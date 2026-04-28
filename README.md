@@ -37,8 +37,8 @@ Assign the **Trigger Actions Framework Admin** permission set to any user who ne
 ### 1. Unified Hierarchy View
 Gain full visibility into every automation running on an object. The Admin Panel groups all Trigger Actions by their execution context—such as Before Insert or After Update—and displays them in their precise execution order.
 
-### 2. Intelligent Auto-Detection
-Creating new actions is faster and more reliable. Select an Apex class, and the tool automatically identifies supported trigger interfaces with full **context awareness**, ensuring your logic is mapped to the right execution point every time.
+### 2. Intelligent Filtering & Auto-Detection
+Save time by browsing only the Apex classes that implement the Trigger Action interfaces. Upon selection, the tool provides full context awareness by auto-detecting and mapping the supported trigger interfaces directly to your configuration.
 
 ### 3. Developer Deep-Links
 Inspect implementation logic directly from the UI. The "View Source" feature allows you to read the associated Apex code without switching back and forth to VS Code, providing a seamless bridge between administration and development.
