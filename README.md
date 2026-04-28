@@ -6,10 +6,6 @@ A lightweight, metadata-driven UI for managing the [Trigger Actions Framework](h
 
 ---
 
-> [!TIP]
-> Use this tool to quickly visualize your trigger architecture, toggle bypasses, and adjust execution orders in real-time.
-
----
 ## 🚀 Installation
 
 > [!IMPORTANT]
@@ -50,8 +46,6 @@ Inspect implementation logic directly from the UI. The "View Source" feature all
 ### 4. Operational Agility
 Instantly toggle bypasses for data loads or maintenance windows with immediate visual feedback. The UI indicates the active/disabled state of each action at a glance, making it easy to manage org-wide automations in real-time.
 
-### 5. Formula-Based Entry Criteria
-Define granular execution logic using standard Salesforce formula syntax directly in the metadata configuration.
 
 ---
 
