@@ -6,14 +6,6 @@ A lightweight, metadata-driven UI for managing the [Trigger Actions Framework](h
 
 ---
 
-## 📺 Demo
-*(Placeholder: How to use the Trigger Actions Admin Panel)*
-
-> [!TIP]
-> Use this tool to quickly visualize your trigger architecture, toggle bypasses, and adjust execution orders in real-time.
-
----
-
 ## 🚀 Installation
 
 > [!IMPORTANT]
