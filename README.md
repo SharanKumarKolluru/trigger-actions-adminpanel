@@ -6,6 +6,10 @@ A lightweight, metadata-driven UI for managing the [Trigger Actions Framework](h
 
 ---
 
+> [!TIP]
+> Use this tool to quickly visualize your trigger architecture, toggle bypasses, and adjust execution orders in real-time.
+
+---
 ## 🚀 Installation
 
 > [!IMPORTANT]
@@ -32,24 +36,22 @@ Assign the **Trigger Actions Framework Admin** permission set to any user who ne
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-### 1. Trigger Settings Management
-Manage the global configuration for each SObject:
-- **Enable/Disable**: Toggle trigger execution for the entire object.
-- **Bypass Permissions**: Define specific permissions required to bypass actions.
-- **Object Wrappers**: Configure custom Apex wrappers for your trigger records.
+### 1. Unified Hierarchy View
+Gain full visibility into every automation running on an object. The Admin Panel groups all Trigger Actions by their execution context—such as Before Insert or After Update—and displays them in their precise execution order.
 
-### 2. Trigger Actions Management
-Configure individual automations within each trigger context:
-- **Auto-Detection**: Select an Apex class, and the tool automatically detects which trigger interfaces (Before Insert, After Update, etc.) it implements.
-- **Context Enforcement**: Ensures each record maps to exactly one execution context, preventing framework validation errors.
-- **Execution Order**: Manually adjust the order of operations.
-- **Formula-Based Entry Criteria**: Define conditional execution logic using standard Salesforce formula syntax.
+### 2. Intelligent Auto-Detection
+Creating new actions is faster and more reliable. Select an Apex class, and the tool automatically identifies supported trigger interfaces with full **context awareness**, ensuring your logic is mapped to the right execution point every time.
 
-### 3. Visual Transparency
-- View your entire trigger hierarchy in a single, grouped view.
-- Instantly identify which actions are bypassed or active.
+### 3. Developer Deep-Links
+Inspect implementation logic directly from the UI. The "View Source" feature allows you to read the associated Apex code without switching back and forth to VS Code, providing a seamless bridge between administration and development.
+
+### 4. Operational Agility
+Instantly toggle bypasses for data loads or maintenance windows with immediate visual feedback. The UI indicates the active/disabled state of each action at a glance, making it easy to manage org-wide automations in real-time.
+
+### 5. Formula-Based Entry Criteria
+Define granular execution logic using standard Salesforce formula syntax directly in the metadata configuration.
 
 ---
 
