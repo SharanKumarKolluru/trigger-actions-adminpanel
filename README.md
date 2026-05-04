@@ -1,6 +1,6 @@
 # Trigger Actions Framework Admin Panel
 
-A lightweight, metadata-driven UI for managing the [Trigger Actions Framework](https://github.com/mitchspano/trigger-actions-framework). This tool provides a streamlined management layer for administrators and developers to visualize, organize, and configure trigger logic directly in Salesforce, automating the underlying Custom Metadata deployments.
+A lightweight administrative UI for managing the [Trigger Actions Framework](https://github.com/mitchspano/trigger-actions-framework). This tool provides a streamlined management layer for administrators and developers to visualize, organize, and configure trigger logic directly in Salesforce, automating the underlying Custom Metadata deployments.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

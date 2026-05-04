@@ -1,7 +1,7 @@
 /**
  * @group Trigger Actions Framework - Admin
  * @description Service class for CRUD operations on `Trigger_Action__mdt` metadata.
- * Provides methods for querying, creating, updating, and deleting trigger actions.
+ * Provides methods for querying, creating, and updating trigger actions.
  */
 public with sharing class TriggerActionService {
 	private static final String METADATA_API_NAME = 'Trigger_Action__mdt';
@@ -217,14 +217,14 @@ public with sharing class TriggerActionService {
 				LIMIT 1
 			];
 		} else {
-			// Fallback: finding setting by related context record
+			// Fallback: finding setting by related context record (checks all 7 contexts)
 			Id settingId = existing.Before_Insert__c != null ? existing.Before_Insert__c :
-						  existing.After_Insert__c != null ? existing.After_Insert__c :
-						  existing.Before_Update__c != null ? existing.Before_Update__c :
-						  existing.After_Update__c != null ? existing.After_Update__c :
-						  existing.Before_Delete__c != null ? existing.Before_Delete__c :
-						  existing.After_Delete__c != null ? existing.After_Delete__c :
-						  existing.After_Undelete__c;
+						   existing.After_Insert__c != null ? existing.After_Insert__c :
+						   existing.Before_Update__c != null ? existing.Before_Update__c :
+						   existing.After_Update__c != null ? existing.After_Update__c :
+						   existing.Before_Delete__c != null ? existing.Before_Delete__c :
+						   existing.After_Delete__c != null ? existing.After_Delete__c :
+						   existing.After_Undelete__c;
 			
 			if (settingId != null) {
 				settings = [
@@ -265,8 +265,8 @@ public with sharing class TriggerActionService {
 
 		addMetadataValue(record, 'Entry_Criteria__c', String.isNotBlank(entryCriteria) ? entryCriteria : null);
 		addMetadataValue(record, 'Description__c', String.isNotBlank(description) ? description : null);
-		addMetadataValue(record, 'Bypass_Execution__c', bypassExecution);
-		addMetadataValue(record, 'Allow_Flow_Recursion__c', allowFlowRecursion);
+		addMetadataValue(record, 'Bypass_Execution__c', bypassExecution != null ? bypassExecution : false);
+		addMetadataValue(record, 'Allow_Flow_Recursion__c', allowFlowRecursion != null ? allowFlowRecursion : false);
 
 		Metadata.DeployContainer mdContainer = new Metadata.DeployContainer();
 		mdContainer.addMetadata(record);
@@ -388,16 +388,6 @@ public with sharing class TriggerActionService {
 		return result;
 	}
 
-	/**
-	 * @description Deletes a Trigger Action via the Metadata SOAP API
-	 * @param devName The Developer Name of the trigger action record to delete
-	 * @return String The result message
-	 */
-	@AuraEnabled
-	public static String deleteTriggerAction(String devName) {
-		// Deprecated in favor of Visualforce-based deletion in the LWC
-		return 'Deletion of ' + devName + ' is now handled by the UI.';
-	}
 
 	/**
 	 * @description Validates that the Developer Name is unique
