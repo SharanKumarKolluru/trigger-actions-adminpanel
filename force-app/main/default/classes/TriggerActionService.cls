@@ -290,16 +290,28 @@ public with sharing class TriggerActionService {
 			String name = d.getName();
 			if (
 				!d.isCustomSetting() &&
-				!name.endsWith('__Share') &&
-				!name.endsWith('__History') &&
-				!name.endsWith('__Feed') &&
-				!name.endsWith('__ChangeEvent') &&
+				!name.endsWith('Share') &&
+				!name.endsWith('History') &&
+				!name.endsWith('Feed') &&
+				!name.endsWith('Event') &&
+				!name.endsWith('ChangeEvent') &&
 				d.isCreateable()
 			) {
 				Map<String, String> obj = new Map<String, String>();
 				obj.put('label', d.getLabel() + ' (' + name + ')');
 				obj.put('value', name);
 				result.add(obj);
+			}
+		}
+		
+		// Sort by label
+		for (Integer i = 0; i < result.size(); i++) {
+			for (Integer j = i + 1; j < result.size(); j++) {
+				if (result[i].get('label').compareTo(result[j].get('label')) > 0) {
+					Map<String, String> temp = result[i];
+					result[i] = result[j];
+					result[j] = temp;
+				}
 			}
 		}
 		return result;
@@ -403,7 +415,7 @@ public with sharing class TriggerActionService {
 	public static AutomationAuditWrapper getNativeAutomations(String objectName) {
 		AutomationAuditWrapper wrapper = new AutomationAuditWrapper();
 		wrapper.triggers = [
-			SELECT Id, Name, Status, ApiVersion, LastModifiedDate,
+			SELECT Id, Name, Status, ApiVersion, LastModifiedDate, NamespacePrefix,
 				UsageBeforeInsert, UsageAfterInsert, UsageBeforeUpdate, UsageAfterUpdate,
 				UsageBeforeDelete, UsageAfterDelete, UsageAfterUndelete
 			FROM ApexTrigger
@@ -419,6 +431,88 @@ public with sharing class TriggerActionService {
 			ORDER BY Label
 		];
 		return wrapper;
+	}
+
+	public class DiscoveredObjectWrapper implements Comparable {
+		@AuraEnabled public String objectName;
+		@AuraEnabled public Integer triggerCount;
+		@AuraEnabled public Integer flowCount;
+
+		public DiscoveredObjectWrapper(String name) {
+			this.objectName = name;
+			this.triggerCount = 0;
+			this.flowCount = 0;
+		}
+
+		public Integer compareTo(Object compareTo) {
+			DiscoveredObjectWrapper other = (DiscoveredObjectWrapper) compareTo;
+			if (this.objectName == other.objectName) return 0;
+			if (this.objectName > other.objectName) return 1;
+			return -1;
+		}
+	}
+
+	/**
+	 * @description Discovers SObjects with native automation that are NOT yet in the framework
+	 * @return List<DiscoveredObjectWrapper> List of discovered objects and their automation counts
+	 */
+	@AuraEnabled(cacheable=true)
+	public static List<DiscoveredObjectWrapper> getDiscoveredObjects() {
+		Map<String, DiscoveredObjectWrapper> discoveryMap = new Map<String, DiscoveredObjectWrapper>();
+		Set<String> managedObjects = new Set<String>();
+		Map<String, SObjectType> gd = Schema.getGlobalDescribe();
+		for (sObject_Trigger_Setting__mdt setting : [SELECT Object_API_Name__c FROM sObject_Trigger_Setting__mdt WITH USER_MODE]) {
+			managedObjects.add(setting.Object_API_Name__c);
+		}
+
+		// Scan Triggers
+		for (ApexTrigger trg : [SELECT TableEnumOrId FROM ApexTrigger WHERE Status = 'Active' WITH USER_MODE]) {
+			String objName = trg.TableEnumOrId;
+			if (gd.containsKey(objName) && !managedObjects.contains(objName)) {
+				if (!discoveryMap.containsKey(objName)) {
+					discoveryMap.put(objName, new DiscoveredObjectWrapper(objName));
+				}
+				discoveryMap.get(objName).triggerCount++;
+			}
+		}
+
+		// Scan Flows
+		for (FlowDefinitionView flw : [SELECT TriggerObjectOrEventId FROM FlowDefinitionView WHERE IsActive = true AND TriggerObjectOrEventId != null WITH USER_MODE]) {
+			String objName = flw.TriggerObjectOrEventId;
+			// Only include objects that are actually in the Global Describe (ignoring ghost objects/events)
+			if (gd.containsKey(objName) && !managedObjects.contains(objName)) {
+				if (!discoveryMap.containsKey(objName)) {
+					discoveryMap.put(objName, new DiscoveredObjectWrapper(objName));
+				}
+				discoveryMap.get(objName).flowCount++;
+			}
+		}
+
+		List<DiscoveredObjectWrapper> discoveredList = discoveryMap.values();
+		discoveredList.sort();
+		return discoveredList;
+	}
+
+	public class GlobalStatsWrapper {
+		@AuraEnabled public Integer managedObjectCount;
+		@AuraEnabled public Integer activeActionCount;
+		@AuraEnabled public Integer unmanagedObjectCount;
+	}
+
+	/**
+	 * @description Retrieves global statistics for the admin dashboard
+	 * @return GlobalStatsWrapper Statistics summary
+	 */
+	@AuraEnabled(cacheable=true)
+	public static GlobalStatsWrapper getGlobalStats() {
+		GlobalStatsWrapper stats = new GlobalStatsWrapper();
+		stats.managedObjectCount = [SELECT COUNT() FROM sObject_Trigger_Setting__mdt WITH USER_MODE];
+		stats.activeActionCount = [SELECT COUNT() FROM Trigger_Action__mdt WITH USER_MODE];
+		
+		// Reuse discovery logic for unmanaged count
+		stats.unmanagedObjectCount = getDiscoveredObjects().size();
+		
+		return stats;
 	}
 
 	/**
@@ -493,16 +587,25 @@ public with sharing class TriggerActionService {
 	@AuraEnabled(cacheable=true)
 	public static String getFlowIdByName(String flowName) {
 		List<FlowDefinitionView> flows = [
-			SELECT ActiveVersionId 
+			SELECT DurableId 
 			FROM FlowDefinitionView 
 			WHERE ApiName = :flowName 
 			WITH USER_MODE
 			LIMIT 1
 		];
 		if (flows.isEmpty()) {
+			flows = [
+				SELECT DurableId 
+				FROM FlowDefinitionView 
+				WHERE DurableId = :flowName
+				WITH USER_MODE
+				LIMIT 1
+			];
+		}
+		if (flows.isEmpty()) {
 			throw new AuraHandledException('Flow "' + flowName + '" not found in the org.');
 		}
-		return flows[0].ActiveVersionId;
+		return flows[0].DurableId;
 	}
 
 	/**

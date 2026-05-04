@@ -5,7 +5,7 @@
 				<lightning-spinner alternative-text="Loading" size="medium" class="slds-spinner_container"></lightning-spinner>
 			</template>
 			<div class="slds-grid slds-gutters_medium">
-				<!-- Column 1: SObject List (2-of-12) -->
+				<!-- Column 1: SObject Sidebar (2-of-12) -->
 				<div class="slds-col slds-size_2-of-12">
 					<div class="object-panel">
 						<div class="panel-header slds-grid slds-wrap">
@@ -13,8 +13,19 @@
 								<h3 class="slds-text-heading_small">SObjects</h3>
 								<div class="slds-grid slds-grid_vertical-align-center">
 									<lightning-button-icon
+										icon-name="utility:search"
+										alternative-text="Discovery Mode"
+										title="Discovery Mode"
+										onclick={handleOpenDiscovery}
+										size="small"
+										variant="bare"
+										class="slds-var-m-right_xx-small"
+									>
+									</lightning-button-icon>
+									<lightning-button-icon
 										icon-name="utility:add"
 										alternative-text="Add SObject"
+										title="Add SObject"
 										onclick={handleAddSObject}
 										size="small"
 										variant="bare"
@@ -24,6 +35,7 @@
 									<lightning-button-icon
 										icon-name="utility:refresh"
 										alternative-text="Refresh"
+										title="Refresh"
 										onclick={handleRefresh}
 										size="small"
 										variant="border-filled"
@@ -189,7 +201,7 @@
 																<lightning-badge
 																	key={ctx.key}
 																	label={ctx.label}
-																	class="slds-var-m-right_xx-small"
+																	class="slds-var-m-right_xx-small compact-badge"
 																>
 																</lightning-badge>
 															</template>
@@ -265,12 +277,26 @@
 																</div>
 																<div class="slds-col_filler"></div>
 																<div class="slds-grid slds-grid_vertical-align-center">
-																	<lightning-badge label={item.status} variant={item.variant} class="slds-var-m-right_small"></lightning-badge>
+																	<lightning-badge label={item.status} variant={item.variant} class="slds-var-m-right_small compact-badge"></lightning-badge>
 																	<template if:true={item.isTrigger}>
-																		<lightning-button-icon icon-name="utility:new_window" variant="bare" data-id={item.id} onclick={handleOpenNativeTrigger} title="Open Trigger"></lightning-button-icon>
+																		<lightning-button-icon 
+																			icon-name="utility:new_window" 
+																			variant="bare" 
+																			data-id={item.id} 
+																			onclick={handleOpenNativeTrigger} 
+																			title={item.buttonTitle}
+																			disabled={item.isManaged}
+																		></lightning-button-icon>
 																	</template>
 																	<template if:true={item.isFlow}>
-																		<lightning-button-icon icon-name="utility:new_window" variant="bare" data-id={item.id} onclick={handleOpenNativeFlow} title="Open in Flow Builder"></lightning-button-icon>
+																		<lightning-button-icon 
+																			icon-name="utility:new_window" 
+																			variant="bare" 
+																			data-id={item.id} 
+																			onclick={handleOpenNativeFlow} 
+																			title={item.buttonTitle}
+																			disabled={item.isManaged}
+																		></lightning-button-icon>
 																	</template>
 																</div>
 															</div>
@@ -293,51 +319,50 @@
 					</div>
 				</template>
 
-				<!-- No object selected: Welcome Dashboard (10-of-12) -->
+				<!-- No object selected: Command Center Dashboard (10-of-12) -->
 				<template if:false={selectedObjectName}>
 					<div class="slds-col slds-size_10-of-12">
-						<div class="welcome-dashboard slds-text-align_center">
-							<div class="welcome-header">
-								<lightning-icon icon-name="standard:config" size="large" class="slds-var-m-bottom_medium"></lightning-icon>
-								<h1 class="welcome-title">Trigger Actions Admin Panel</h1>
-								<p class="welcome-subtitle">
-									A streamlined UI for configuring and ordering your Trigger Actions metadata.
-								</p>
+						<div class="command-center">
+							<div class="command-header slds-text-align_center">
+								<h1 class="command-title">Automation Command Center</h1>
+								<p class="command-subtitle">Monitor, manage, and scale your Trigger Actions Framework</p>
 							</div>
 
-							<div class="getting-started-grid">
-								<div class="step-card">
-									<lightning-icon icon-name="utility:search" size="small" class="step-icon slds-var-m-bottom_small"></lightning-icon>
-									<h3 class="step-title">Select SObject</h3>
-									<p class="step-description">
-										Choose an SObject from the sidebar to view its active trigger actions and settings.
-									</p>
+
+							<!-- Action Cards -->
+							<div class="actions-grid slds-grid slds-gutters_medium">
+								<div class="slds-col slds-size_1-of-3">
+									<div class="dashboard-action-card" onclick={handleOpenDiscovery}>
+										<lightning-icon icon-name="utility:search" size="medium" class="action-icon"></lightning-icon>
+										<h3>Launch Discovery</h3>
+										<p>Scan your org to find and initialize unmanaged triggers and flows.</p>
+										<div class="action-link">Start Scanning →</div>
+									</div>
 								</div>
-								<div class="step-card">
-									<lightning-icon icon-name="utility:settings" size="small" class="step-icon slds-var-m-bottom_small"></lightning-icon>
-									<h3 class="step-title">Add Settings</h3>
-									<p class="step-description">
-										Use the "+" button in the sidebar to add trigger settings for new SObjects.
-									</p>
+								<div class="slds-col slds-size_1-of-3">
+									<div class="dashboard-action-card" onclick={handleAddSObject}>
+										<lightning-icon icon-name="utility:add" size="medium" class="action-icon"></lightning-icon>
+										<h3>Configure New Object</h3>
+										<p>Manually add a new SObject to the Trigger Actions Framework.</p>
+										<div class="action-link">Add Object →</div>
+									</div>
 								</div>
-								<div class="step-card">
-									<lightning-icon icon-name="utility:setup" size="small" class="step-icon slds-var-m-bottom_small"></lightning-icon>
-									<h3 class="step-title">Manage Actions</h3>
-									<p class="step-description">
-										Create, edit, or reorder Apex and Flow actions to control your execution logic.
-									</p>
+								<div class="slds-col slds-size_1-of-3">
+									<a href="https://github.com/mitchspano/trigger-actions-framework" target="_blank" rel="noopener noreferrer" class="dashboard-action-card-link">
+										<div class="dashboard-action-card">
+											<lightning-icon icon-name="utility:knowledge_base" size="medium" class="action-icon"></lightning-icon>
+											<h3>Framework Docs</h3>
+											<p>Read the official documentation for advanced framework features.</p>
+											<div class="action-link">Learn More →</div>
+										</div>
+									</a>
 								</div>
 							</div>
 
-							<div class="upstream-footer">
-								<p class="slds-text-body_small slds-text-color_weak slds-var-m-bottom_small">
-									Powered by the Trigger Actions Framework
+							<div class="command-footer slds-text-align_center slds-m-top_xx-large">
+								<p class="slds-text-body_small slds-text-color_weak">
+									v2.0.0 • Powered by Trigger Actions Framework
 								</p>
-								<a href="https://github.com/mitchspano/trigger-actions-framework" target="_blank" rel="noopener noreferrer" class="upstream-link">
-									<lightning-icon icon-name="utility:github" size="xx-small" variant="base"></lightning-icon>
-									<span>View Framework Documentation</span>
-									<lightning-icon icon-name="utility:new_window" size="xx-small" variant="base" class="slds-var-m-left_xx-small"></lightning-icon>
-								</a>
 							</div>
 						</div>
 					</div>
@@ -375,5 +400,58 @@
 			onclose={handleSourceClose}
 		>
 		</c-trigger-action-source-view>
+	</template>
+
+	<!-- Discovery Modal -->
+	<template if:true={showDiscoveryModal}>
+		<section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium">
+			<div class="slds-modal__container">
+				<header class="slds-modal__header">
+					<lightning-button-icon
+						icon-name="utility:close"
+						onclick={handleCloseDiscovery}
+						alternative-text="Close"
+						variant="bare-inverse"
+						class="slds-modal__close"
+					></lightning-button-icon>
+					<h2 class="slds-text-heading_medium">Automation Discovery</h2>
+				</header>
+				<div class="slds-modal__content slds-p-around_medium">
+					<p class="slds-var-m-bottom_medium">
+						The following objects have native automations (Triggers/Flows) but are not yet managed by the Trigger Actions Framework.
+					</p>
+					<template if:true={discoveredObjects.length}>
+						<div class="slds-grid slds-wrap slds-gutters_small">
+							<template for:each={discoveredObjects} for:item="obj">
+								<div key={obj.objectName} class="slds-col slds-size_1-of-3 slds-var-m-bottom_small">
+									<lightning-card title={obj.objectName} icon-name="standard:record">
+										<div class="slds-p-horizontal_small">
+											<p class="slds-text-body_small">
+												Triggers: <strong>{obj.triggerCount}</strong><br/>
+												Flows: <strong>{obj.flowCount}</strong>
+											</p>
+											<lightning-button
+												label="Initialize"
+												variant="brand"
+												class="slds-var-m-top_small"
+												data-name={obj.objectName}
+												onclick={handleInitializeObject}
+											></lightning-button>
+										</div>
+									</lightning-card>
+								</div>
+							</template>
+						</div>
+					</template>
+					<template if:false={discoveredObjects.length}>
+						<div class="slds-text-align_center slds-p-around_large">
+							<lightning-icon icon-name="utility:success" variant="success"></lightning-icon>
+							<p class="slds-text-heading_small slds-var-m-top_medium">Everything is managed!</p>
+						</div>
+					</template>
+				</div>
+			</div>
+		</section>
+		<div class="slds-backdrop slds-backdrop_open"></div>
 	</template>
 </template>

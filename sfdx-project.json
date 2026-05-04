@@ -1,8 +1,8 @@
 {
   "packageDirectories": [
     {
-      "versionName": "Version 1.0",
-      "versionNumber": "1.0.0.NEXT",
+      "versionName": "v2.0.0",
+      "versionNumber": "2.0.0.NEXT",
       "path": "force-app",
       "default": true,
       "package": "Trigger Actions Admin Panel",
@@ -15,15 +15,15 @@
     }
   ],
   "name": "trigger-actions-adminpanel",
+  "version": "2.0.0",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
   "sourceApiVersion": "66.0",
   "packageAliases": {
     "Trigger Actions Framework": "04tKY000000R0yHYAS",
     "Trigger Actions Admin Panel": "0HogL0000002AjFSAU",
-    "Trigger Actions Admin Panel@1.0.0-5": "04tgL000000EEHdQAO",
-    "Trigger Actions Admin Panel@1.0.0-6": "04tgL000000EM8jQAG",
-    "Trigger Actions Admin Panel@1.0.0-7": "04tgL000000Egc5QAC",
-    "Trigger Actions Admin Panel@1.0.0-8": "04tgL000000EgyfQAC"
+    "Trigger Actions Admin Panel@2.0.0-1": "04tgL000000Eh9xQAC",
+    "Trigger Actions Admin Panel@2.0.0": "04tgL000000EhBZQA0",
+    "Trigger Actions Admin Panel@2.0.0-2": "04tgL000000EhBZQA0"
   }
 }

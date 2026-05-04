@@ -12,8 +12,8 @@ A lightweight administrative UI for managing the [Trigger Actions Framework](htt
 > **Prerequisite:** You must have the core [Trigger Actions Framework](https://github.com/mitchspano/trigger-actions-framework) installed in your org first.
 
 ### Option 1: Unlocked Package (Recommended)
-*   [Install in Production / Developer Org](https://login.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000EgyfQAC)
-*   [Install in Sandbox](https://test.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000EgyfQAC)
+*   [Install in Production / Developer Org](https://login.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000EhBZQA0)
+*   [Install in Sandbox](https://test.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000EhBZQA0)
 
 ### Option 2: Deploy from Source
 <a href="https://githubsfdeploy.herokuapp.com?owner=shahrier&repo=trigger-actions-adminpanel&ref=main">
@@ -46,9 +46,11 @@ Inspect implementation logic directly from the UI. The "View Source" feature all
 ### 4. Operational Agility
 Instantly toggle bypasses for data loads or maintenance windows with immediate visual feedback. The UI indicates the active/disabled state of each action at a glance, making it easy to manage org-wide automations in real-time.
 
-### 5. Full Automation Audit
-Visualize every native Apex Trigger, Record-Triggered Flow, and Process Builder alongside your framework actions. This comprehensive audit view helps identify unmigrated legacy logic and potential conflicts in one centralized dashboard.
+### 5. Automation Command Center (v2.0)
+Monitor global health stats and access critical governance tools from a centralized dashboard. Gain instant visibility into managed SObjects, active actions, and unmanaged automation across your entire org.
 
+### 6. Intelligent Automation Discovery
+Automatically scan your org to find native Apex Triggers and Record-Triggered Flows. The Discovery tool identifies objects that aren't yet in the framework and helps you initialize them in seconds.
 
 ---
 
@@ -68,4 +70,4 @@ Contributions are welcome! Please feel free to open issues or submit pull reques
 
 ---
 
-**Version:** 1.0
+**Version:** 2.0.0

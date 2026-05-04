@@ -374,4 +374,16 @@ private class TriggerActionService_Test {
 		System.assert(audit.triggers != null, 'Triggers list should not be null');
 		System.assert(audit.flows != null, 'Flows list should not be null');
 	}
+
+	/**
+	 * Test getDiscoveredObjects logic
+	 */
+	@isTest
+	static void testGetDiscoveredObjects() {
+		Test.startTest();
+		List<TriggerActionService.DiscoveredObjectWrapper> discovered = TriggerActionService.getDiscoveredObjects();
+		Test.stopTest();
+
+		System.assert(discovered != null, 'Discovered list should not be null');
+	}
 }

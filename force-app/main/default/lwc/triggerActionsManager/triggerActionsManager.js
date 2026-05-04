@@ -7,6 +7,9 @@ import getTriggerActionById from '@salesforce/apex/TriggerActionService.getTrigg
 import getAvailableSObjects from '@salesforce/apex/TriggerActionService.getAvailableSObjects';
 import getFlowIdByName from '@salesforce/apex/TriggerActionService.getFlowIdByName';
 import getNativeAutomations from '@salesforce/apex/TriggerActionService.getNativeAutomations';
+import getDiscoveredObjects from '@salesforce/apex/TriggerActionService.getDiscoveredObjects';
+import createTriggerSetting from '@salesforce/apex/TriggerActionService.createTriggerSetting';
+import getGlobalStats from '@salesforce/apex/TriggerActionService.getGlobalStats';
 
 const CONTEXT_LABELS = [
 	{ field: 'Before_Insert__c', label: 'Before Insert' },
@@ -26,15 +29,27 @@ export default class TriggerActionsManager extends NavigationMixin(LightningElem
 	isLoading = false;
 	showFormModal = false;
 	showSettingFormModal = false;
+	showDiscoveryModal = false;
 	showSourceModal = false;
 	searchTerm = '';
 	isCreating = false;
 	availableSObjects = [];
+	discoveredObjects = [];
+	globalStats = {};
 	nativeAutomations = { triggers: [], flows: [] };
 	activeTab = 'actions';
 	_wiredActionsResult;
 	_wiredSObjectsResult;
 	_wiredNativeResult;
+	_wiredStatsResult;
+
+	@wire(getGlobalStats)
+	wiredStats(result) {
+		this._wiredStatsResult = result;
+		if (result.data) {
+			this.globalStats = result.data;
+		}
+	}
 
 	@wire(getNativeAutomations, { objectName: '$selectedObjectName' })
 	wiredNative(result) {
@@ -165,7 +180,10 @@ export default class TriggerActionsManager extends NavigationMixin(LightningElem
 						icon: 'utility:apex',
 						status: t.Status,
 						variant: t.Status === 'Active' ? 'success' : 'lightest',
-						isTrigger: true
+						isTrigger: true,
+						isFlow: false,
+						isManaged: !!t.NamespacePrefix,
+						buttonTitle: !!t.NamespacePrefix ? 'Managed Package Trigger (View Restricted)' : 'Open Trigger'
 					});
 				}
 			});
@@ -174,13 +192,26 @@ export default class TriggerActionsManager extends NavigationMixin(LightningElem
 			(this.nativeAutomations.flows || []).forEach(f => {
 				const isBefore = f.TriggerType === 'RecordBeforeSave';
 				const isAfter = f.TriggerType === 'RecordAfterSave' || f.ProcessType === 'Workflow';
-				
-				// Map Flow triggers to our contexts (Flows typically cover Insert & Update)
-				const isRelevantContext = 
-					(isBefore && ctx.field.startsWith('Before') && !ctx.field.includes('Delete')) ||
-					(isAfter && ctx.field.startsWith('After') && !ctx.field.includes('Delete'));
+				const triggerType = f.RecordTriggerType; // Create, Update, CreateAndUpdate, Delete
+
+				const isInsert = !triggerType || triggerType.includes('Create');
+				const isUpdate = !triggerType || triggerType.includes('Update');
+				const isDelete = triggerType === 'Delete';
+
+				// Map Flow triggers to our contexts precisely
+				let isRelevantContext = false;
+				if (isBefore) {
+					isRelevantContext = (isInsert && ctx.field === 'Before_Insert__c') || 
+					                    (isUpdate && ctx.field === 'Before_Update__c');
+				} else if (isAfter) {
+					isRelevantContext = (isInsert && ctx.field === 'After_Insert__c') || 
+					                    (isUpdate && ctx.field === 'After_Update__c') ||
+					                    (isDelete && ctx.field === 'Before_Delete__c');
+				}
 
 				if (isRelevantContext) {
+					const isFlow = f.ProcessType === 'AutoLaunchedFlow' || f.ProcessType === 'Flow';
+					const isManaged = !f.DurableId.startsWith('300');
 					items.push({
 						id: f.DurableId,
 						name: f.Label,
@@ -188,7 +219,10 @@ export default class TriggerActionsManager extends NavigationMixin(LightningElem
 						icon: f.ProcessType === 'Workflow' ? 'utility:retire' : 'utility:flow',
 						status: f.IsActive ? 'Active' : 'Inactive',
 						variant: f.IsActive ? 'success' : 'lightest',
-						isFlow: true
+						isTrigger: false,
+						isFlow: isFlow,
+						isManaged: isManaged,
+						buttonTitle: isManaged ? 'Managed Package Flow (Builder Restricted)' : 'Open in Flow Builder'
 					});
 				}
 			});
@@ -256,12 +290,14 @@ export default class TriggerActionsManager extends NavigationMixin(LightningElem
 
 	async handleOpenFlowBuilder() {
 		const flowName = this.selectedAction?.Flow_Name__c;
-		if (!flowName) return;
-
 		this.isLoading = true;
 		try {
 			const flowId = await getFlowIdByName({ flowName });
-			this.navigateToFlowBuilder(flowId);
+			if (flowId && flowId.startsWith('300')) {
+				this.navigateToFlowBuilder(flowId);
+			} else {
+				this.showError('Notice', 'This is a managed package flow and cannot be opened directly in the Flow Builder.');
+			}
 		} catch (error) {
 			this.showError('Error opening Flow Builder', error.body?.message || error.message);
 		} finally {
@@ -297,6 +333,41 @@ export default class TriggerActionsManager extends NavigationMixin(LightningElem
 
 	handleTabChange(event) {
 		this.activeTab = event.target.value;
+	}
+
+	async handleOpenDiscovery() {
+		this.isLoading = true;
+		try {
+			this.discoveredObjects = await getDiscoveredObjects();
+			this.showDiscoveryModal = true;
+		} catch (error) {
+			this.showError('Error discovering objects', error.body?.message || error.message);
+		} finally {
+			this.isLoading = false;
+		}
+	}
+
+	handleCloseDiscovery() {
+		this.showDiscoveryModal = false;
+	}
+
+	async handleInitializeObject(event) {
+		const objectName = event.currentTarget.dataset.name;
+		this.isLoading = true;
+		try {
+			await createTriggerSetting({ 
+				objectName,
+				bypassPermission: null,
+				requiredPermission: null
+			});
+			this.showSuccess(`Initialization of ${objectName} enqueued. This may take a few seconds.`);
+			this.handleCloseDiscovery();
+			// Refresh will happen via the auto-refresh logic we already have
+		} catch (error) {
+			this.showError('Error initializing object', error.body?.message || error.message);
+		} finally {
+			this.isLoading = false;
+		}
 	}
 
 	handleFormClose() {
@@ -343,6 +414,9 @@ export default class TriggerActionsManager extends NavigationMixin(LightningElem
 		}
 		if (this._wiredNativeResult) {
 			promises.push(refreshApex(this._wiredNativeResult));
+		}
+		if (this._wiredStatsResult) {
+			promises.push(refreshApex(this._wiredStatsResult));
 		}
 		if (promises.length === 0) {
 			return Promise.reject(new Error('Wire results not available'));
