@@ -389,6 +389,38 @@ public with sharing class TriggerActionService {
 	}
 
 
+	public class AutomationAuditWrapper {
+		@AuraEnabled public List<ApexTrigger> triggers;
+		@AuraEnabled public List<FlowDefinitionView> flows;
+	}
+
+	/**
+	 * @description Retrieves native automations (Apex Triggers and Flows) for a given SObject
+	 * @param objectName The API name of the SObject
+	 * @return AutomationAuditWrapper Wrapper containing lists of triggers and flows
+	 */
+	@AuraEnabled(cacheable=true)
+	public static AutomationAuditWrapper getNativeAutomations(String objectName) {
+		AutomationAuditWrapper wrapper = new AutomationAuditWrapper();
+		wrapper.triggers = [
+			SELECT Id, Name, Status, ApiVersion, LastModifiedDate,
+				UsageBeforeInsert, UsageAfterInsert, UsageBeforeUpdate, UsageAfterUpdate,
+				UsageBeforeDelete, UsageAfterDelete, UsageAfterUndelete
+			FROM ApexTrigger
+			WHERE TableEnumOrId = :objectName
+			WITH USER_MODE
+			ORDER BY Name
+		];
+		wrapper.flows = [
+			SELECT Id, DurableId, Label, ApiName, ProcessType, TriggerType, IsActive, LastModifiedDate
+			FROM FlowDefinitionView
+			WHERE TriggerObjectOrEventId = :objectName
+			WITH USER_MODE
+			ORDER BY Label
+		];
+		return wrapper;
+	}
+
 	/**
 	 * @description Validates that the Developer Name is unique
 	 * @param devName The Developer Name to validate

@@ -6,6 +6,7 @@ import getAllTriggerActions from '@salesforce/apex/TriggerActionService.getAllTr
 import getTriggerActionById from '@salesforce/apex/TriggerActionService.getTriggerActionById';
 import getAvailableSObjects from '@salesforce/apex/TriggerActionService.getAvailableSObjects';
 import getFlowIdByName from '@salesforce/apex/TriggerActionService.getFlowIdByName';
+import getNativeAutomations from '@salesforce/apex/TriggerActionService.getNativeAutomations';
 
 const CONTEXT_LABELS = [
 	{ field: 'Before_Insert__c', label: 'Before Insert' },
@@ -29,8 +30,19 @@ export default class TriggerActionsManager extends NavigationMixin(LightningElem
 	searchTerm = '';
 	isCreating = false;
 	availableSObjects = [];
+	nativeAutomations = { triggers: [], flows: [] };
+	activeTab = 'actions';
 	_wiredActionsResult;
 	_wiredSObjectsResult;
+	_wiredNativeResult;
+
+	@wire(getNativeAutomations, { objectName: '$selectedObjectName' })
+	wiredNative(result) {
+		this._wiredNativeResult = result;
+		if (result.data) {
+			this.nativeAutomations = result.data;
+		}
+	}
 
 	@wire(getAllTriggerActions)
 	wiredActions(result) {
@@ -136,6 +148,59 @@ export default class TriggerActionsManager extends NavigationMixin(LightningElem
 		return this.selectedAction?.Allow_Flow_Recursion__c ? 'Yes' : 'No';
 	}
 
+	get auditGroups() {
+		if (!this.nativeAutomations) return [];
+
+		return CONTEXT_LABELS.map(ctx => {
+			const items = [];
+
+			// Add Triggers
+			(this.nativeAutomations.triggers || []).forEach(t => {
+				const field = ctx.field.replace('__c', '').replace('_', ''); // BeforeInsert, AfterUpdate, etc
+				if (t[`Usage${field}`]) {
+					items.push({
+						id: t.Id,
+						name: t.Name,
+						type: 'Apex Trigger',
+						icon: 'utility:apex',
+						status: t.Status,
+						variant: t.Status === 'Active' ? 'success' : 'lightest',
+						isTrigger: true
+					});
+				}
+			});
+
+			// Add Flows & Process Builders
+			(this.nativeAutomations.flows || []).forEach(f => {
+				const isBefore = f.TriggerType === 'RecordBeforeSave';
+				const isAfter = f.TriggerType === 'RecordAfterSave' || f.ProcessType === 'Workflow';
+				
+				// Map Flow triggers to our contexts (Flows typically cover Insert & Update)
+				const isRelevantContext = 
+					(isBefore && ctx.field.startsWith('Before') && !ctx.field.includes('Delete')) ||
+					(isAfter && ctx.field.startsWith('After') && !ctx.field.includes('Delete'));
+
+				if (isRelevantContext) {
+					items.push({
+						id: f.DurableId,
+						name: f.Label,
+						type: f.ProcessType === 'Workflow' ? 'Process Builder' : 'Flow',
+						icon: f.ProcessType === 'Workflow' ? 'utility:retire' : 'utility:flow',
+						status: f.IsActive ? 'Active' : 'Inactive',
+						variant: f.IsActive ? 'success' : 'lightest',
+						isFlow: true
+					});
+				}
+			});
+
+			return { 
+				...ctx, 
+				items, 
+				hasItems: items.length > 0 
+			};
+		}).filter(group => group.hasItems);
+	}
+
 	// --- Event handlers ---
 
 	handleSearchChange(event) {
@@ -196,17 +261,42 @@ export default class TriggerActionsManager extends NavigationMixin(LightningElem
 		this.isLoading = true;
 		try {
 			const flowId = await getFlowIdByName({ flowName });
-			this[NavigationMixin.Navigate]({
-				type: 'standard__webPage',
-				attributes: {
-					url: `/builder_platform_interaction/flowBuilder.app?flowId=${flowId}`
-				}
-			});
+			this.navigateToFlowBuilder(flowId);
 		} catch (error) {
 			this.showError('Error opening Flow Builder', error.body?.message || error.message);
 		} finally {
 			this.isLoading = false;
 		}
+	}
+
+	handleOpenNativeFlow(event) {
+		const durableId = event.currentTarget.dataset.id;
+		this.navigateToFlowBuilder(durableId);
+	}
+
+	handleOpenNativeTrigger(event) {
+		const triggerId = event.currentTarget.dataset.id;
+		this[NavigationMixin.Navigate]({
+			type: 'standard__recordPage',
+			attributes: {
+				recordId: triggerId,
+				objectApiName: 'ApexTrigger',
+				actionName: 'view'
+			}
+		});
+	}
+
+	navigateToFlowBuilder(durableId) {
+		this[NavigationMixin.Navigate]({
+			type: 'standard__webPage',
+			attributes: {
+				url: `/builder_platform_interaction/flowBuilder.app?flowDefId=${durableId}`
+			}
+		});
+	}
+
+	handleTabChange(event) {
+		this.activeTab = event.target.value;
 	}
 
 	handleFormClose() {
@@ -250,6 +340,9 @@ export default class TriggerActionsManager extends NavigationMixin(LightningElem
 		}
 		if (this._wiredSObjectsResult) {
 			promises.push(refreshApex(this._wiredSObjectsResult));
+		}
+		if (this._wiredNativeResult) {
+			promises.push(refreshApex(this._wiredNativeResult));
 		}
 		if (promises.length === 0) {
 			return Promise.reject(new Error('Wire results not available'));

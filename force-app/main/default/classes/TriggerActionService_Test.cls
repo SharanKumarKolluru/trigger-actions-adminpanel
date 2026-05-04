@@ -360,4 +360,18 @@ private class TriggerActionService_Test {
 		Test.stopTest();
 		// Verification via debug logs (no assertion needed for coverage)
 	}
+
+	/**
+	 * Test getNativeAutomations query logic
+	 */
+	@isTest
+	static void testGetNativeAutomations() {
+		Test.startTest();
+		TriggerActionService.AutomationAuditWrapper audit = TriggerActionService.getNativeAutomations('Account');
+		Test.stopTest();
+
+		System.assert(audit != null, 'Audit wrapper should not be null');
+		System.assert(audit.triggers != null, 'Triggers list should not be null');
+		System.assert(audit.flows != null, 'Flows list should not be null');
+	}
 }

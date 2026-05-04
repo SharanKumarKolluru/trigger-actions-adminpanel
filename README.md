@@ -46,6 +46,9 @@ Inspect implementation logic directly from the UI. The "View Source" feature all
 ### 4. Operational Agility
 Instantly toggle bypasses for data loads or maintenance windows with immediate visual feedback. The UI indicates the active/disabled state of each action at a glance, making it easy to manage org-wide automations in real-time.
 
+### 5. Full Automation Audit
+Visualize every native Apex Trigger, Record-Triggered Flow, and Process Builder alongside your framework actions. This comprehensive audit view helps identify unmigrated legacy logic and potential conflicts in one centralized dashboard.
+
 
 ---
 
