@@ -47,10 +47,10 @@ Inspect implementation logic directly from the UI. The "View Source" feature all
 Instantly toggle bypasses for data loads or maintenance windows with immediate visual feedback. The UI indicates the active/disabled state of each action at a glance, making it easy to manage org-wide automations in real-time.
 
 ### 5. Automation Command Center (v2.0)
-Monitor global health stats and access critical governance tools from a centralized dashboard. Gain instant visibility into managed SObjects, active actions, and unmanaged automation across your entire org.
+Your strategic entry point for automation governance. The Command Center provides a centralized oversight of your framework adoption, serving as the control tower for managing discovery results and initializing new SObject configurations with a single click.
 
-### 6. Intelligent Automation Discovery
-Automatically scan your org to find native Apex Triggers and Record-Triggered Flows. The Discovery tool identifies objects that aren't yet in the framework and helps you initialize them in seconds.
+### 6. Intelligent Discovery & Onboarding
+Uncover hidden automation debt in seconds. The Discovery engine automatically scans your entire org for unmanaged Apex Triggers and Record-Triggered Flows, identifying exactly where native logic exists and providing a streamlined path to bring it under the framework's control.
 
 ---
 
