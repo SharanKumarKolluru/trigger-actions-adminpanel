@@ -281,16 +281,20 @@ private class TriggerActionService_Test {
 	}
 
 	/**
-	 * Test updateTriggerAction with existing record
+	 * Test that updateTriggerAction with existing record
 	 */
 	@isTest
 	static void testUpdateTriggerActionValid() {
-		List<Trigger_Action__mdt> existing = [SELECT DeveloperName FROM Trigger_Action__mdt LIMIT 1];
-		if (existing.isEmpty()) return;
+		TriggerActionService.mockActions = new List<Trigger_Action__mdt>{
+			(Trigger_Action__mdt)JSON.deserialize('{"Id":"000000000000000AAA","DeveloperName":"Test_Action","Object_API_Name__c":"Account"}', Trigger_Action__mdt.class)
+		};
+		TriggerActionService.mockSettings = new List<sObject_Trigger_Setting__mdt>{
+			(sObject_Trigger_Setting__mdt)JSON.deserialize('{"DeveloperName":"Account"}', sObject_Trigger_Setting__mdt.class)
+		};
 
 		Test.startTest();
 		String jobId = TriggerActionService.updateTriggerAction(
-			existing[0].DeveloperName,
+			'Test_Action',
 			'TriggerActionService',
 			null,
 			2,
@@ -361,29 +365,115 @@ private class TriggerActionService_Test {
 		// Verification via debug logs (no assertion needed for coverage)
 	}
 
+	public class FullDummyAction implements 
+		TriggerAction.BeforeInsert, TriggerAction.AfterInsert,
+		TriggerAction.BeforeUpdate, TriggerAction.AfterUpdate,
+		TriggerAction.BeforeDelete, TriggerAction.AfterDelete,
+		TriggerAction.AfterUndelete {
+		public void beforeInsert(List<SObject> newList) {}
+		public void afterInsert(List<SObject> newList) {}
+		public void beforeUpdate(List<SObject> newList, List<SObject> oldList) {}
+		public void afterUpdate(List<SObject> newList, List<SObject> oldList) {}
+		public void beforeDelete(List<SObject> oldList) {}
+		public void afterDelete(List<SObject> oldList) {}
+		public void afterUndelete(List<SObject> newList) {}
+	}
+
 	/**
-	 * Test getNativeAutomations query logic
+	 * Test that getImplementedContexts returns all contexts for a class implementing all interfaces
+	 */
+	@isTest
+	static void testGetImplementedContextsFull() {
+		Test.startTest();
+		String result = TriggerActionService.getImplementedContexts('TriggerActionService_Test.FullDummyAction');
+		Test.stopTest();
+
+		Map<String, Object> contexts = (Map<String, Object>) JSON.deserializeUntyped(result);
+		System.assertEquals(true, contexts.get('Before_Insert__c'));
+		System.assertEquals(true, contexts.get('After_Insert__c'));
+		System.assertEquals(true, contexts.get('Before_Update__c'));
+		System.assertEquals(true, contexts.get('After_Update__c'));
+		System.assertEquals(true, contexts.get('Before_Delete__c'));
+		System.assertEquals(true, contexts.get('After_Delete__c'));
+		System.assertEquals(true, contexts.get('After_Undelete__c'));
+	}
+
+	/**
+	 * Test validation of unique dev name failure
+	 */
+	@isTest
+	static void testCreateTriggerActionDuplicateName() {
+		TriggerActionService.mockActions = new List<Trigger_Action__mdt>{
+			(Trigger_Action__mdt)JSON.deserialize('{"DeveloperName":"Existing_Action"}', Trigger_Action__mdt.class)
+		};
+		Test.startTest();
+		try {
+			TriggerActionService.createTriggerAction('Account', 'Existing_Action', 'System', null, 1, new Map<String, Boolean>{'Before_Insert__c' => true}, null, null, false);
+			System.assert(false, 'Should throw for duplicate name');
+		} catch (AuraHandledException e) {
+			// Expected
+		}
+		Test.stopTest();
+	}
+
+	/**
+	 * Test createTriggerSetting with missing setting mock
+	 */
+	@isTest
+	static void testUpdateTriggerActionMissingSetting() {
+		TriggerActionService.mockActions = new List<Trigger_Action__mdt>{
+			(Trigger_Action__mdt)JSON.deserialize('{"DeveloperName":"Test_Action","Object_API_Name__c":"Account"}', Trigger_Action__mdt.class)
+		};
+		TriggerActionService.mockSettings = new List<sObject_Trigger_Setting__mdt>(); // Empty
+
+		Test.startTest();
+		try {
+			TriggerActionService.updateTriggerAction('Test_Action', 'System', null, 1, new Map<String, Boolean>{'Before_Insert__c' => true}, null, null, false, false);
+			System.assert(false, 'Should throw for missing setting');
+		} catch (AuraHandledException e) {
+			// Expected
+		}
+		Test.stopTest();
+	}
+
+	/**
+	 * Test getNativeAutomations query logic with mocking
 	 */
 	@isTest
 	static void testGetNativeAutomations() {
+		TriggerActionService.mockTriggers = new List<ApexTrigger>{
+			(ApexTrigger)JSON.deserialize('{"Name":"TestTrigger","TableEnumOrId":"Account","Status":"Active"}', ApexTrigger.class)
+		};
+		TriggerActionService.mockFlows = new List<FlowDefinitionView>{
+			(FlowDefinitionView)JSON.deserialize('{"Label":"TestFlow","ApiName":"TestFlow","TriggerType":"RecordBeforeSave","IsActive":true}', FlowDefinitionView.class)
+		};
+
 		Test.startTest();
 		TriggerActionService.AutomationAuditWrapper audit = TriggerActionService.getNativeAutomations('Account');
 		Test.stopTest();
 
 		System.assert(audit != null, 'Audit wrapper should not be null');
-		System.assert(audit.triggers != null, 'Triggers list should not be null');
-		System.assert(audit.flows != null, 'Flows list should not be null');
+		System.assertEquals(1, audit.triggers.size(), 'Should have 1 mocked trigger');
+		System.assertEquals(1, audit.flows.size(), 'Should have 1 mocked flow');
 	}
 
 	/**
-	 * Test getDiscoveredObjects logic
+	 * Test getDiscoveredObjects logic with mocking
 	 */
 	@isTest
 	static void testGetDiscoveredObjects() {
+		TriggerActionService.mockTriggers = new List<ApexTrigger>{
+			(ApexTrigger)JSON.deserialize('{"TableEnumOrId":"Account","Status":"Active"}', ApexTrigger.class)
+		};
+		TriggerActionService.mockFlows = new List<FlowDefinitionView>{
+			(FlowDefinitionView)JSON.deserialize('{"TriggerObjectOrEventId":"Contact","IsActive":true}', FlowDefinitionView.class)
+		};
+
 		Test.startTest();
 		List<TriggerActionService.DiscoveredObjectWrapper> discovered = TriggerActionService.getDiscoveredObjects();
 		Test.stopTest();
 
 		System.assert(discovered != null, 'Discovered list should not be null');
+		System.assert(discovered.size() >= 2, 'Should have at least 2 discovered objects from mocks');
 	}
 }

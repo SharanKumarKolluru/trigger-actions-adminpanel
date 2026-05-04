@@ -54,6 +54,9 @@ public with sharing class TriggerActionValidator {
 		}
 	}
 
+	@TestVisible
+	private static List<FlowDefinitionView> mockFlows;
+
 	/**
 	 * @description Validates that the Flow exists in the org
 	 * @param flowName The API name of the Flow
@@ -62,7 +65,7 @@ public with sharing class TriggerActionValidator {
 		if (String.isBlank(flowName)) {
 			return;
 		}
-		List<FlowDefinitionView> flows = [
+		List<FlowDefinitionView> flows = mockFlows != null ? mockFlows : [
 			SELECT ApiName 
 			FROM FlowDefinitionView 
 			WHERE ApiName = :flowName 

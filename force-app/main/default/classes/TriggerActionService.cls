@@ -6,13 +6,18 @@
 public with sharing class TriggerActionService {
 	private static final String METADATA_API_NAME = 'Trigger_Action__mdt';
 
+	@TestVisible
+	private static List<Trigger_Action__mdt> mockActions;
+	@TestVisible
+	private static List<sObject_Trigger_Setting__mdt> mockSettings;
+
 	/**
 	 * @description Retrieves all Trigger Actions
 	 * @return List<Trigger_Action__mdt> All trigger actions
 	 */
 	@AuraEnabled(cacheable=true)
 	public static List<Trigger_Action__mdt> getAllTriggerActions() {
-		return [
+		return mockActions != null ? mockActions : [
 			SELECT
 				Id,
 				DeveloperName,
@@ -44,6 +49,14 @@ public with sharing class TriggerActionService {
 	 */
 	@AuraEnabled(cacheable=false)
 	public static Trigger_Action__mdt getTriggerActionById(String actionId) {
+		if (mockActions != null) {
+			for (Trigger_Action__mdt action : mockActions) {
+				if (action.Id == actionId || action.DeveloperName == actionId) {
+					return action;
+				}
+			}
+			return null;
+		}
 		List<Trigger_Action__mdt> actions = [
 			SELECT
 				Id,
@@ -190,25 +203,38 @@ public with sharing class TriggerActionService {
 		}
 		TriggerActionValidator.validateTriggerContexts(contexts);
 
-		Trigger_Action__mdt existing = [
-			SELECT 
-				Object_API_Name__c,
-				Before_Insert__c,
-				After_Insert__c,
-				Before_Update__c,
-				After_Update__c,
-				Before_Delete__c,
-				After_Delete__c,
-				After_Undelete__c
-			FROM Trigger_Action__mdt
-			WHERE DeveloperName = :devName
-			WITH USER_MODE
-		];
+		Trigger_Action__mdt existing;
+		if (mockActions != null) {
+			for (Trigger_Action__mdt action : mockActions) {
+				if (action.DeveloperName == devName) {
+					existing = action;
+					break;
+				}
+			}
+		}
+		if (existing == null) {
+			existing = [
+				SELECT 
+					Object_API_Name__c,
+					Before_Insert__c,
+					After_Insert__c,
+					Before_Update__c,
+					After_Update__c,
+					Before_Delete__c,
+					After_Delete__c,
+					After_Undelete__c
+				FROM Trigger_Action__mdt
+				WHERE DeveloperName = :devName
+				WITH USER_MODE
+			];
+		}
 
 		// Look up the sObject Trigger Setting DeveloperName for this object
 		// Use Object_API_Name__c if available, otherwise find via context relationships
 		List<sObject_Trigger_Setting__mdt> settings;
-		if (String.isNotBlank(existing.Object_API_Name__c)) {
+		if (mockSettings != null) {
+			settings = mockSettings;
+		} else if (String.isNotBlank(existing.Object_API_Name__c)) {
 			settings = [
 				SELECT DeveloperName, Object_API_Name__c
 				FROM sObject_Trigger_Setting__mdt
@@ -406,6 +432,11 @@ public with sharing class TriggerActionService {
 		@AuraEnabled public List<FlowDefinitionView> flows;
 	}
 
+	@TestVisible
+	private static List<ApexTrigger> mockTriggers;
+	@TestVisible
+	private static List<FlowDefinitionView> mockFlows;
+
 	/**
 	 * @description Retrieves native automations (Apex Triggers and Flows) for a given SObject
 	 * @param objectName The API name of the SObject
@@ -414,7 +445,7 @@ public with sharing class TriggerActionService {
 	@AuraEnabled(cacheable=true)
 	public static AutomationAuditWrapper getNativeAutomations(String objectName) {
 		AutomationAuditWrapper wrapper = new AutomationAuditWrapper();
-		wrapper.triggers = [
+		wrapper.triggers = mockTriggers != null ? mockTriggers : [
 			SELECT Id, Name, Status, ApiVersion, LastModifiedDate, NamespacePrefix,
 				UsageBeforeInsert, UsageAfterInsert, UsageBeforeUpdate, UsageAfterUpdate,
 				UsageBeforeDelete, UsageAfterDelete, UsageAfterUndelete
@@ -423,7 +454,7 @@ public with sharing class TriggerActionService {
 			WITH USER_MODE
 			ORDER BY Name
 		];
-		wrapper.flows = [
+		wrapper.flows = mockFlows != null ? mockFlows : [
 			SELECT Id, DurableId, Label, ApiName, ProcessType, TriggerType, IsActive, LastModifiedDate
 			FROM FlowDefinitionView
 			WHERE TriggerObjectOrEventId = :objectName
@@ -466,7 +497,8 @@ public with sharing class TriggerActionService {
 		}
 
 		// Scan Triggers
-		for (ApexTrigger trg : [SELECT TableEnumOrId FROM ApexTrigger WHERE Status = 'Active' WITH USER_MODE]) {
+		List<ApexTrigger> trgs = mockTriggers != null ? mockTriggers : [SELECT TableEnumOrId FROM ApexTrigger WHERE Status = 'Active' WITH USER_MODE];
+		for (ApexTrigger trg : trgs) {
 			String objName = trg.TableEnumOrId;
 			if (gd.containsKey(objName) && !managedObjects.contains(objName)) {
 				if (!discoveryMap.containsKey(objName)) {
@@ -477,7 +509,8 @@ public with sharing class TriggerActionService {
 		}
 
 		// Scan Flows
-		for (FlowDefinitionView flw : [SELECT TriggerObjectOrEventId FROM FlowDefinitionView WHERE IsActive = true AND TriggerObjectOrEventId != null WITH USER_MODE]) {
+		List<FlowDefinitionView> flws = mockFlows != null ? mockFlows : [SELECT TriggerObjectOrEventId FROM FlowDefinitionView WHERE IsActive = true AND TriggerObjectOrEventId != null WITH USER_MODE];
+		for (FlowDefinitionView flw : flws) {
 			String objName = flw.TriggerObjectOrEventId;
 			// Only include objects that are actually in the Global Describe (ignoring ghost objects/events)
 			if (gd.containsKey(objName) && !managedObjects.contains(objName)) {

@@ -161,10 +161,25 @@ private class TriggerActionValidator_Test {
 	}
 
 	/**
+	 * Test validation of Flow existence - success path with mocking
+	 */
+	@isTest
+	static void testValidateFlowExistsValid() {
+		TriggerActionValidator.mockFlows = new List<FlowDefinitionView>{
+			(FlowDefinitionView)JSON.deserialize('{"ApiName":"MyFlow"}', FlowDefinitionView.class)
+		};
+		Test.startTest();
+		TriggerActionValidator.validateFlowExists('MyFlow');
+		Test.stopTest();
+		// Passes if no exception thrown
+	}
+
+	/**
 	 * Test validation of Flow existence - non-existent flow
 	 */
 	@isTest
 	static void testValidateFlowExistsInvalid() {
+		TriggerActionValidator.mockFlows = new List<FlowDefinitionView>();
 		Test.startTest();
 		Boolean threwExpectedException = false;
 		try {
@@ -175,5 +190,25 @@ private class TriggerActionValidator_Test {
 		}
 		Test.stopTest();
 		System.assert(threwExpectedException, 'Expected AuraHandledException for non-existent flow');
+	}
+
+	/**
+	 * Test validation of invalid context name
+	 */
+	@isTest
+	static void testValidateTriggerContextsInvalidName() {
+		Test.startTest();
+		Boolean threwExpectedException = false;
+		try {
+			Map<String, Boolean> contexts = new Map<String, Boolean>{
+				'Invalid_Context' => true
+			};
+			TriggerActionValidator.validateTriggerContexts(contexts);
+			System.assert(false, 'Should throw for invalid context name');
+		} catch (AuraHandledException e) {
+			threwExpectedException = true;
+		}
+		Test.stopTest();
+		System.assert(threwExpectedException, 'Expected AuraHandledException for invalid context name');
 	}
 }
