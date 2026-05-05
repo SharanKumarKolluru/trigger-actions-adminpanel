@@ -31,6 +31,8 @@ export default class TriggerActionsManager extends NavigationMixin(LightningElem
 	showSettingFormModal = false;
 	showDiscoveryModal = false;
 	showSourceModal = false;
+	sourceCode = '';
+	sourceClassName = '';
 	searchTerm = '';
 	isCreating = false;
 	availableSObjects = [];
@@ -183,6 +185,7 @@ export default class TriggerActionsManager extends NavigationMixin(LightningElem
 						isTrigger: true,
 						isFlow: false,
 						isManaged: !!t.NamespacePrefix,
+						body: t.Body,
 						buttonTitle: !!t.NamespacePrefix ? 'Managed Package Trigger (View Restricted)' : 'Open Trigger'
 					});
 				}
@@ -280,12 +283,16 @@ export default class TriggerActionsManager extends NavigationMixin(LightningElem
 
 	handleViewSource() {
 		if (this.selectedAction?.Apex_Class_Name__c) {
+			this.sourceClassName = this.selectedAction.Apex_Class_Name__c;
+			this.sourceCode = '';
 			this.showSourceModal = true;
 		}
 	}
 
 	handleSourceClose() {
 		this.showSourceModal = false;
+		this.sourceCode = '';
+		this.sourceClassName = '';
 	}
 
 	async handleOpenFlowBuilder() {
@@ -308,6 +315,16 @@ export default class TriggerActionsManager extends NavigationMixin(LightningElem
 	handleOpenNativeFlow(event) {
 		const durableId = event.currentTarget.dataset.id;
 		this.navigateToFlowBuilder(durableId);
+	}
+
+	handleViewTriggerSource(event) {
+		const id = event.currentTarget.dataset.id;
+		const trigger = (this.nativeAutomations.triggers || []).find(t => t.Id === id);
+		if (trigger && trigger.Body) {
+			this.sourceClassName = trigger.Name;
+			this.sourceCode = trigger.Body;
+			this.showSourceModal = true;
+		}
 	}
 
 	handleOpenNativeTrigger(event) {

@@ -12,8 +12,8 @@ A lightweight administrative UI for managing the [Trigger Actions Framework](htt
 > **Prerequisite:** You must have the core [Trigger Actions Framework](https://github.com/mitchspano/trigger-actions-framework) installed in your org first.
 
 ### Option 1: Unlocked Package (Recommended)
-*   [Install in Production / Developer Org](https://login.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000EhI1QAK)
-*   [Install in Sandbox](https://test.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000EhI1QAK)
+*   [Install in Production / Developer Org](https://login.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000EkarQAC)
+*   [Install in Sandbox](https://test.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000EkarQAC)
 
 ### Option 2: Deploy from Source
 <a href="https://githubsfdeploy.herokuapp.com?owner=shahrier&repo=trigger-actions-adminpanel&ref=main">
@@ -40,8 +40,8 @@ Gain full visibility into every automation running on an object. The Admin Panel
 ### 2. Intelligent Filtering & Auto-Detection
 Save time by browsing only the Apex classes that implement the Trigger Action interfaces. Upon selection, the tool provides full context awareness by auto-detecting and mapping the supported trigger interfaces directly to your configuration.
 
-### 3. Developer Deep-Links
-Inspect implementation logic directly from the UI. The "View Source" feature allows you to read the associated Apex code without switching back and forth to VS Code, providing a seamless bridge between administration and development.
+### 3. Developer Deep-Links & Native Auditing
+Inspect implementation logic directly from the UI. The "View Source" feature allows you to read the associated Apex code for both framework-managed actions and **native legacy triggers** without switching back and forth to VS Code, providing a seamless bridge between administration and development.
 
 ### 4. Operational Agility
 Instantly toggle bypasses for data loads or maintenance windows with immediate visual feedback. The UI indicates the active/disabled state of each action at a glance, making it easy to manage org-wide automations in real-time.

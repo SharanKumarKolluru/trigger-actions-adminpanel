@@ -5,12 +5,31 @@ export default class TriggerActionSourceView extends LightningElement {
 	@api className;
 	@api showModal = false;
 	
+	@api 
+	get manualBody() {
+		return this._manualBody;
+	}
+	set manualBody(value) {
+		this._manualBody = value;
+		if (value) {
+			this.classBody = value;
+			this.isLoading = false;
+			this.error = undefined;
+		}
+	}
+	
+	_manualBody;
 	classBody;
 	isLoading = false;
 	error;
 
 	@wire(getApexClassBody, { className: '$className' })
 	wiredClassBody({ error, data }) {
+		if (this._manualBody) {
+			this.isLoading = false;
+			return;
+		}
+		
 		this.isLoading = true;
 		if (data) {
 			this.classBody = data;

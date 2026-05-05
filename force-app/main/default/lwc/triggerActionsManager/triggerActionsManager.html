@@ -276,28 +276,41 @@
 																	<div class="slds-text-body_x-small slds-text-color_weak">{item.type}</div>
 																</div>
 																<div class="slds-col_filler"></div>
-																<div class="slds-grid slds-grid_vertical-align-center">
+																<div class="slds-grid slds-grid_vertical-align-center slds-no-flex">
 																	<lightning-badge label={item.status} variant={item.variant} class="slds-var-m-right_small compact-badge"></lightning-badge>
-																	<template if:true={item.isTrigger}>
-																		<lightning-button-icon 
-																			icon-name="utility:new_window" 
-																			variant="bare" 
-																			data-id={item.id} 
-																			onclick={handleOpenNativeTrigger} 
-																			title={item.buttonTitle}
-																			disabled={item.isManaged}
-																		></lightning-button-icon>
-																	</template>
-																	<template if:true={item.isFlow}>
-																		<lightning-button-icon 
-																			icon-name="utility:new_window" 
-																			variant="bare" 
-																			data-id={item.id} 
-																			onclick={handleOpenNativeFlow} 
-																			title={item.buttonTitle}
-																			disabled={item.isManaged}
-																		></lightning-button-icon>
-																	</template>
+																	
+																	<!-- Action Buttons with Fixed Width for Alignment -->
+																	<div class="slds-grid slds-grid_vertical-align-center slds-m-left_small" style="width: 64px; justify-content: flex-end;">
+																		<template if:true={item.isTrigger}>
+																			<lightning-button-icon 
+																				icon-name="utility:apex" 
+																				variant="bare" 
+																				data-id={item.id} 
+																				onclick={handleViewTriggerSource} 
+																				title="View Source"
+																				disabled={item.isManaged}
+																				class="slds-var-m-right_x-small"
+																			></lightning-button-icon>
+																			<lightning-button-icon 
+																				icon-name="utility:new_window" 
+																				variant="bare" 
+																				data-id={item.id} 
+																				onclick={handleOpenNativeTrigger} 
+																				title={item.buttonTitle}
+																				disabled={item.isManaged}
+																			></lightning-button-icon>
+																		</template>
+																		<template if:true={item.isFlow}>
+																			<lightning-button-icon 
+																				icon-name="utility:new_window" 
+																				variant="bare" 
+																				data-id={item.id} 
+																				onclick={handleOpenNativeFlow} 
+																				title={item.buttonTitle}
+																				disabled={item.isManaged}
+																			></lightning-button-icon>
+																		</template>
+																	</div>
 																</div>
 															</div>
 														</li>
@@ -393,14 +406,13 @@
 	</template>
 
 	<!-- Source View Modal -->
-	<template if:true={selectedAction}>
-		<c-trigger-action-source-view
-			class-name={selectedAction.Apex_Class_Name__c}
-			show-modal={showSourceModal}
-			onclose={handleSourceClose}
-		>
-		</c-trigger-action-source-view>
-	</template>
+	<c-trigger-action-source-view
+		class-name={sourceClassName}
+		manual-body={sourceCode}
+		show-modal={showSourceModal}
+		onclose={handleSourceClose}
+	>
+	</c-trigger-action-source-view>
 
 	<!-- Discovery Modal -->
 	<template if:true={showDiscoveryModal}>

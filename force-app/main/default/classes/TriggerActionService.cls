@@ -51,7 +51,7 @@ public with sharing class TriggerActionService {
 	public static Trigger_Action__mdt getTriggerActionById(String actionId) {
 		if (mockActions != null) {
 			for (Trigger_Action__mdt action : mockActions) {
-				if (action.Id == actionId || action.DeveloperName == actionId) {
+				if ((action.Id != null && String.valueOf(action.Id) == actionId) || action.DeveloperName == actionId) {
 					return action;
 				}
 			}
@@ -116,20 +116,28 @@ public with sharing class TriggerActionService {
 		TriggerActionValidator.validateTriggerContexts(contexts);
 
 		// Look up the sObject Trigger Setting DeveloperName for this object
-		// Context fields are MetadataRelationship fields — they must be set to the
-		// DeveloperName of the sObject_Trigger_Setting__mdt record, not a boolean
-		List<sObject_Trigger_Setting__mdt> settings = [
-			SELECT DeveloperName
-			FROM sObject_Trigger_Setting__mdt
-			WHERE Object_API_Name__c = :objectName
-			WITH USER_MODE
-			LIMIT 1
-		];
+		List<sObject_Trigger_Setting__mdt> settings;
+		if (mockSettings != null) {
+			settings = new List<sObject_Trigger_Setting__mdt>();
+			for (sObject_Trigger_Setting__mdt setting : mockSettings) {
+				if (setting.Object_API_Name__c == objectName) {
+					settings.add(setting);
+					break;
+				}
+			}
+		} else {
+			settings = [
+				SELECT DeveloperName
+				FROM sObject_Trigger_Setting__mdt
+				WHERE Object_API_Name__c = :objectName
+				WITH USER_MODE
+				LIMIT 1
+			];
+		}
+
 		if (settings.isEmpty()) {
 			String msg = 'No Trigger Setting found for SObject "' + objectName + '". Please create a Trigger Setting first.';
-			AuraHandledException ahe = new AuraHandledException(msg);
-			ahe.setMessage(msg);
-			throw ahe;
+			throw createAuraException(msg);
 		}
 		String settingDevName = settings[0].DeveloperName;
 
@@ -446,7 +454,7 @@ public with sharing class TriggerActionService {
 	public static AutomationAuditWrapper getNativeAutomations(String objectName) {
 		AutomationAuditWrapper wrapper = new AutomationAuditWrapper();
 		wrapper.triggers = mockTriggers != null ? mockTriggers : [
-			SELECT Id, Name, Status, ApiVersion, LastModifiedDate, NamespacePrefix,
+			SELECT Id, Name, Status, ApiVersion, LastModifiedDate, NamespacePrefix, Body,
 				UsageBeforeInsert, UsageAfterInsert, UsageBeforeUpdate, UsageAfterUpdate,
 				UsageBeforeDelete, UsageAfterDelete, UsageAfterUndelete
 			FROM ApexTrigger
@@ -553,6 +561,15 @@ public with sharing class TriggerActionService {
 	 * @param devName The Developer Name to validate
 	 */
 	private static void validateUniqueDevName(String devName) {
+		if (mockActions != null) {
+			for (Trigger_Action__mdt action : mockActions) {
+				if (action.DeveloperName == devName) {
+					String msg = 'A Trigger Action with Developer Name "' + devName + '" already exists.';
+					throw createAuraException(msg);
+				}
+			}
+			return;
+		}
 		List<Trigger_Action__mdt> existing = [
 			SELECT Id
 			FROM Trigger_Action__mdt
@@ -561,9 +578,7 @@ public with sharing class TriggerActionService {
 		];
 		if (!existing.isEmpty()) {
 			String msg = 'A Trigger Action with Developer Name "' + devName + '" already exists.';
-			AuraHandledException ahe = new AuraHandledException(msg);
-			ahe.setMessage(msg);
-			throw ahe;
+			throw createAuraException(msg);
 		}
 	}
 
@@ -607,7 +622,7 @@ public with sharing class TriggerActionService {
 	public static String getApexClassBody(String className) {
 		List<ApexClass> classes = [SELECT Body FROM ApexClass WHERE Name = :className WITH USER_MODE LIMIT 1];
 		if (classes.isEmpty()) {
-			throw new AuraHandledException('Apex class "' + className + '" not found in the org.');
+			throw createAuraException('Apex class "' + className + '" not found in the org.');
 		}
 		return classes[0].Body;
 	}
@@ -636,7 +651,7 @@ public with sharing class TriggerActionService {
 			];
 		}
 		if (flows.isEmpty()) {
-			throw new AuraHandledException('Flow "' + flowName + '" not found in the org.');
+			throw createAuraException('Flow "' + flowName + '" not found in the org.');
 		}
 		return flows[0].DurableId;
 	}
