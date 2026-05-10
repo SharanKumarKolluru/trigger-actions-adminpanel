@@ -46,3 +46,14 @@ $RECYCLE.BIN/
 **/__pycache__/
 **/.venv/
 **/venv/
+
+# Salesforce standard apps
+**/applications/standard__*.app-meta.xml
+
+# Salesforce standard/internal permission sets
+**/permissionsets/Experience_Profile_Manager.permissionset-meta.xml
+**/permissionsets/sfdcInternalInt__*.permissionset-meta.xml
+**/permissionsets/sfdc_aiplanner_service_permset.permissionset-meta.xml
+
+# Salesforce standard flexipages (utility bars)
+**/flexipages/*_UtilityBar.flexipage-meta.xml
