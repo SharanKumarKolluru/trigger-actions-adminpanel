@@ -21,3 +21,12 @@ package.xml
 
 # Salesforce standard flexipages (utility bars)
 **/flexipages/*_UtilityBar.flexipage-meta.xml
+
+# Local duplicate examples and configurations (sync metadata from playground)
+force-app/main/default/classes/TA_*
+force-app/main/default/customMetadata/Trigger_Action.TA_*
+force-app/main/default/customMetadata/Trigger_Action.Demo_*
+force-app/main/default/customMetadata/sObject_Trigger_Setting.*
+force-app/main/default/triggers/**
+force-app/main/default/pages/MetadataService.page*
+force-app/main/default/testSuites/**
