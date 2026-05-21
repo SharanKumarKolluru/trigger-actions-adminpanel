@@ -560,7 +560,9 @@ public with sharing class TriggerActionService {
             IsActive,
             LastModifiedDate
           FROM FlowDefinitionView
-          WHERE TriggerObjectOrEventId = :objectName
+          WHERE
+            TriggerObjectOrEvent.QualifiedApiName = :objectName
+            OR TriggerObjectOrEventId = :objectName
           WITH USER_MODE
           ORDER BY Label
         ];
@@ -646,13 +648,16 @@ public with sharing class TriggerActionService {
     List<FlowDefinitionView> flws = mockFlows != null
       ? mockFlows
       : [
-          SELECT TriggerObjectOrEventId
+          SELECT TriggerObjectOrEventId, TriggerObjectOrEvent.QualifiedApiName
           FROM FlowDefinitionView
           WHERE IsActive = TRUE AND TriggerObjectOrEventId != NULL
           WITH USER_MODE
         ];
     for (FlowDefinitionView flw : flws) {
-      String objName = flw.TriggerObjectOrEventId;
+      String objName = (flw.TriggerObjectOrEvent != null &&
+        flw.TriggerObjectOrEvent.QualifiedApiName != null)
+        ? flw.TriggerObjectOrEvent.QualifiedApiName
+        : flw.TriggerObjectOrEventId;
       // Only include objects that are actually in the Global Describe (ignoring ghost objects/events)
       if (gd.containsKey(objName) && !managedObjects.contains(objName)) {
         if (!discoveryMap.containsKey(objName)) {

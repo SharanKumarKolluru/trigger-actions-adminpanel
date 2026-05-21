@@ -453,6 +453,10 @@ private class TriggerActionService_Test {
       (FlowDefinitionView) JSON.deserialize(
         '{"TriggerObjectOrEventId":"Account","IsActive":true}',
         FlowDefinitionView.class
+      ),
+      (FlowDefinitionView) JSON.deserialize(
+        '{"TriggerObjectOrEventId":"01I8c0000010abc","TriggerObjectOrEvent":{"QualifiedApiName":"Contact"},"IsActive":true}',
+        FlowDefinitionView.class
       )
     };
 
@@ -461,7 +465,11 @@ private class TriggerActionService_Test {
     Test.stopTest();
 
     System.assert(discovered != null, 'Discovered list should not be null');
-    System.assert(!discovered.isEmpty(), 'Discovered list should not be empty');
+    System.assertEquals(
+      2,
+      discovered.size(),
+      'Should have discovered 2 objects (Account and Contact)'
+    );
     System.assertEquals(
       'Account',
       discovered[0].objectName,
@@ -471,6 +479,16 @@ private class TriggerActionService_Test {
       'Account',
       discovered[0].objectLabel,
       'Object label should be Account'
+    );
+    System.assertEquals(
+      'Contact',
+      discovered[1].objectName,
+      'Object name should be Contact'
+    );
+    System.assertEquals(
+      'Contact',
+      discovered[1].objectLabel,
+      'Object label should be Contact'
     );
 
     // Test compareTo sorting logic
