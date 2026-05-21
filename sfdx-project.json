@@ -6,7 +6,7 @@
       "path": "force-app",
       "default": true,
       "package": "Trigger Actions Admin Panel",
-      "description": "Admin Panel for managing Trigger Actions Framework configurations. Maintained by Shahrier.",
+      "description": "Admin Panel for managing Trigger Actions Framework configurations. Maintained by Shahrier Emon.",
       "dependencies": [
         {
           "package": "Trigger Actions Framework"
@@ -29,6 +29,7 @@
     "Trigger Actions Admin Panel@2.0.0-4": "04tgL000000EhI1QAK",
     "Trigger Actions Admin Panel@2.0.0-5": "04tgL000000EkUPQA0",
     "Trigger Actions Admin Panel@2.0.0-6": "04tgL000000EkarQAC",
-    "Trigger Actions Admin Panel@2.0.1-1": "04tgL000000FyK1QAK"
+    "Trigger Actions Admin Panel@2.0.1-1": "04tgL000000FyK1QAK",
+    "Trigger Actions Admin Panel@2.0.1-2": "04tgL000000FyLdQAK"
   }
 }
