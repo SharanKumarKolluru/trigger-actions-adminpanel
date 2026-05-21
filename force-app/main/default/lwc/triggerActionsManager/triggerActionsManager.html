@@ -502,7 +502,7 @@
                 class="command-footer slds-text-align_center slds-m-top_xx-large"
               >
                 <p class="slds-text-body_small slds-text-color_weak">
-                  v2.0.0 • Powered by Trigger Actions Framework
+                  v2.0.1 • Powered by Trigger Actions Framework
                 </p>
               </div>
             </div>
@@ -578,13 +578,18 @@
                       class="slds-card__header-link slds-truncate"
                       title={obj.objectLabel}
                     >
-                      <span
-                        class="slds-text-heading_small slds-var-m-right_xx-small"
-                        >{obj.objectLabel}</span
+                      <div
+                        class="slds-truncate slds-text-heading_small"
+                        title={obj.objectLabel}
                       >
-                      <span class="slds-text-color_weak slds-text-body_small"
-                        >({obj.objectName})</span
+                        {obj.objectLabel}
+                      </div>
+                      <div
+                        class="slds-truncate slds-text-color_weak slds-text-body_small"
+                        title={obj.objectName}
                       >
+                        {obj.objectName}
+                      </div>
                     </span>
                     <div class="slds-p-horizontal_small">
                       <p class="slds-text-body_small">
