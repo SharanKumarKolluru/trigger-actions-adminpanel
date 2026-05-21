@@ -515,6 +515,8 @@ public with sharing class TriggerActionService {
   private static List<ApexTrigger> mockTriggers;
   @TestVisible
   private static List<FlowDefinitionView> mockFlows;
+  @TestVisible
+  private static Map<String, String> mockEntityIdToApiName;
 
   /**
    * @description Retrieves native automations (Apex Triggers and Flows) for a given SObject
@@ -547,6 +549,29 @@ public with sharing class TriggerActionService {
           WITH USER_MODE
           ORDER BY Name
         ];
+    String targetId = objectName;
+    String targetId18 = objectName;
+    List<EntityDefinition> eds = [
+      SELECT DurableId
+      FROM EntityDefinition
+      WHERE QualifiedApiName = :objectName
+      WITH USER_MODE
+      LIMIT 1
+    ];
+    if (!eds.isEmpty()) {
+      targetId = eds[0].DurableId;
+      if (targetId.startsWith('01I')) {
+        if (targetId.length() == 15) {
+          try {
+            targetId18 = Id.valueOf(targetId);
+          } catch (Exception e) {
+          }
+        } else if (targetId.length() == 18) {
+          targetId18 = targetId;
+          targetId = targetId.substring(0, 15);
+        }
+      }
+    }
     wrapper.flows = mockFlows != null
       ? mockFlows
       : [
@@ -561,7 +586,8 @@ public with sharing class TriggerActionService {
             LastModifiedDate
           FROM FlowDefinitionView
           WHERE
-            TriggerObjectOrEvent.QualifiedApiName = :objectName
+            TriggerObjectOrEventId = :targetId
+            OR TriggerObjectOrEventId = :targetId18
             OR TriggerObjectOrEventId = :objectName
           WITH USER_MODE
           ORDER BY Label
@@ -648,15 +674,73 @@ public with sharing class TriggerActionService {
     List<FlowDefinitionView> flws = mockFlows != null
       ? mockFlows
       : [
-          SELECT TriggerObjectOrEventId, TriggerObjectOrEvent.QualifiedApiName
+          SELECT TriggerObjectOrEventId
           FROM FlowDefinitionView
           WHERE IsActive = TRUE AND TriggerObjectOrEventId != NULL
           WITH USER_MODE
         ];
+    Set<String> triggerObjectIds = new Set<String>();
     for (FlowDefinitionView flw : flws) {
-      String objName = (flw.TriggerObjectOrEvent != null &&
-        flw.TriggerObjectOrEvent.QualifiedApiName != null)
-        ? flw.TriggerObjectOrEvent.QualifiedApiName
+      if (flw.TriggerObjectOrEventId != null) {
+        String idStr = flw.TriggerObjectOrEventId;
+        triggerObjectIds.add(idStr);
+        if (idStr.startsWith('01I')) {
+          if (idStr.length() == 15) {
+            try {
+              triggerObjectIds.add(Id.valueOf(idStr));
+            } catch (Exception e) {
+            }
+          } else if (idStr.length() == 18) {
+            triggerObjectIds.add(idStr.substring(0, 15));
+          }
+        }
+      }
+    }
+    Map<String, String> entityIdToApiName = new Map<String, String>();
+    if (mockEntityIdToApiName != null) {
+      for (String key : mockEntityIdToApiName.keySet()) {
+        String val = mockEntityIdToApiName.get(key);
+        entityIdToApiName.put(key, val);
+        if (key.startsWith('01I')) {
+          if (key.length() == 15) {
+            try {
+              entityIdToApiName.put(Id.valueOf(key), val);
+            } catch (Exception e) {
+            }
+          } else if (key.length() == 18) {
+            entityIdToApiName.put(key.substring(0, 15), val);
+          }
+        }
+      }
+    }
+    Set<String> queryIds = new Set<String>();
+    for (String idStr : triggerObjectIds) {
+      if (!entityIdToApiName.containsKey(idStr)) {
+        queryIds.add(idStr);
+      }
+    }
+    if (!queryIds.isEmpty()) {
+      for (EntityDefinition ed : [
+        SELECT DurableId, QualifiedApiName
+        FROM EntityDefinition
+        WHERE DurableId IN :queryIds
+        WITH USER_MODE
+      ]) {
+        entityIdToApiName.put(ed.DurableId, ed.QualifiedApiName);
+        if (ed.DurableId.startsWith('01I') && ed.DurableId.length() == 15) {
+          try {
+            entityIdToApiName.put(
+              Id.valueOf(ed.DurableId),
+              ed.QualifiedApiName
+            );
+          } catch (Exception e) {
+          }
+        }
+      }
+    }
+    for (FlowDefinitionView flw : flws) {
+      String objName = entityIdToApiName.containsKey(flw.TriggerObjectOrEventId)
+        ? entityIdToApiName.get(flw.TriggerObjectOrEventId)
         : flw.TriggerObjectOrEventId;
       // Only include objects that are actually in the Global Describe (ignoring ghost objects/events)
       if (gd.containsKey(objName) && !managedObjects.contains(objName)) {

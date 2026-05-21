@@ -460,6 +460,10 @@ private class TriggerActionService_Test {
       )
     };
 
+    TriggerActionService.mockEntityIdToApiName = new Map<String, String>{
+      '01I8c0000010abc' => 'Contact'
+    };
+
     Test.startTest();
     List<TriggerActionService.DiscoveredObjectWrapper> discovered = TriggerActionService.getDiscoveredObjects();
     Test.stopTest();
