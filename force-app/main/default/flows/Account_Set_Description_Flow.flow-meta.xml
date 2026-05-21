@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>60.0</apiVersion>
     <assignments>
@@ -10,16 +10,19 @@
             <assignToReference>Loop_triggerNew.Description</assignToReference>
             <operator>Assign</operator>
             <value>
-                <stringValue>Updated by Trigger Actions Framework Flow Example</stringValue>
+                <stringValue
+        >Updated by Trigger Actions Framework Flow Example</stringValue>
             </value>
         </assignmentItems>
         <connector>
             <targetReference>Loop_triggerNew</targetReference>
         </connector>
     </assignments>
-    <description>A sample Autolaunched Flow for the Trigger Actions Framework.</description>
+    <description
+  >A sample Autolaunched Flow for the Trigger Actions Framework.</description>
     <environments>Default</environments>
-    <interviewLabel>Account: Set Description Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <interviewLabel
+  >Account: Set Description Flow {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Account: Set Description Flow</label>
     <loops>
         <name>Loop_triggerNew</name>
