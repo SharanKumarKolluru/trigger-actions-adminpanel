@@ -481,16 +481,24 @@ public with sharing class TriggerActionService {
   @AuraEnabled(cacheable=true)
   public static List<Map<String, String>> getAvailableSObjects() {
     List<Map<String, String>> result = new List<Map<String, String>>();
-    // Get all trigger settings to show configured objects
-    for (sObject_Trigger_Setting__mdt setting : [
-      SELECT Object_API_Name__c
-      FROM sObject_Trigger_Setting__mdt
-      WITH USER_MODE
-      ORDER BY Object_API_Name__c
-    ]) {
+    Map<String, SObjectType> gd = Schema.getGlobalDescribe();
+    List<sObject_Trigger_Setting__mdt> settings = mockSettings != null
+      ? mockSettings
+      : [
+          SELECT Object_API_Name__c
+          FROM sObject_Trigger_Setting__mdt
+          WITH USER_MODE
+          ORDER BY Object_API_Name__c
+        ];
+    for (sObject_Trigger_Setting__mdt setting : settings) {
+      String objName = setting.Object_API_Name__c;
+      String label = objName;
+      if (gd.containsKey(objName)) {
+        label = gd.get(objName).getDescribe().getLabel();
+      }
       Map<String, String> obj = new Map<String, String>();
-      obj.put('name', setting.Object_API_Name__c);
-      obj.put('label', setting.Object_API_Name__c);
+      obj.put('name', objName);
+      obj.put('label', label);
       result.add(obj);
     }
     return result;

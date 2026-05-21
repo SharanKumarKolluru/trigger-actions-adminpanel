@@ -96,6 +96,32 @@ private class TriggerActionService_Test {
   }
 
   @isTest
+  static void testGetAvailableSObjectsWithMocks() {
+    TriggerActionService.mockSettings = new List<sObject_Trigger_Setting__mdt>{
+      new sObject_Trigger_Setting__mdt(Object_API_Name__c = 'Account')
+    };
+    Test.startTest();
+    List<Map<String, String>> sObjects = TriggerActionService.getAvailableSObjects();
+    Test.stopTest();
+
+    System.assertEquals(
+      1,
+      sObjects.size(),
+      'SObjects list should have one item'
+    );
+    System.assertEquals(
+      'Account',
+      sObjects[0].get('name'),
+      'Name should be Account'
+    );
+    System.assertEquals(
+      'Account',
+      sObjects[0].get('label'),
+      'Label should be Account'
+    );
+  }
+
+  @isTest
   static void testGetAllOrgSObjects() {
     Test.startTest();
     List<Map<String, String>> sObjects = TriggerActionService.getAllOrgSObjects();

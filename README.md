@@ -13,8 +13,8 @@ A lightweight administrative UI for managing the [Trigger Actions Framework](htt
 
 ### Option 1: Unlocked Package (Recommended)
 
-- [Install in Production / Developer Org](https://login.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000FyOrQAK)
-- [Install in Sandbox](https://test.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000FyOrQAK)
+- [Install in Production / Developer Org](https://login.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000Fyn3QAC)
+- [Install in Sandbox](https://test.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000Fyn3QAC)
 
 ### Option 2: Deploy from Source
 

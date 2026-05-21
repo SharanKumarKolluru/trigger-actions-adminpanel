@@ -69,7 +69,20 @@
                   data-object-name={obj.name}
                   onclick={handleObjectClick}
                 >
-                  <div class="object-name">{obj.name}</div>
+                  <div
+                    class="slds-grid slds-grid_vertical slds-truncate slds-m-right_small"
+                    style="flex: 1; min-width: 0"
+                  >
+                    <div class="object-name slds-truncate" title={obj.label}>
+                      {obj.label}
+                    </div>
+                    <div
+                      class="slds-text-color_weak slds-text-body_small slds-truncate"
+                      title={obj.name}
+                    >
+                      {obj.name}
+                    </div>
+                  </div>
                   <div class="object-count">{obj.actionCount}</div>
                 </div>
               </template>

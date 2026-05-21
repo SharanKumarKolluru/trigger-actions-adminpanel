@@ -101,10 +101,13 @@ export default class TriggerActionsManager extends NavigationMixin(
       .filter(
         (obj) =>
           !this.searchTerm ||
-          obj.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+          obj.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+          (obj.label &&
+            obj.label.toLowerCase().includes(this.searchTerm.toLowerCase()))
       )
       .map((obj) => ({
         name: obj.name,
+        label: obj.label || obj.name,
         actionCount: actionCounts[obj.name] || 0,
         cssClass:
           "object-item" +
