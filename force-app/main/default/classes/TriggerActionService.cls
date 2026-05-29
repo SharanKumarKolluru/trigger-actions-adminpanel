@@ -537,7 +537,7 @@ public with sharing class TriggerActionService {
     List<sObject_Trigger_Setting__mdt> settings = mockSettings != null
       ? mockSettings
       : [
-          SELECT Object_API_Name__c
+          SELECT Object_API_Name__c, Object_Namespace__c
           FROM sObject_Trigger_Setting__mdt
           WITH USER_MODE
           ORDER BY Object_API_Name__c
@@ -545,9 +545,17 @@ public with sharing class TriggerActionService {
     Set<String> objectNames = new Set<String>();
     Set<String> lowercaseObjectNames = new Set<String>();
     for (sObject_Trigger_Setting__mdt setting : settings) {
-      objectNames.add(setting.Object_API_Name__c);
-      if (setting.Object_API_Name__c != null) {
-        lowercaseObjectNames.add(setting.Object_API_Name__c.toLowerCase());
+      String objName = setting.Object_API_Name__c;
+      if (objName != null) {
+        String fqName = objName;
+        if (
+          String.isNotBlank(setting.Object_Namespace__c) &&
+          !objName.startsWithIgnoreCase(setting.Object_Namespace__c + '__')
+        ) {
+          fqName = setting.Object_Namespace__c + '__' + objName;
+        }
+        objectNames.add(fqName);
+        lowercaseObjectNames.add(fqName.toLowerCase());
       }
     }
     Map<String, Integer> triggerCounts = new Map<String, Integer>();
@@ -640,11 +648,19 @@ public with sharing class TriggerActionService {
     }
     for (sObject_Trigger_Setting__mdt setting : settings) {
       String objName = setting.Object_API_Name__c;
-      String label = objName;
-      if (objName != null && objectLabels.containsKey(objName.toLowerCase())) {
-        label = objectLabels.get(objName.toLowerCase());
+      String fqName = objName;
+      if (
+        String.isNotBlank(setting.Object_Namespace__c) &&
+        objName != null &&
+        !objName.startsWithIgnoreCase(setting.Object_Namespace__c + '__')
+      ) {
+        fqName = setting.Object_Namespace__c + '__' + objName;
       }
-      String matchName = objName != null ? objName.toLowerCase() : '';
+      String label = objName;
+      if (fqName != null && objectLabels.containsKey(fqName.toLowerCase())) {
+        label = objectLabels.get(fqName.toLowerCase());
+      }
+      String matchName = fqName != null ? fqName.toLowerCase() : '';
       Integer tCount = triggerCounts.containsKey(matchName)
         ? triggerCounts.get(matchName)
         : 0;
@@ -683,6 +699,24 @@ public with sharing class TriggerActionService {
   @AuraEnabled(cacheable=true)
   public static AutomationAuditWrapper getNativeAutomations(String objectName) {
     AutomationAuditWrapper wrapper = new AutomationAuditWrapper();
+
+    String resolvedObjectName = objectName;
+    List<sObject_Trigger_Setting__mdt> settings = [
+      SELECT Object_Namespace__c
+      FROM sObject_Trigger_Setting__mdt
+      WHERE Object_API_Name__c = :objectName
+      WITH USER_MODE
+      LIMIT 1
+    ];
+    if (
+      !settings.isEmpty() && String.isNotBlank(settings[0].Object_Namespace__c)
+    ) {
+      String ns = settings[0].Object_Namespace__c;
+      if (objectName != null && !objectName.startsWithIgnoreCase(ns + '__')) {
+        resolvedObjectName = ns + '__' + objectName;
+      }
+    }
+
     wrapper.triggers = mockTriggers != null
       ? mockTriggers
       : [
@@ -702,16 +736,16 @@ public with sharing class TriggerActionService {
             UsageAfterDelete,
             UsageAfterUndelete
           FROM ApexTrigger
-          WHERE TableEnumOrId = :objectName
+          WHERE TableEnumOrId = :resolvedObjectName
           WITH USER_MODE
           ORDER BY Name
         ];
-    String targetId = objectName;
-    String targetId18 = objectName;
+    String targetId = resolvedObjectName;
+    String targetId18 = resolvedObjectName;
     List<EntityDefinition> eds = [
       SELECT DurableId
       FROM EntityDefinition
-      WHERE QualifiedApiName = :objectName
+      WHERE QualifiedApiName = :resolvedObjectName
       WITH USER_MODE
       LIMIT 1
     ];
@@ -739,13 +773,14 @@ public with sharing class TriggerActionService {
             ApiName,
             ProcessType,
             TriggerType,
+            RecordTriggerType,
             IsActive,
             LastModifiedDate
           FROM FlowDefinitionView
           WHERE
             TriggerObjectOrEventId = :targetId
             OR TriggerObjectOrEventId = :targetId18
-            OR TriggerObjectOrEventId = :objectName
+            OR TriggerObjectOrEventId = :resolvedObjectName
           WITH USER_MODE
           ORDER BY Label
         ];

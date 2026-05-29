@@ -64,6 +64,11 @@ export default class TriggerActionsManager extends NavigationMixin(
     this._wiredNativeResult = result;
     if (result.data) {
       this.nativeAutomations = result.data;
+    } else if (result.error) {
+      this.showError(
+        "Error loading native automations",
+        result.error.body?.message || result.error.message
+      );
     }
   }
 
@@ -262,7 +267,9 @@ export default class TriggerActionsManager extends NavigationMixin(
         if (isRelevantContext) {
           const isFlow =
             f.ProcessType === "AutoLaunchedFlow" || f.ProcessType === "Flow";
-          const isManaged = !f.DurableId.startsWith("300");
+          const isManaged = f.DurableId
+            ? !f.DurableId.startsWith("300")
+            : false;
           const isPb = f.ProcessType === "Workflow";
           const isActive = f.IsActive;
 
