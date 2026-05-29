@@ -562,6 +562,28 @@ private class TriggerActionService_Test {
   }
 
   @isTest
+  static void testCreateTriggerSettingNamespace() {
+    Test.startTest();
+    // Test manual namespace passing
+    String jobId1 = TriggerActionService.createTriggerSetting(
+      'TestObject2',
+      null,
+      null,
+      'my_ns'
+    );
+    // Test automatic namespace extraction (multiple __ in object name)
+    String jobId2 = TriggerActionService.createTriggerSetting(
+      'my_ns__MyObject__c',
+      null,
+      null,
+      null
+    );
+    Test.stopTest();
+    System.assertEquals('MockJobId', jobId1);
+    System.assertEquals('MockJobId', jobId2);
+  }
+
+  @isTest
   static void testCreateTriggerActionDuplicateName() {
     TriggerActionService.mockActions = new List<Trigger_Action__mdt>{
       (Trigger_Action__mdt) JSON.deserialize(

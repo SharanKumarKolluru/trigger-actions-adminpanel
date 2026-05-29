@@ -8,6 +8,7 @@ export default class TriggerSettingForm extends LightningElement {
   objectName = "";
   bypassPermission = "";
   requiredPermission = "";
+  objectNamespace = "";
   objectOptions = [];
 
   @wire(getAllOrgSObjects)
@@ -26,6 +27,15 @@ export default class TriggerSettingForm extends LightningElement {
     const field = event.target.name;
     if (field === "objectName") {
       this.objectName = event.target.value;
+      // Auto-extract namespace if it's a namespaced custom object (e.g. rstk__pohdr__c)
+      const parts = this.objectName.split("__");
+      if (parts.length >= 3) {
+        this.objectNamespace = parts[0];
+      } else {
+        this.objectNamespace = "";
+      }
+    } else if (field === "objectNamespace") {
+      this.objectNamespace = event.target.value;
     } else if (field === "bypassPermission") {
       this.bypassPermission = event.target.value;
     } else if (field === "requiredPermission") {
@@ -54,7 +64,8 @@ export default class TriggerSettingForm extends LightningElement {
       await createTriggerSetting({
         objectName: this.objectName,
         bypassPermission: this.bypassPermission,
-        requiredPermission: this.requiredPermission
+        requiredPermission: this.requiredPermission,
+        objectNamespace: this.objectNamespace
       });
       this.dispatchEvent(new CustomEvent("savesuccess"));
     } catch (error) {

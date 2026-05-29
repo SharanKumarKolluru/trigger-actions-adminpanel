@@ -430,13 +430,15 @@ public with sharing class TriggerActionService {
    * @param objectName The API name of the target SObject
    * @param bypassPermission Optional permission to bypass execution
    * @param requiredPermission Optional permission required to execute
+   * @param objectNamespace Optional namespace of the target SObject
    * @return String The deployment job ID
    */
   @AuraEnabled
   public static String createTriggerSetting(
     String objectName,
     String bypassPermission,
-    String requiredPermission
+    String requiredPermission,
+    String objectNamespace
   ) {
     if (String.isBlank(objectName)) {
       String msg = 'Object Name is required.';
@@ -479,6 +481,18 @@ public with sharing class TriggerActionService {
     addMetadataValue(record, 'Object_API_Name__c', objectName);
     addMetadataValue(record, 'Bypass_Execution__c', false);
 
+    // Automatically resolve namespace if blank
+    String resolvedNamespace = objectNamespace;
+    if (String.isBlank(resolvedNamespace) && String.isNotBlank(objectName)) {
+      List<String> parts = objectName.split('__');
+      if (parts.size() >= 3) {
+        resolvedNamespace = parts[0];
+      }
+    }
+
+    if (String.isNotBlank(resolvedNamespace)) {
+      addMetadataValue(record, 'Object_Namespace__c', resolvedNamespace);
+    }
     if (String.isNotBlank(bypassPermission)) {
       addMetadataValue(record, 'Bypass_Permission__c', bypassPermission);
     }
@@ -495,6 +509,22 @@ public with sharing class TriggerActionService {
     return Metadata.Operations.enqueueDeployment(
       mdContainer,
       new CustomMetadataCallback()
+    );
+  }
+
+  /**
+   * @description Overload of createTriggerSetting for backward compatibility with 3-parameter callers
+   */
+  public static String createTriggerSetting(
+    String objectName,
+    String bypassPermission,
+    String requiredPermission
+  ) {
+    return createTriggerSetting(
+      objectName,
+      bypassPermission,
+      requiredPermission,
+      null
     );
   }
   /**

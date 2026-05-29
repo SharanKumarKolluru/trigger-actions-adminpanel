@@ -531,7 +531,8 @@ export default class TriggerActionsManager extends NavigationMixin(
       await createTriggerSetting({
         objectName,
         bypassPermission: null,
-        requiredPermission: null
+        requiredPermission: null,
+        objectNamespace: null
       });
       this.showSuccess(
         `Initialization of ${objectName} enqueued. This may take a few seconds.`
