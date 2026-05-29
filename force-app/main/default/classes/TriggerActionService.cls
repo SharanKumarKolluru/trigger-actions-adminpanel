@@ -474,13 +474,6 @@ public with sharing class TriggerActionService {
       throw ahe;
     }
 
-    Metadata.CustomMetadata record = new Metadata.CustomMetadata();
-    record.fullName = 'sObject_Trigger_Setting__mdt.' + devName;
-    record.label = devName;
-
-    addMetadataValue(record, 'Object_API_Name__c', objectName);
-    addMetadataValue(record, 'Bypass_Execution__c', false);
-
     // Automatically resolve namespace if blank
     String resolvedNamespace = objectNamespace;
     if (String.isBlank(resolvedNamespace) && String.isNotBlank(objectName)) {
@@ -489,6 +482,35 @@ public with sharing class TriggerActionService {
         resolvedNamespace = parts[0];
       }
     }
+
+    String fqName = objectName;
+    if (
+      String.isNotBlank(resolvedNamespace) &&
+      objectName != null &&
+      !objectName.startsWithIgnoreCase(resolvedNamespace + '__')
+    ) {
+      fqName = resolvedNamespace + '__' + objectName;
+    }
+
+    String recordLabel = devName;
+    try {
+      Schema.DescribeSObjectResult describeResult = Schema.describeSObjects(
+        new List<String>{ fqName }
+      )[0];
+      recordLabel = describeResult.getLabel();
+    } catch (Exception e) {
+      // Fallback to devName
+    }
+    if (recordLabel.length() > 40) {
+      recordLabel = recordLabel.substring(0, 40);
+    }
+
+    Metadata.CustomMetadata record = new Metadata.CustomMetadata();
+    record.fullName = 'sObject_Trigger_Setting__mdt.' + devName;
+    record.label = recordLabel;
+
+    addMetadataValue(record, 'Object_API_Name__c', objectName);
+    addMetadataValue(record, 'Bypass_Execution__c', false);
 
     if (String.isNotBlank(resolvedNamespace)) {
       addMetadataValue(record, 'Object_Namespace__c', resolvedNamespace);
