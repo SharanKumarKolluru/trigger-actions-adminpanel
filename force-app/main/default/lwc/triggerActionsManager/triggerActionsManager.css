@@ -60,6 +60,22 @@
   color: #fff;
 }
 
+.native-count {
+  background-color: #feebd0;
+  color: #a83e00;
+  border-radius: 12px;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+}
+
+.object-item.selected .native-count {
+  background-color: #e28743;
+  color: #fff;
+}
+
 /* Actions toolbar */
 .actions-toolbar {
   display: flex;

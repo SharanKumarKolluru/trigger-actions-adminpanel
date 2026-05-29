@@ -490,15 +490,124 @@ public with sharing class TriggerActionService {
           WITH USER_MODE
           ORDER BY Object_API_Name__c
         ];
+    Set<String> objectNames = new Set<String>();
+    for (sObject_Trigger_Setting__mdt setting : settings) {
+      objectNames.add(setting.Object_API_Name__c);
+    }
+    Map<String, Integer> triggerCounts = new Map<String, Integer>();
+    List<ApexTrigger> trgs = mockTriggers != null
+      ? mockTriggers
+      : [
+          SELECT TableEnumOrId
+          FROM ApexTrigger
+          WHERE Status = 'Active' AND TableEnumOrId IN :objectNames
+          WITH USER_MODE
+        ];
+    for (ApexTrigger trg : trgs) {
+      String objName = trg.TableEnumOrId;
+      if (objectNames.contains(objName)) {
+        Integer count = triggerCounts.containsKey(objName)
+          ? triggerCounts.get(objName)
+          : 0;
+        triggerCounts.put(objName, count + 1);
+      }
+    }
+    List<FlowDefinitionView> flws = mockFlows != null
+      ? mockFlows
+      : [
+          SELECT TriggerObjectOrEventId
+          FROM FlowDefinitionView
+          WHERE IsActive = TRUE AND TriggerObjectOrEventId != NULL
+          WITH USER_MODE
+        ];
+    Set<String> triggerObjectIds = new Set<String>();
+    for (FlowDefinitionView flw : flws) {
+      if (flw.TriggerObjectOrEventId != null) {
+        String idStr = flw.TriggerObjectOrEventId;
+        triggerObjectIds.add(idStr);
+        if (idStr.startsWith('01I')) {
+          if (idStr.length() == 15) {
+            try {
+              triggerObjectIds.add(Id.valueOf(idStr));
+            } catch (Exception e) {
+            }
+          } else if (idStr.length() == 18) {
+            triggerObjectIds.add(idStr.substring(0, 15));
+          }
+        }
+      }
+    }
+    Map<String, String> entityIdToApiName = new Map<String, String>();
+    if (mockEntityIdToApiName != null) {
+      for (String key : mockEntityIdToApiName.keySet()) {
+        String val = mockEntityIdToApiName.get(key);
+        entityIdToApiName.put(key, val);
+        if (key.startsWith('01I')) {
+          if (key.length() == 15) {
+            try {
+              entityIdToApiName.put(Id.valueOf(key), val);
+            } catch (Exception e) {
+            }
+          } else if (key.length() == 18) {
+            entityIdToApiName.put(key.substring(0, 15), val);
+          }
+        }
+      }
+    }
+    Set<String> queryIds = new Set<String>();
+    for (String idStr : triggerObjectIds) {
+      if (!entityIdToApiName.containsKey(idStr)) {
+        queryIds.add(idStr);
+      }
+    }
+    if (!queryIds.isEmpty()) {
+      for (EntityDefinition ed : [
+        SELECT DurableId, QualifiedApiName
+        FROM EntityDefinition
+        WHERE DurableId IN :queryIds
+        WITH USER_MODE
+      ]) {
+        entityIdToApiName.put(ed.DurableId, ed.QualifiedApiName);
+        if (ed.DurableId.startsWith('01I') && ed.DurableId.length() == 15) {
+          try {
+            entityIdToApiName.put(
+              Id.valueOf(ed.DurableId),
+              ed.QualifiedApiName
+            );
+          } catch (Exception e) {
+          }
+        }
+      }
+    }
+    Map<String, Integer> flowCounts = new Map<String, Integer>();
+    for (FlowDefinitionView flw : flws) {
+      String objName = entityIdToApiName.containsKey(flw.TriggerObjectOrEventId)
+        ? entityIdToApiName.get(flw.TriggerObjectOrEventId)
+        : flw.TriggerObjectOrEventId;
+      if (objectNames.contains(objName)) {
+        Integer count = flowCounts.containsKey(objName)
+          ? flowCounts.get(objName)
+          : 0;
+        flowCounts.put(objName, count + 1);
+      }
+    }
     for (sObject_Trigger_Setting__mdt setting : settings) {
       String objName = setting.Object_API_Name__c;
       String label = objName;
       if (gd.containsKey(objName)) {
         label = gd.get(objName).getDescribe().getLabel();
       }
+      Integer tCount = triggerCounts.containsKey(objName)
+        ? triggerCounts.get(objName)
+        : 0;
+      Integer fCount = flowCounts.containsKey(objName)
+        ? flowCounts.get(objName)
+        : 0;
+      Integer totalNative = tCount + fCount;
       Map<String, String> obj = new Map<String, String>();
       obj.put('name', objName);
       obj.put('label', label);
+      obj.put('nativeCount', String.valueOf(totalNative));
       result.add(obj);
     }
     return result;

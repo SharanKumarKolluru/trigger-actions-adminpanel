@@ -13,8 +13,8 @@ A lightweight administrative UI for managing the [Trigger Actions Framework](htt
 
 ### Option 1: Unlocked Package (Recommended)
 
-- [Install in Production / Developer Org](https://login.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000Fyn3QAC)
-- [Install in Sandbox](https://test.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000Fyn3QAC)
+- [Install in Production / Developer Org](https://login.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000GKvdQAG)
+- [Install in Sandbox](https://test.salesforce.com/packaging/installPackage.apexp?p0=04tgL000000GKvdQAG)
 
 ### Option 2: Deploy from Source
 
@@ -44,9 +44,9 @@ Gain full visibility into every automation running on an object. The Admin Panel
 
 Save time by browsing only the Apex classes that implement the Trigger Action interfaces. Upon selection, the tool provides full context awareness by auto-detecting and mapping the supported trigger interfaces directly to your configuration.
 
-### 3. Developer Deep-Links & Native Auditing
+### 3. Developer Deep-Links & Native Automations
 
-Inspect implementation logic directly from the UI. The "View Source" feature allows you to read the associated Apex code for both framework-managed actions and **native legacy triggers** without switching back and forth to VS Code, providing a seamless bridge between administration and development.
+Inspect implementation logic directly from the UI. The "View Source" feature allows you to read the associated Apex code for both framework-managed actions and **native triggers** without switching back and forth to VS Code, providing a seamless bridge between administration and development.
 
 ### 4. Operational Agility
 
@@ -81,4 +81,4 @@ Contributions are welcome! Please feel free to open issues or submit pull reques
 
 ---
 
-**Version:** 2.0.1
+**Version:** 2.0.3

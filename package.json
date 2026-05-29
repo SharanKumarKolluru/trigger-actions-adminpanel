@@ -1,10 +1,10 @@
 {
-  "name": "salesforce-app",
+  "name": "trigger-actions-adminpanel",
   "private": true,
-  "version": "2.0.1",
-  "description": "Salesforce App",
+  "version": "2.0.3",
+  "description": "Salesforce Admin Panel for managing Trigger Actions Framework configurations",
   "scripts": {
-    "lint": "eslint **/{aura,lwc}/**/*.js",
+    "lint": "eslint force-app/main/default/lwc/**/*.js",
     "test": "npm run test:unit",
     "test:unit": "sfdx-lwc-jest",
     "test:unit:watch": "sfdx-lwc-jest --watch",
@@ -34,7 +34,7 @@
     "**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}": [
       "prettier --write"
     ],
-    "**/{aura,lwc}/**/*.js": [
+    "force-app/main/default/lwc/**/*.js": [
       "eslint"
     ],
     "**/lwc/**": [

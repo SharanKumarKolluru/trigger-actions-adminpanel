@@ -41,7 +41,11 @@ export default class TriggerActionsManager extends NavigationMixin(
   discoveredObjects = [];
   globalStats = {};
   nativeAutomations = { triggers: [], flows: [] };
+  discoverySearchTerm = "";
+  discoverySortBy = "label";
   activeTab = "actions";
+  nativeTypeFilter = "all";
+  nativeStatusFilter = "all";
   _wiredActionsResult;
   _wiredSObjectsResult;
   _wiredNativeResult;
@@ -109,6 +113,7 @@ export default class TriggerActionsManager extends NavigationMixin(
         name: obj.name,
         label: obj.label || obj.name,
         actionCount: actionCounts[obj.name] || 0,
+        nativeCount: obj.nativeCount ? parseInt(obj.nativeCount, 10) : 0,
         cssClass:
           "object-item" +
           (this.selectedObjectName === obj.name ? " selected" : "")
@@ -193,21 +198,32 @@ export default class TriggerActionsManager extends NavigationMixin(
       (this.nativeAutomations.triggers || []).forEach((t) => {
         const field = ctx.field.replace("__c", "").replace("_", ""); // BeforeInsert, AfterUpdate, etc
         if (t[`Usage${field}`]) {
-          items.push({
-            id: t.Id,
-            name: t.Name,
-            type: "Apex Trigger",
-            icon: "utility:apex",
-            status: t.Status,
-            variant: t.Status === "Active" ? "success" : "lightest",
-            isTrigger: true,
-            isFlow: false,
-            isManaged: !!t.NamespacePrefix,
-            body: t.Body,
-            buttonTitle: t.NamespacePrefix
-              ? "Managed Package Trigger (View Restricted)"
-              : "Open Trigger"
-          });
+          const isActive = t.Status === "Active";
+          const matchesType =
+            this.nativeTypeFilter === "all" ||
+            this.nativeTypeFilter === "trigger";
+          const matchesStatus =
+            this.nativeStatusFilter === "all" ||
+            (this.nativeStatusFilter === "active" && isActive) ||
+            (this.nativeStatusFilter === "inactive" && !isActive);
+
+          if (matchesType && matchesStatus) {
+            items.push({
+              id: t.Id,
+              name: t.Name,
+              type: "Apex Trigger",
+              icon: "utility:apex",
+              status: t.Status,
+              variant: t.Status === "Active" ? "success" : "lightest",
+              isTrigger: true,
+              isFlow: false,
+              isManaged: !!t.NamespacePrefix,
+              body: t.Body,
+              buttonTitle: t.NamespacePrefix
+                ? "Managed Package Trigger (View Restricted)"
+                : "Open Trigger"
+            });
+          }
         }
       });
 
@@ -239,21 +255,39 @@ export default class TriggerActionsManager extends NavigationMixin(
           const isFlow =
             f.ProcessType === "AutoLaunchedFlow" || f.ProcessType === "Flow";
           const isManaged = !f.DurableId.startsWith("300");
-          items.push({
-            id: f.DurableId,
-            name: f.Label,
-            type: f.ProcessType === "Workflow" ? "Process Builder" : "Flow",
-            icon:
-              f.ProcessType === "Workflow" ? "utility:retire" : "utility:flow",
-            status: f.IsActive ? "Active" : "Inactive",
-            variant: f.IsActive ? "success" : "lightest",
-            isTrigger: false,
-            isFlow: isFlow,
-            isManaged: isManaged,
-            buttonTitle: isManaged
-              ? "Managed Package Flow (Builder Restricted)"
-              : "Open in Flow Builder"
-          });
+          const isPb = f.ProcessType === "Workflow";
+          const isActive = f.IsActive;
+
+          let matchesType = false;
+          if (this.nativeTypeFilter === "all") {
+            matchesType = true;
+          } else if (this.nativeTypeFilter === "flow" && isFlow) {
+            matchesType = true;
+          } else if (this.nativeTypeFilter === "pb" && isPb) {
+            matchesType = true;
+          }
+
+          const matchesStatus =
+            this.nativeStatusFilter === "all" ||
+            (this.nativeStatusFilter === "active" && isActive) ||
+            (this.nativeStatusFilter === "inactive" && !isActive);
+
+          if (matchesType && matchesStatus) {
+            items.push({
+              id: f.DurableId,
+              name: f.Label,
+              type: isPb ? "Process Builder" : "Flow",
+              icon: isPb ? "utility:retire" : "utility:flow",
+              status: f.IsActive ? "Active" : "Inactive",
+              variant: f.IsActive ? "success" : "lightest",
+              isTrigger: false,
+              isFlow: isFlow,
+              isManaged: isManaged,
+              buttonTitle: isManaged
+                ? "Managed Package Flow (Builder Restricted)"
+                : "Open in Flow Builder"
+            });
+          }
         }
       });
 
@@ -263,6 +297,78 @@ export default class TriggerActionsManager extends NavigationMixin(
         hasItems: items.length > 0
       };
     }).filter((group) => group.hasItems);
+  }
+
+  get typeFilterOptions() {
+    return [
+      { label: "All Types", value: "all" },
+      { label: "Apex Triggers", value: "trigger" },
+      { label: "Record-Triggered Flows", value: "flow" },
+      { label: "Process Builders", value: "pb" }
+    ];
+  }
+
+  get statusFilterOptions() {
+    return [
+      { label: "All Statuses", value: "all" },
+      { label: "Active Only", value: "active" },
+      { label: "Inactive Only", value: "inactive" }
+    ];
+  }
+
+  handleTypeFilterChange(event) {
+    this.nativeTypeFilter = event.target.value;
+  }
+
+  handleStatusFilterChange(event) {
+    this.nativeStatusFilter = event.target.value;
+  }
+
+  get discoverySortOptions() {
+    return [
+      { label: "Object Label (A-Z)", value: "label" },
+      { label: "Total Automations (High to Low)", value: "total" },
+      { label: "Triggers (High to Low)", value: "triggers" },
+      { label: "Flows (High to Low)", value: "flows" }
+    ];
+  }
+
+  get filteredDiscoveredObjects() {
+    if (!this.discoveredObjects) return [];
+
+    let results = this.discoveredObjects.filter((obj) => {
+      const term = this.discoverySearchTerm.toLowerCase();
+      return (
+        !term ||
+        obj.objectLabel.toLowerCase().includes(term) ||
+        obj.objectName.toLowerCase().includes(term)
+      );
+    });
+
+    results = [...results].sort((a, b) => {
+      if (this.discoverySortBy === "total") {
+        const totalA = (a.triggerCount || 0) + (a.flowCount || 0);
+        const totalB = (b.triggerCount || 0) + (b.flowCount || 0);
+        return totalB - totalA;
+      }
+      if (this.discoverySortBy === "triggers") {
+        return (b.triggerCount || 0) - (a.triggerCount || 0);
+      }
+      if (this.discoverySortBy === "flows") {
+        return (b.flowCount || 0) - (a.flowCount || 0);
+      }
+      return a.objectLabel.localeCompare(b.objectLabel);
+    });
+
+    return results;
+  }
+
+  handleDiscoverySearch(event) {
+    this.discoverySearchTerm = event.target.value;
+  }
+
+  handleDiscoverySortChange(event) {
+    this.discoverySortBy = event.target.value;
   }
 
   // --- Event handlers ---
@@ -275,6 +381,8 @@ export default class TriggerActionsManager extends NavigationMixin(
     const objectName = event.currentTarget.dataset.objectName;
     this.selectedObjectName = objectName;
     this.selectedAction = null;
+    this.nativeTypeFilter = "all";
+    this.nativeStatusFilter = "all";
   }
 
   async handleActionClick(event) {
@@ -404,6 +512,8 @@ export default class TriggerActionsManager extends NavigationMixin(
 
   handleCloseDiscovery() {
     this.showDiscoveryModal = false;
+    this.discoverySearchTerm = "";
+    this.discoverySortBy = "label";
   }
 
   async handleInitializeObject(event) {

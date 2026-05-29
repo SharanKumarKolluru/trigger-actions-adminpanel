@@ -100,6 +100,19 @@ private class TriggerActionService_Test {
     TriggerActionService.mockSettings = new List<sObject_Trigger_Setting__mdt>{
       new sObject_Trigger_Setting__mdt(Object_API_Name__c = 'Account')
     };
+    TriggerActionService.mockTriggers = new List<ApexTrigger>{
+      (ApexTrigger) JSON.deserialize(
+        '{"TableEnumOrId":"Account","Status":"Active"}',
+        ApexTrigger.class
+      )
+    };
+    TriggerActionService.mockFlows = new List<FlowDefinitionView>{
+      (FlowDefinitionView) JSON.deserialize(
+        '{"TriggerObjectOrEventId":"Account","IsActive":true}',
+        FlowDefinitionView.class
+      )
+    };
+
     Test.startTest();
     List<Map<String, String>> sObjects = TriggerActionService.getAvailableSObjects();
     Test.stopTest();
@@ -118,6 +131,11 @@ private class TriggerActionService_Test {
       'Account',
       sObjects[0].get('label'),
       'Label should be Account'
+    );
+    System.assertEquals(
+      '2',
+      sObjects[0].get('nativeCount'),
+      'Native count should be 2 (1 trigger + 1 flow)'
     );
   }
 

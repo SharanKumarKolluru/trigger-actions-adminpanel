@@ -83,7 +83,20 @@
                       {obj.name}
                     </div>
                   </div>
-                  <div class="object-count">{obj.actionCount}</div>
+                  <div class="slds-grid slds-grid_vertical-align-center">
+                    <div
+                      class="object-count slds-var-m-right_xx-small"
+                      title="Defined TAF Actions"
+                    >
+                      {obj.actionCount}
+                    </div>
+                    <div
+                      class="native-count"
+                      title="Native Automations (Triggers & Flows)"
+                    >
+                      {obj.nativeCount}
+                    </div>
+                  </div>
                 </div>
               </template>
               <template if:false={objectList.length}>
@@ -321,16 +334,42 @@
                 </template>
               </lightning-tab>
 
-              <lightning-tab label="Native Audit" value="audit">
+              <lightning-tab label="Native Automations" value="audit">
                 <div class="audit-panel slds-p-around_medium">
                   <div
                     class="slds-box slds-theme_info slds-var-m-bottom_medium"
                   >
                     <p class="slds-text-body_small">
-                      <strong>Audit Mode:</strong> Viewing all non-framework
-                      automations grouped by context. Use this to identify
-                      legacy logic that needs migration.
+                      <strong>Native Automations:</strong> Viewing active and
+                      inactive non-framework automations (Apex Triggers, Flows,
+                      and Process Builders) grouped by execution context.
                     </p>
+                  </div>
+
+                  <!-- Filters Row -->
+                  <div
+                    class="slds-grid slds-gutters_small slds-m-bottom_medium"
+                  >
+                    <div class="slds-col slds-size_1-of-2">
+                      <lightning-combobox
+                        name="nativeTypeFilter"
+                        label="Filter by Type"
+                        value={nativeTypeFilter}
+                        options={typeFilterOptions}
+                        onchange={handleTypeFilterChange}
+                        variant="label-hidden"
+                      ></lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                      <lightning-combobox
+                        name="nativeStatusFilter"
+                        label="Filter by Status"
+                        value={nativeStatusFilter}
+                        options={statusFilterOptions}
+                        onchange={handleStatusFilterChange}
+                        variant="label-hidden"
+                      ></lightning-combobox>
+                    </div>
                   </div>
 
                   <template if:true={auditGroups.length}>
@@ -430,8 +469,7 @@
                         class="slds-var-m-bottom_medium slds-text-color_success"
                       ></lightning-icon>
                       <p class="slds-text-body_small">
-                        No native Apex Triggers or Record-Triggered Flows
-                        detected for this object.
+                        No matching native automations detected for this object.
                       </p>
                     </div>
                   </template>
@@ -515,7 +553,7 @@
                 class="command-footer slds-text-align_center slds-m-top_xx-large"
               >
                 <p class="slds-text-body_small slds-text-color_weak">
-                  v2.0.1 • Powered by Trigger Actions Framework
+                  v2.0.3 • Powered by Trigger Actions Framework
                 </p>
               </div>
             </div>
@@ -579,48 +617,86 @@
             are not yet managed by the Trigger Actions Framework.
           </p>
           <template if:true={discoveredObjects.length}>
-            <div class="slds-grid slds-wrap slds-gutters_small">
-              <template for:each={discoveredObjects} for:item="obj">
-                <div
-                  key={obj.objectName}
-                  class="slds-col slds-size_1-of-3 slds-var-m-bottom_small"
-                >
-                  <lightning-card icon-name="standard:record">
-                    <span
-                      slot="title"
-                      class="slds-card__header-link slds-truncate"
-                      title={obj.objectLabel}
-                    >
-                      <div
-                        class="slds-truncate slds-text-heading_small"
+            <!-- Discovery search and sort controls -->
+            <div
+              class="slds-grid slds-gutters_small slds-m-bottom_medium slds-grid_vertical-align-end"
+            >
+              <div class="slds-col slds-size_1-of-2">
+                <lightning-input
+                  type="search"
+                  label="Search Objects"
+                  placeholder="Search by name or label..."
+                  value={discoverySearchTerm}
+                  onchange={handleDiscoverySearch}
+                  variant="label-hidden"
+                ></lightning-input>
+              </div>
+              <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox
+                  name="discoverySortBy"
+                  label="Sort By"
+                  value={discoverySortBy}
+                  options={discoverySortOptions}
+                  onchange={handleDiscoverySortChange}
+                  variant="label-hidden"
+                ></lightning-combobox>
+              </div>
+            </div>
+
+            <template if:true={filteredDiscoveredObjects.length}>
+              <div class="slds-grid slds-wrap slds-gutters_small">
+                <template for:each={filteredDiscoveredObjects} for:item="obj">
+                  <div
+                    key={obj.objectName}
+                    class="slds-col slds-size_1-of-3 slds-var-m-bottom_small"
+                  >
+                    <lightning-card icon-name="standard:record">
+                      <span
+                        slot="title"
+                        class="slds-card__header-link slds-truncate"
                         title={obj.objectLabel}
                       >
-                        {obj.objectLabel}
+                        <div
+                          class="slds-truncate slds-text-heading_small"
+                          title={obj.objectLabel}
+                        >
+                          {obj.objectLabel}
+                        </div>
+                        <div
+                          class="slds-truncate slds-text-color_weak slds-text-body_small"
+                          title={obj.objectName}
+                        >
+                          {obj.objectName}
+                        </div>
+                      </span>
+                      <div class="slds-p-horizontal_small">
+                        <p class="slds-text-body_small">
+                          Triggers: <strong>{obj.triggerCount}</strong><br />
+                          Flows: <strong>{obj.flowCount}</strong>
+                        </p>
+                        <lightning-button
+                          label="Initialize"
+                          variant="brand"
+                          class="slds-var-m-top_small"
+                          data-name={obj.objectName}
+                          onclick={handleInitializeObject}
+                        ></lightning-button>
                       </div>
-                      <div
-                        class="slds-truncate slds-text-color_weak slds-text-body_small"
-                        title={obj.objectName}
-                      >
-                        {obj.objectName}
-                      </div>
-                    </span>
-                    <div class="slds-p-horizontal_small">
-                      <p class="slds-text-body_small">
-                        Triggers: <strong>{obj.triggerCount}</strong><br />
-                        Flows: <strong>{obj.flowCount}</strong>
-                      </p>
-                      <lightning-button
-                        label="Initialize"
-                        variant="brand"
-                        class="slds-var-m-top_small"
-                        data-name={obj.objectName}
-                        onclick={handleInitializeObject}
-                      ></lightning-button>
-                    </div>
-                  </lightning-card>
-                </div>
-              </template>
-            </div>
+                    </lightning-card>
+                  </div>
+                </template>
+              </div>
+            </template>
+            <template if:false={filteredDiscoveredObjects.length}>
+              <div class="slds-text-align_center slds-p-around_large">
+                <lightning-icon
+                  icon-name="utility:search"
+                  size="medium"
+                  class="slds-var-m-bottom_small"
+                ></lightning-icon>
+                <p class="slds-text-body_small">No matching SObjects found.</p>
+              </div>
+            </template>
           </template>
           <template if:false={discoveredObjects.length}>
             <div class="slds-text-align_center slds-p-around_large">
