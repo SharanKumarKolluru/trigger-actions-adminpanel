@@ -17,31 +17,43 @@ public with sharing class TriggerActionService {
    */
   @AuraEnabled(cacheable=true)
   public static List<Trigger_Action__mdt> getAllTriggerActions() {
-    return mockActions != null
-      ? mockActions
-      : [
-          SELECT
-            Id,
-            DeveloperName,
-            Apex_Class_Name__c,
-            Flow_Name__c,
-            Order__c,
-            Object_API_Name__c,
-            Allow_Flow_Recursion__c,
-            Entry_Criteria__c,
-            Bypass_Execution__c,
-            Description__c,
-            Before_Insert__c,
-            After_Insert__c,
-            Before_Update__c,
-            After_Update__c,
-            Before_Delete__c,
-            After_Delete__c,
-            After_Undelete__c
-          FROM Trigger_Action__mdt
-          WITH USER_MODE
-          ORDER BY Object_API_Name__c, Order__c
-        ];
+    if (mockActions != null) {
+      return mockActions;
+    }
+    List<Trigger_Action__mdt> actions = [
+      SELECT
+        Id,
+        DeveloperName,
+        Apex_Class_Name__c,
+        Flow_Name__c,
+        Order__c,
+        Object_API_Name__c,
+        Allow_Flow_Recursion__c,
+        Entry_Criteria__c,
+        Bypass_Execution__c,
+        Description__c,
+        Before_Insert__c,
+        After_Insert__c,
+        Before_Update__c,
+        After_Update__c,
+        Before_Delete__c,
+        After_Delete__c,
+        After_Undelete__c,
+        Before_Insert__r.Object_API_Name__c,
+        After_Insert__r.Object_API_Name__c,
+        Before_Update__r.Object_API_Name__c,
+        After_Update__r.Object_API_Name__c,
+        Before_Delete__r.Object_API_Name__c,
+        After_Delete__r.Object_API_Name__c,
+        After_Undelete__r.Object_API_Name__c
+      FROM Trigger_Action__mdt
+      WITH USER_MODE
+      ORDER BY Object_API_Name__c, Order__c
+    ];
+    for (Trigger_Action__mdt action : actions) {
+      populateObjectApiNameIfBlank(action);
+    }
+    return actions;
   }
 
   /**
@@ -80,12 +92,23 @@ public with sharing class TriggerActionService {
         After_Update__c,
         Before_Delete__c,
         After_Delete__c,
-        After_Undelete__c
+        After_Undelete__c,
+        Before_Insert__r.Object_API_Name__c,
+        After_Insert__r.Object_API_Name__c,
+        Before_Update__r.Object_API_Name__c,
+        After_Update__r.Object_API_Name__c,
+        Before_Delete__r.Object_API_Name__c,
+        After_Delete__r.Object_API_Name__c,
+        After_Undelete__r.Object_API_Name__c
       FROM Trigger_Action__mdt
       WHERE Id = :actionId
       WITH USER_MODE
     ];
-    return actions.isEmpty() ? null : actions[0];
+    if (actions.isEmpty()) {
+      return null;
+    }
+    populateObjectApiNameIfBlank(actions[0]);
+    return actions[0];
   }
 
   /**
@@ -481,7 +504,6 @@ public with sharing class TriggerActionService {
   @AuraEnabled(cacheable=true)
   public static List<Map<String, String>> getAvailableSObjects() {
     List<Map<String, String>> result = new List<Map<String, String>>();
-    Map<String, SObjectType> gd = Schema.getGlobalDescribe();
     List<sObject_Trigger_Setting__mdt> settings = mockSettings != null
       ? mockSettings
       : [
@@ -491,8 +513,12 @@ public with sharing class TriggerActionService {
           ORDER BY Object_API_Name__c
         ];
     Set<String> objectNames = new Set<String>();
+    Set<String> lowercaseObjectNames = new Set<String>();
     for (sObject_Trigger_Setting__mdt setting : settings) {
       objectNames.add(setting.Object_API_Name__c);
+      if (setting.Object_API_Name__c != null) {
+        lowercaseObjectNames.add(setting.Object_API_Name__c.toLowerCase());
+      }
     }
     Map<String, Integer> triggerCounts = new Map<String, Integer>();
     List<ApexTrigger> trgs = mockTriggers != null
@@ -505,103 +531,95 @@ public with sharing class TriggerActionService {
         ];
     for (ApexTrigger trg : trgs) {
       String objName = trg.TableEnumOrId;
-      if (objectNames.contains(objName)) {
-        Integer count = triggerCounts.containsKey(objName)
-          ? triggerCounts.get(objName)
+      if (
+        objName != null && lowercaseObjectNames.contains(objName.toLowerCase())
+      ) {
+        String matchName = objName.toLowerCase();
+        Integer count = triggerCounts.containsKey(matchName)
+          ? triggerCounts.get(matchName)
           : 0;
-        triggerCounts.put(objName, count + 1);
+        triggerCounts.put(matchName, count + 1);
       }
     }
-    List<FlowDefinitionView> flws = mockFlows != null
-      ? mockFlows
+
+    // Get target identifiers for FlowDefinitionView query optimization
+    Set<String> targetIdentifiers = new Set<String>();
+    Map<String, String> entityIdToApiName = new Map<String, String>();
+    Map<String, String> objectLabels = new Map<String, String>();
+    for (String objName : objectNames) {
+      targetIdentifiers.add(objName);
+    }
+
+    List<EntityDefinition> eds = mockSettings != null
+      ? new List<EntityDefinition>()
       : [
-          SELECT TriggerObjectOrEventId
-          FROM FlowDefinitionView
-          WHERE IsActive = TRUE AND TriggerObjectOrEventId != NULL
+          SELECT DurableId, QualifiedApiName, Label
+          FROM EntityDefinition
+          WHERE QualifiedApiName IN :objectNames
           WITH USER_MODE
         ];
-    Set<String> triggerObjectIds = new Set<String>();
-    for (FlowDefinitionView flw : flws) {
-      if (flw.TriggerObjectOrEventId != null) {
-        String idStr = flw.TriggerObjectOrEventId;
-        triggerObjectIds.add(idStr);
-        if (idStr.startsWith('01I')) {
-          if (idStr.length() == 15) {
-            try {
-              triggerObjectIds.add(Id.valueOf(idStr));
-            } catch (Exception e) {
-            }
-          } else if (idStr.length() == 18) {
-            triggerObjectIds.add(idStr.substring(0, 15));
-          }
-        }
+    for (EntityDefinition ed : eds) {
+      String dId = ed.DurableId;
+      String apiName = ed.QualifiedApiName;
+      targetIdentifiers.add(dId);
+      entityIdToApiName.put(dId, apiName);
+      if (apiName != null) {
+        objectLabels.put(apiName.toLowerCase(), ed.Label);
       }
-    }
-    Map<String, String> entityIdToApiName = new Map<String, String>();
-    if (mockEntityIdToApiName != null) {
-      for (String key : mockEntityIdToApiName.keySet()) {
-        String val = mockEntityIdToApiName.get(key);
-        entityIdToApiName.put(key, val);
-        if (key.startsWith('01I')) {
-          if (key.length() == 15) {
-            try {
-              entityIdToApiName.put(Id.valueOf(key), val);
-            } catch (Exception e) {
-            }
-          } else if (key.length() == 18) {
-            entityIdToApiName.put(key.substring(0, 15), val);
-          }
-        }
-      }
-    }
-    Set<String> queryIds = new Set<String>();
-    for (String idStr : triggerObjectIds) {
-      if (!entityIdToApiName.containsKey(idStr)) {
-        queryIds.add(idStr);
-      }
-    }
-    if (!queryIds.isEmpty()) {
-      for (EntityDefinition ed : [
-        SELECT DurableId, QualifiedApiName
-        FROM EntityDefinition
-        WHERE DurableId IN :queryIds
-        WITH USER_MODE
-      ]) {
-        entityIdToApiName.put(ed.DurableId, ed.QualifiedApiName);
-        if (ed.DurableId.startsWith('01I') && ed.DurableId.length() == 15) {
+      if (dId.startsWith('01I')) {
+        if (dId.length() == 18) {
+          String dId15 = dId.substring(0, 15);
+          targetIdentifiers.add(dId15);
+          entityIdToApiName.put(dId15, apiName);
+        } else if (dId.length() == 15) {
           try {
-            entityIdToApiName.put(
-              Id.valueOf(ed.DurableId),
-              ed.QualifiedApiName
-            );
+            String dId18 = Id.valueOf(dId);
+            targetIdentifiers.add(dId18);
+            entityIdToApiName.put(dId18, apiName);
           } catch (Exception e) {
           }
         }
       }
     }
+
+    List<FlowDefinitionView> flws = mockFlows != null
+      ? mockFlows
+      : [
+          SELECT TriggerObjectOrEventId
+          FROM FlowDefinitionView
+          WHERE IsActive = TRUE AND TriggerObjectOrEventId IN :targetIdentifiers
+          WITH USER_MODE
+        ];
     Map<String, Integer> flowCounts = new Map<String, Integer>();
     for (FlowDefinitionView flw : flws) {
-      String objName = entityIdToApiName.containsKey(flw.TriggerObjectOrEventId)
+      String rawObjName = entityIdToApiName.containsKey(
+          flw.TriggerObjectOrEventId
+        )
         ? entityIdToApiName.get(flw.TriggerObjectOrEventId)
         : flw.TriggerObjectOrEventId;
-      if (objectNames.contains(objName)) {
-        Integer count = flowCounts.containsKey(objName)
-          ? flowCounts.get(objName)
+      if (
+        rawObjName != null &&
+        lowercaseObjectNames.contains(rawObjName.toLowerCase())
+      ) {
+        String matchName = rawObjName.toLowerCase();
+        Integer count = flowCounts.containsKey(matchName)
+          ? flowCounts.get(matchName)
           : 0;
-        flowCounts.put(objName, count + 1);
+        flowCounts.put(matchName, count + 1);
       }
     }
     for (sObject_Trigger_Setting__mdt setting : settings) {
       String objName = setting.Object_API_Name__c;
       String label = objName;
-      if (gd.containsKey(objName)) {
-        label = gd.get(objName).getDescribe().getLabel();
+      if (objName != null && objectLabels.containsKey(objName.toLowerCase())) {
+        label = objectLabels.get(objName.toLowerCase());
       }
-      Integer tCount = triggerCounts.containsKey(objName)
-        ? triggerCounts.get(objName)
+      String matchName = objName != null ? objName.toLowerCase() : '';
+      Integer tCount = triggerCounts.containsKey(matchName)
+        ? triggerCounts.get(matchName)
         : 0;
-      Integer fCount = flowCounts.containsKey(objName)
-        ? flowCounts.get(objName)
+      Integer fCount = flowCounts.containsKey(matchName)
+        ? flowCounts.get(matchName)
         : 0;
       Integer totalNative = tCount + fCount;
       Map<String, String> obj = new Map<String, String>();
@@ -1094,6 +1112,47 @@ public with sharing class TriggerActionService {
     }
 
     return JSON.serialize(contexts);
+  }
+
+  private static void populateObjectApiNameIfBlank(Trigger_Action__mdt action) {
+    if (action != null && String.isBlank(action.Object_API_Name__c)) {
+      if (
+        action.Before_Insert__r != null &&
+        String.isNotBlank(action.Before_Insert__r.Object_API_Name__c)
+      ) {
+        action.Object_API_Name__c = action.Before_Insert__r.Object_API_Name__c;
+      } else if (
+        action.After_Insert__r != null &&
+        String.isNotBlank(action.After_Insert__r.Object_API_Name__c)
+      ) {
+        action.Object_API_Name__c = action.After_Insert__r.Object_API_Name__c;
+      } else if (
+        action.Before_Update__r != null &&
+        String.isNotBlank(action.Before_Update__r.Object_API_Name__c)
+      ) {
+        action.Object_API_Name__c = action.Before_Update__r.Object_API_Name__c;
+      } else if (
+        action.After_Update__r != null &&
+        String.isNotBlank(action.After_Update__r.Object_API_Name__c)
+      ) {
+        action.Object_API_Name__c = action.After_Update__r.Object_API_Name__c;
+      } else if (
+        action.Before_Delete__r != null &&
+        String.isNotBlank(action.Before_Delete__r.Object_API_Name__c)
+      ) {
+        action.Object_API_Name__c = action.Before_Delete__r.Object_API_Name__c;
+      } else if (
+        action.After_Delete__r != null &&
+        String.isNotBlank(action.After_Delete__r.Object_API_Name__c)
+      ) {
+        action.Object_API_Name__c = action.After_Delete__r.Object_API_Name__c;
+      } else if (
+        action.After_Undelete__r != null &&
+        String.isNotBlank(action.After_Undelete__r.Object_API_Name__c)
+      ) {
+        action.Object_API_Name__c = action.After_Undelete__r.Object_API_Name__c;
+      }
+    }
   }
 
   private static AuraHandledException createAuraException(String msg) {

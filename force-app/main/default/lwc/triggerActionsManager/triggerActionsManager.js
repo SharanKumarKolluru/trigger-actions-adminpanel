@@ -96,7 +96,9 @@ export default class TriggerActionsManager extends NavigationMixin(
     const actionCounts = {};
     if (this.actions) {
       this.actions.forEach((action) => {
-        const obj = action.Object_API_Name__c;
+        const obj = action.Object_API_Name__c
+          ? action.Object_API_Name__c.toLowerCase()
+          : "";
         actionCounts[obj] = (actionCounts[obj] || 0) + 1;
       });
     }
@@ -112,11 +114,14 @@ export default class TriggerActionsManager extends NavigationMixin(
       .map((obj) => ({
         name: obj.name,
         label: obj.label || obj.name,
-        actionCount: actionCounts[obj.name] || 0,
+        actionCount: obj.name ? actionCounts[obj.name.toLowerCase()] || 0 : 0,
         nativeCount: obj.nativeCount ? parseInt(obj.nativeCount, 10) : 0,
         cssClass:
           "object-item" +
-          (this.selectedObjectName === obj.name ? " selected" : "")
+          (this.selectedObjectName &&
+          this.selectedObjectName.toLowerCase() === obj.name.toLowerCase()
+            ? " selected"
+            : "")
       }));
   }
 
@@ -124,7 +129,10 @@ export default class TriggerActionsManager extends NavigationMixin(
     if (!this.selectedObjectName) return [];
 
     const filtered = this.actions.filter(
-      (a) => a.Object_API_Name__c === this.selectedObjectName
+      (a) =>
+        a.Object_API_Name__c &&
+        a.Object_API_Name__c.toLowerCase() ===
+          this.selectedObjectName.toLowerCase()
     );
 
     const sections = [];
@@ -581,6 +589,7 @@ export default class TriggerActionsManager extends NavigationMixin(
   }
 
   refreshList() {
+    this.isLoading = true;
     const promises = [];
     if (this._wiredActionsResult) {
       promises.push(refreshApex(this._wiredActionsResult));
@@ -588,13 +597,14 @@ export default class TriggerActionsManager extends NavigationMixin(
     if (this._wiredSObjectsResult) {
       promises.push(refreshApex(this._wiredSObjectsResult));
     }
-    if (this._wiredNativeResult) {
+    if (this._wiredNativeResult && this.selectedObjectName) {
       promises.push(refreshApex(this._wiredNativeResult));
     }
     if (this._wiredStatsResult) {
       promises.push(refreshApex(this._wiredStatsResult));
     }
     if (promises.length === 0) {
+      this.isLoading = false;
       return Promise.reject(new Error("Wire results not available"));
     }
     return Promise.all(promises)
@@ -602,7 +612,13 @@ export default class TriggerActionsManager extends NavigationMixin(
         this.showSuccess("Data refreshed successfully.");
       })
       .catch((error) => {
-        this.showError("Refresh Error", "Failed to refresh: " + error.message);
+        this.showError(
+          "Refresh Error",
+          "Failed to refresh: " + (error.body?.message || error.message)
+        );
+      })
+      .finally(() => {
+        this.isLoading = false;
       });
   }
 
