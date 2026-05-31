@@ -1049,14 +1049,24 @@ public with sharing class TriggerActionService {
     List<Map<String, String>> result = new List<Map<String, String>>();
 
     // Collect all unique Apex class names from existing Trigger Actions
-    for (Trigger_Action__mdt action : [
-      SELECT Apex_Class_Name__c
-      FROM Trigger_Action__mdt
-      WHERE Apex_Class_Name__c != NULL
-      WITH USER_MODE
-      ORDER BY Apex_Class_Name__c
+    for(ApexTypeImplementor impl : [
+        SELECT ClassName
+        FROM ApexTypeImplementor
+        WHERE
+          InterfaceName IN (
+                'TriggerAction.BeforeInsert',
+                'TriggerAction.AfterInsert',
+                'TriggerAction.BeforeUpdate',
+                'TriggerAction.AfterUpdate',
+                'TriggerAction.BeforeDelete',
+                'TriggerAction.AfterDelete',
+                'TriggerAction.AfterUndelete'
+            ) AND
+          IsConcrete = true AND
+          ClassName NOT IN ('MetadataTriggerHandler','TriggerActionFlow','TriggerActionFlowChangeEvent')
+        ORDER BY ClassName
     ]) {
-      classNames.add(action.Apex_Class_Name__c);
+        classNames.add(impl.ClassName);
     }
 
     // Convert to map format for LWC combobox
