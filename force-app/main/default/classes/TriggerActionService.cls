@@ -454,18 +454,33 @@ public with sharing class TriggerActionService {
     if (devName.length() > 37)
       devName = devName.substring(0, 37);
 
-    List<sObject_Trigger_Setting__mdt> existingByName = [
-      SELECT Id
-      FROM sObject_Trigger_Setting__mdt
-      WHERE DeveloperName = :devName
-      WITH USER_MODE
-    ];
-    List<sObject_Trigger_Setting__mdt> existingByObject = [
-      SELECT Id
-      FROM sObject_Trigger_Setting__mdt
-      WHERE Object_API_Name__c = :objectName
-      WITH USER_MODE
-    ];
+    List<sObject_Trigger_Setting__mdt> existingByName;
+    List<sObject_Trigger_Setting__mdt> existingByObject;
+    if (mockSettings != null) {
+      existingByName = new List<sObject_Trigger_Setting__mdt>();
+      existingByObject = new List<sObject_Trigger_Setting__mdt>();
+      for (sObject_Trigger_Setting__mdt setting : mockSettings) {
+        if (setting.DeveloperName == devName) {
+          existingByName.add(setting);
+        }
+        if (setting.Object_API_Name__c == objectName) {
+          existingByObject.add(setting);
+        }
+      }
+    } else {
+      existingByName = [
+        SELECT Id
+        FROM sObject_Trigger_Setting__mdt
+        WHERE DeveloperName = :devName
+        WITH USER_MODE
+      ];
+      existingByObject = [
+        SELECT Id
+        FROM sObject_Trigger_Setting__mdt
+        WHERE Object_API_Name__c = :objectName
+        WITH USER_MODE
+      ];
+    }
 
     if (!existingByName.isEmpty() || !existingByObject.isEmpty()) {
       String msg = 'A Trigger Setting for this SObject already exists.';

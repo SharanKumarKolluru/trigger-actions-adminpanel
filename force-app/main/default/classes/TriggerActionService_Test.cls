@@ -622,6 +622,7 @@ private class TriggerActionService_Test {
         Trigger_Action__mdt.class
       )
     };
+    TriggerActionService.mockSettings = new List<sObject_Trigger_Setting__mdt>();
     Test.startTest();
     try {
       TriggerActionService.updateTriggerAction(
@@ -653,6 +654,7 @@ private class TriggerActionService_Test {
         Trigger_Action__mdt.class
       )
     };
+    TriggerActionService.mockSettings = new List<sObject_Trigger_Setting__mdt>();
     Test.startTest();
     try {
       TriggerActionService.updateTriggerAction(
@@ -678,6 +680,7 @@ private class TriggerActionService_Test {
 
   @isTest
   static void testCreateTriggerSettingRealObject() {
+    TriggerActionService.mockSettings = new List<sObject_Trigger_Setting__mdt>();
     Test.startTest();
     String jobId = TriggerActionService.createTriggerSetting(
       'Account',
