@@ -1048,25 +1048,31 @@ public with sharing class TriggerActionService {
     Set<String> classNames = new Set<String>();
     List<Map<String, String>> result = new List<Map<String, String>>();
 
-    // Collect all unique Apex class names from existing Trigger Actions
-    for(ApexTypeImplementor impl : [
-        SELECT ClassName
-        FROM ApexTypeImplementor
-        WHERE
-          InterfaceName IN (
-                'TriggerAction.BeforeInsert',
-                'TriggerAction.AfterInsert',
-                'TriggerAction.BeforeUpdate',
-                'TriggerAction.AfterUpdate',
-                'TriggerAction.BeforeDelete',
-                'TriggerAction.AfterDelete',
-                'TriggerAction.AfterUndelete'
-            ) AND
-          IsConcrete = true AND
-          ClassName NOT IN ('MetadataTriggerHandler','TriggerActionFlow','TriggerActionFlowChangeEvent')
-        ORDER BY ClassName
+    // Query ApexTypeImplementor to discover all concrete classes that implement TriggerAction interfaces in the org.
+    // Note: TriggerActionServiceSampleStub is packaged specifically to guarantee this query returns at least one result
+    // in clean scratch orgs, ensuring test coverage for the loop and conversion logic below.
+    for (ApexTypeImplementor impl : [
+      SELECT ClassName
+      FROM ApexTypeImplementor
+      WHERE
+        InterfaceName IN (
+          'TriggerAction.BeforeInsert',
+          'TriggerAction.AfterInsert',
+          'TriggerAction.BeforeUpdate',
+          'TriggerAction.AfterUpdate',
+          'TriggerAction.BeforeDelete',
+          'TriggerAction.AfterDelete',
+          'TriggerAction.AfterUndelete'
+        )
+        AND IsConcrete = TRUE
+        AND ClassName NOT IN (
+          'MetadataTriggerHandler',
+          'TriggerActionFlow',
+          'TriggerActionFlowChangeEvent'
+        )
+      ORDER BY ClassName
     ]) {
-        classNames.add(impl.ClassName);
+      classNames.add(impl.ClassName);
     }
 
     // Convert to map format for LWC combobox

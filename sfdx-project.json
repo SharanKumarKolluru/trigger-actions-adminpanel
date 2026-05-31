@@ -22,22 +22,9 @@
   "packageAliases": {
     "Trigger Actions Framework": "04tKY000000R0yHYAS",
     "Trigger Actions Admin Panel": "0HogL0000002AjFSAU",
-    "Trigger Actions Admin Panel@2.0.0-1": "04tgL000000Eh9xQAC",
     "Trigger Actions Admin Panel@2.0.0": "04tgL000000EhBZQA0",
-    "Trigger Actions Admin Panel@2.0.0-2": "04tgL000000EhBZQA0",
-    "Trigger Actions Admin Panel@2.0.0-3": "04tgL000000EhEnQAK",
-    "Trigger Actions Admin Panel@2.0.0-4": "04tgL000000EhI1QAK",
-    "Trigger Actions Admin Panel@2.0.0-5": "04tgL000000EkUPQA0",
-    "Trigger Actions Admin Panel@2.0.0-6": "04tgL000000EkarQAC",
-    "Trigger Actions Admin Panel@2.0.1-5": "04tgL000000Fyn3QAC",
     "Trigger Actions Admin Panel@2.0.1": "04tgL000000Fyn3QAC",
-    "Trigger Actions Admin Panel@2.0.2-1": "04tgL000000FyqHQAS",
     "Trigger Actions Admin Panel@2.0.2": "04tgL000000FyqHQAS",
-    "Trigger Actions Admin Panel@2.0.3-1": "04tgL000000GKvdQAG",
-    "Trigger Actions Admin Panel@2.0.3-2": "04tgL000000GLZxQAO",
-    "Trigger Actions Admin Panel@2.0.3-3": "04tgL000000GLoTQAW",
-    "Trigger Actions Admin Panel@2.0.3-4": "04tgL000000GLq5QAG",
-    "Trigger Actions Admin Panel@2.0.3-5": "04tgL000000GLtJQAW",
-    "Trigger Actions Admin Panel@2.0.3": "04tgL000000GLtJQAW"
+    "Trigger Actions Admin Panel@2.0.3": "04tgL000000GMqzQAG"
   }
 }

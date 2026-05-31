@@ -282,7 +282,10 @@ private class TriggerActionService_Test {
       'TriggerActionService',
       'MyFlow',
       1,
-      new Map<String, Boolean>{ 'Before_Insert__c' => true },
+      new Map<String, Boolean>{
+        'Before_Insert__c' => true,
+        'Before_Update' => true
+      },
       'Criteria',
       'Desc',
       false
@@ -607,6 +610,68 @@ private class TriggerActionService_Test {
       System.assert(false, 'Should throw for duplicate name');
     } catch (AuraHandledException e) {
       // Expected
+    }
+    Test.stopTest();
+  }
+
+  @isTest
+  static void testUpdateTriggerActionNoMocks() {
+    TriggerActionService.mockActions = new List<Trigger_Action__mdt>{
+      (Trigger_Action__mdt) JSON.deserialize(
+        '{"DeveloperName":"Test_Action","Object_API_Name__c":"Account"}',
+        Trigger_Action__mdt.class
+      )
+    };
+    Test.startTest();
+    try {
+      TriggerActionService.updateTriggerAction(
+        'Test_Action',
+        'TriggerActionService',
+        null,
+        2,
+        new Map<String, Boolean>{ 'Before_Insert__c' => true },
+        'New Criteria',
+        'New Description',
+        true,
+        false
+      );
+      System.assert(false, 'Should throw setting not found exception');
+    } catch (AuraHandledException e) {
+      System.assert(
+        e.getMessage().contains('No Trigger Setting found'),
+        'Should indicate missing setting'
+      );
+    }
+    Test.stopTest();
+  }
+
+  @isTest
+  static void testUpdateTriggerActionFallbackSetting() {
+    TriggerActionService.mockActions = new List<Trigger_Action__mdt>{
+      (Trigger_Action__mdt) JSON.deserialize(
+        '{"DeveloperName":"Test_Action","Before_Insert__c":"00D000000000000"}',
+        Trigger_Action__mdt.class
+      )
+    };
+    Test.startTest();
+    try {
+      TriggerActionService.updateTriggerAction(
+        'Test_Action',
+        'TriggerActionService',
+        null,
+        2,
+        new Map<String, Boolean>{ 'Before_Insert__c' => true },
+        'New Criteria',
+        'New Description',
+        true,
+        false
+      );
+      System.assert(false, 'Should throw setting not found exception');
+    } catch (AuraHandledException e) {
+      System.assert(
+        e.getMessage().contains('No Trigger Setting found'),
+        'Should indicate missing setting'
+      );
     }
     Test.stopTest();
   }

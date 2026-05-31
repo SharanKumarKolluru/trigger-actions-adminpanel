@@ -27,7 +27,7 @@ export default class TriggerSettingForm extends LightningElement {
     const field = event.target.name;
     if (field === "objectName") {
       this.objectName = event.target.value;
-      // Auto-extract namespace if it's a namespaced custom object (e.g. rstk__pohdr__c)
+      // Auto-extract namespace if it's a namespaced custom object (e.g. my_ns__MyObject__c)
       const parts = this.objectName.split("__");
       if (parts.length >= 3) {
         this.objectNamespace = parts[0];
