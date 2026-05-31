@@ -1,4 +1,4 @@
-trigger ContactTrigger on Contact(
+trigger TA_OpportunityTrigger on Opportunity(
   before insert,
   after insert,
   before update,

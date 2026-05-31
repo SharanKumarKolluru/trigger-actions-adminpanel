@@ -1,4 +1,4 @@
-trigger OpportunityTrigger on Opportunity(
+trigger TA_AccountTrigger on Account(
   before insert,
   after insert,
   before update,
