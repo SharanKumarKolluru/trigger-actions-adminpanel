@@ -62,8 +62,6 @@ Assign the **Trigger Actions Framework Admin** permission set to any user who ne
 
 Gain full visibility into every automation running on an object. The Admin Panel groups all Trigger Actions by their execution context—such as Before Insert or After Update—and displays them in their precise execution order.
 
-![Unified Hierarchy View](images/hierarchy_view.png)
-
 ### 2. Intelligent Filtering & Auto-Detection
 
 Save time by browsing only the Apex classes that implement the Trigger Action interfaces. Upon selection, the tool provides full context awareness by auto-detecting and mapping the supported trigger interfaces directly to your configuration.
@@ -80,13 +78,9 @@ Instantly toggle bypasses for data loads or maintenance windows with immediate v
 
 Your strategic entry point for automation governance. The Command Center provides a centralized oversight of your framework adoption, serving as the control tower for managing discovery results and initializing new SObject configurations with a single click.
 
-![Automation Command Center](images/command_center.png)
-
 ### 6. Intelligent Discovery & Onboarding
 
 Uncover hidden automation debt in seconds. The Discovery engine automatically scans your entire org for unmanaged Apex Triggers and Record-Triggered Flows, identifying exactly where native logic exists and providing a streamlined path to bring it under the framework's control.
-
-![Automation Discovery](images/discovery_modal.png)
 
 ---
 
