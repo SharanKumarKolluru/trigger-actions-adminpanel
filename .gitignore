@@ -67,3 +67,6 @@ force-app/main/default/triggers/
 force-app/main/default/pages/MetadataService.page*
 force-app/main/default/remoteSiteSettings/ApexDevNet.remoteSite-meta.xml
 force-app/main/default/testSuites/LoggerCore.testSuite-meta.xml
+
+# Local test outputs
+test_results.txt
