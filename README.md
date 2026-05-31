@@ -36,28 +36,6 @@ Assign the **Trigger Actions Framework Admin** permission set to any user who ne
 
 ## ✨ Key Features
 
-### Screenshots
-
-#### Command Center Dashboard
-
-![Command Center Dashboard](images/command_center.png)
-
-#### Discovery & Initialization
-
-![Discovery Modal](images/discovery_modal.png)
-
-#### Actions Hierarchy View
-
-![Hierarchy View](images/hierarchy_view.png)
-
-#### Creating a New Action
-
-![Create Action](images/create_action.png)
-
-#### Native Automations Tracking
-
-![Native Automations](images/native_automations.png)
-
 ### 1. Unified Hierarchy View
 
 Gain full visibility into every automation running on an object. The Admin Panel groups all Trigger Actions by their execution context—such as Before Insert or After Update—and displays them in their precise execution order.
@@ -81,6 +59,28 @@ Your strategic entry point for automation governance. The Command Center provide
 ### 6. Intelligent Discovery & Onboarding
 
 Uncover hidden automation debt in seconds. The Discovery engine automatically scans your entire org for unmanaged Apex Triggers and Record-Triggered Flows, identifying exactly where native logic exists and providing a streamlined path to bring it under the framework's control.
+
+### Screenshots
+
+#### Command Center Dashboard
+
+![Command Center Dashboard](images/command_center.png)
+
+#### Discovery & Initialization
+
+![Discovery Modal](images/discovery_modal.png)
+
+#### Actions Hierarchy View
+
+![Hierarchy View](images/hierarchy_view.png)
+
+#### Creating a New Action
+
+![Create Action](images/create_action.png)
+
+#### Native Automations Tracking
+
+![Native Automations](images/native_automations.png)
 
 ---
 
