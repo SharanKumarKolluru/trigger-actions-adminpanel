@@ -115,7 +115,7 @@ private class TriggerActionValidator_Test {
     try {
       Map<String, Boolean> contexts = new Map<String, Boolean>{
         'Before_Insert__c' => true,
-        'After_Insert__c' => false
+        'After_Insert' => false
       };
       TriggerActionValidator.validateTriggerContexts(contexts);
       // If no exception, test passes

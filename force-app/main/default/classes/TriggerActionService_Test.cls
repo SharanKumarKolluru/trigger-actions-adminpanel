@@ -675,4 +675,77 @@ private class TriggerActionService_Test {
     }
     Test.stopTest();
   }
+
+  @isTest
+  static void testCreateTriggerSettingRealObject() {
+    Test.startTest();
+    String jobId = TriggerActionService.createTriggerSetting(
+      'Account',
+      null,
+      null
+    );
+    Test.stopTest();
+    System.assertEquals('MockJobId', jobId);
+  }
+
+  @isTest
+  static void testCreateTriggerSettingLongName() {
+    Test.startTest();
+    String jobId = TriggerActionService.createTriggerSetting(
+      'a_very_long_object_name_that_exceeds_forty_characters__c',
+      null,
+      null
+    );
+    Test.stopTest();
+    System.assertEquals('MockJobId', jobId);
+  }
+
+  @isTest
+  static void testCreateTriggerSettingPermissions() {
+    Test.startTest();
+    String jobId = TriggerActionService.createTriggerSetting(
+      'TestObject',
+      'BypassPerm',
+      'RequiredPerm'
+    );
+    Test.stopTest();
+    System.assertEquals('MockJobId', jobId);
+  }
+
+  @isTest
+  static void testUpdateTriggerActionWithFlow() {
+    TriggerActionService.mockActions = new List<Trigger_Action__mdt>{
+      (Trigger_Action__mdt) JSON.deserialize(
+        '{"DeveloperName":"MockAction","Object_API_Name__c":"Account"}',
+        Trigger_Action__mdt.class
+      )
+    };
+    TriggerActionService.mockSettings = new List<sObject_Trigger_Setting__mdt>{
+      (sObject_Trigger_Setting__mdt) JSON.deserialize(
+        '{"DeveloperName":"Account","Object_API_Name__c":"Account"}',
+        sObject_Trigger_Setting__mdt.class
+      )
+    };
+    TriggerActionValidator.mockFlows = new List<FlowDefinitionView>{
+      (FlowDefinitionView) JSON.deserialize(
+        '{"ApiName":"MyFlow","IsActive":true}',
+        FlowDefinitionView.class
+      )
+    };
+
+    Test.startTest();
+    String jobId = TriggerActionService.updateTriggerAction(
+      'MockAction',
+      'TriggerActionService',
+      'MyFlow',
+      1,
+      new Map<String, Boolean>{ 'Before_Insert__c' => true },
+      null,
+      'Desc',
+      false,
+      false
+    );
+    Test.stopTest();
+    System.assertEquals('MockJobId', jobId);
+  }
 }
