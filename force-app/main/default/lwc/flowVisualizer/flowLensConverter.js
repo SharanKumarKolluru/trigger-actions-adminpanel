@@ -657,7 +657,7 @@ function populateTransitions(flow, nameToNode) {
   return result;
 }
 
-export function convertFlowToMermaid(flow, flowLabel) {
+export function convertFlowToMermaid(flow, flowLabel, includeTitle = true) {
   const nameToNode = new Map();
   nameToNode.set("END", { name: "END", label: "End", _type: "end" });
 
@@ -701,10 +701,15 @@ export function convertFlowToMermaid(flow, flowLabel) {
   const transitions = populateTransitions(flow, nameToNode);
 
   // Build the Mermaid syntax output
-  const lines = [
-    "---",
-    `title: "${sanitizeLabel(flowLabel || flow.label || "Flow Diagram")}"`,
-    "---",
+  const lines = [];
+  if (includeTitle) {
+    lines.push("---");
+    lines.push(
+      `title: "${sanitizeLabel(flowLabel || flow.label || "Flow Diagram")}"`
+    );
+    lines.push("---");
+  }
+  lines.push(
     "stateDiagram-v2",
     "",
     "  classDef pink fill:#F9548A, color:white",
@@ -712,7 +717,7 @@ export function convertFlowToMermaid(flow, flowLabel) {
     "  classDef navy fill:#344568, color:white",
     "  classDef blue fill:#1B96FF, color:white",
     ""
-  ];
+  );
 
   // Emit node state definitions
   nameToNode.forEach((node) => {

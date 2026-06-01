@@ -73,6 +73,7 @@ export default class FlowVisualizer extends LightningElement {
   sessionId;
   orgDomainUrl;
   mermaidCode;
+  copiedMermaidCode;
   isLibraryLoaded = false;
   _isDestroyed = false;
 
@@ -144,7 +145,18 @@ export default class FlowVisualizer extends LightningElement {
       this.loadingMessage = "Generating flowchart diagram...";
 
       // Translate the Metadata JSON using our flow-lens port
-      this.mermaidCode = convertFlowToMermaid(data.Metadata, this.flowName);
+      // We pass includeTitle = false for rendering inside LWC to avoid duplicate title blocks,
+      // but keep includeTitle = true for copied/portable Mermaid code.
+      this.mermaidCode = convertFlowToMermaid(
+        data.Metadata,
+        this.flowName,
+        false
+      );
+      this.copiedMermaidCode = convertFlowToMermaid(
+        data.Metadata,
+        this.flowName,
+        true
+      );
 
       // Render the diagram
       this.renderDiagram();
@@ -310,7 +322,8 @@ export default class FlowVisualizer extends LightningElement {
   }
 
   async handleCopyCode() {
-    const text = `\`\`\`mermaid\n${this.mermaidCode}\n\`\`\``;
+    const codeToCopy = this.copiedMermaidCode || this.mermaidCode;
+    const text = `\`\`\`mermaid\n${codeToCopy}\n\`\`\``;
     try {
       // Prefer modern Clipboard API, fall back to deprecated execCommand
       if (navigator.clipboard && navigator.clipboard.writeText) {

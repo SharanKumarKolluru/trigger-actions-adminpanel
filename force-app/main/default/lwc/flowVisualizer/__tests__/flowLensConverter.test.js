@@ -41,6 +41,19 @@ describe("flowLensConverter", () => {
       const result = convertFlowToMermaid(flow, "");
       expect(result).toContain('title: "Fallback Label"');
     });
+
+    it("should omit the title block when includeTitle is false", () => {
+      const flow = {
+        processType: "AutoLaunchedFlow",
+        label: "Fallback Label",
+        start: {}
+      };
+
+      const result = convertFlowToMermaid(flow, "Custom Title", false);
+      expect(result).not.toContain("title:");
+      expect(result.startsWith("---")).toBe(false);
+      expect(result).toContain("stateDiagram-v2");
+    });
   });
 
   // ─── Class Definitions ──────────────────────────────────────────
