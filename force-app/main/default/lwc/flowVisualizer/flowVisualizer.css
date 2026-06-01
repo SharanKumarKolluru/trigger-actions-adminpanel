@@ -47,9 +47,10 @@
   background: #f8fafc;
   position: relative;
   cursor: grab;
+  user-select: none; /* Prevent text selection during drag scroll */
 }
 
-.canvas-wrapper:active {
+.canvas-wrapper.grabbing {
   cursor: grabbing;
 }
 

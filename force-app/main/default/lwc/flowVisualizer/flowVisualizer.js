@@ -77,6 +77,13 @@ export default class FlowVisualizer extends LightningElement {
   isLibraryLoaded = false;
   _isDestroyed = false;
 
+  // Drag scroll state
+  isMouseDown = false;
+  startX = 0;
+  startY = 0;
+  scrollLeft = 0;
+  scrollTop = 0;
+
   get zoomPercentage() {
     return `${Math.round(this.zoomLevel * 100)}%`;
   }
@@ -362,5 +369,52 @@ export default class FlowVisualizer extends LightningElement {
     // Using flowId with a 300 ID results in an error.
     const url = `${this.orgDomainUrl}/builder_platform_interaction/flowBuilder.app?flowDefId=${this.flowId}`;
     window.open(url, "_blank");
+  }
+
+  // --- Drag-Scroll Event Handlers ---
+  handleMouseDown(event) {
+    // Only drag with primary mouse button
+    if (event.button !== 0) return;
+    const wrapper = this.template.querySelector(".canvas-wrapper");
+    if (!wrapper) return;
+
+    this.isMouseDown = true;
+    wrapper.classList.add("grabbing");
+
+    this.startX = event.pageX - wrapper.offsetLeft;
+    this.startY = event.pageY - wrapper.offsetTop;
+    this.scrollLeft = wrapper.scrollLeft;
+    this.scrollTop = wrapper.scrollTop;
+  }
+
+  handleMouseMove(event) {
+    if (!this.isMouseDown) return;
+    event.preventDefault();
+    const wrapper = this.template.querySelector(".canvas-wrapper");
+    if (!wrapper) return;
+
+    const x = event.pageX - wrapper.offsetLeft;
+    const y = event.pageY - wrapper.offsetTop;
+    const walkX = (x - this.startX) * 1.5; // Scroll speed factor
+    const walkY = (y - this.startY) * 1.5;
+
+    wrapper.scrollLeft = this.scrollLeft - walkX;
+    wrapper.scrollTop = this.scrollTop - walkY;
+  }
+
+  handleMouseUp() {
+    this.isMouseDown = false;
+    const wrapper = this.template.querySelector(".canvas-wrapper");
+    if (wrapper) {
+      wrapper.classList.remove("grabbing");
+    }
+  }
+
+  handleMouseLeave() {
+    this.isMouseDown = false;
+    const wrapper = this.template.querySelector(".canvas-wrapper");
+    if (wrapper) {
+      wrapper.classList.remove("grabbing");
+    }
   }
 }
