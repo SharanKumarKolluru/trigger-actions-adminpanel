@@ -53,6 +53,15 @@
           </template>
         </div>
         <footer class="slds-modal__footer">
+          <template if:true={recordId}>
+            <lightning-button
+              label="Open Trigger"
+              icon-name="utility:new_window"
+              variant="brand"
+              onclick={handleOpenTrigger}
+              class="slds-m-right_x-small"
+            ></lightning-button>
+          </template>
           <lightning-button
             label="Close"
             variant="neutral"

@@ -416,7 +416,7 @@
                                   <div
                                     class="slds-grid slds-grid_vertical-align-center slds-m-left_small"
                                     style="
-                                      width: 64px;
+                                      width: 32px;
                                       justify-content: flex-end;
                                     "
                                   >
@@ -427,15 +427,6 @@
                                         data-id={item.id}
                                         onclick={handleViewTriggerSource}
                                         title="View Source"
-                                        disabled={item.isManaged}
-                                        class="slds-var-m-right_x-small"
-                                      ></lightning-button-icon>
-                                      <lightning-button-icon
-                                        icon-name="utility:new_window"
-                                        variant="bare"
-                                        data-id={item.id}
-                                        onclick={handleOpenNativeTrigger}
-                                        title={item.buttonTitle}
                                         disabled={item.isManaged}
                                       ></lightning-button-icon>
                                     </template>
@@ -589,6 +580,7 @@
   <c-trigger-action-source-view
     class-name={sourceClassName}
     manual-body={sourceCode}
+    record-id={sourceRecordId}
     show-modal={showSourceModal}
     onclose={handleSourceClose}
   >

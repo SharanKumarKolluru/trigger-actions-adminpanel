@@ -35,6 +35,7 @@ export default class TriggerActionsManager extends NavigationMixin(
   showSourceModal = false;
   sourceCode = "";
   sourceClassName = "";
+  sourceRecordId = "";
   searchTerm = "";
   isCreating = false;
   availableSObjects = [];
@@ -234,10 +235,7 @@ export default class TriggerActionsManager extends NavigationMixin(
               isTrigger: true,
               isFlow: false,
               isManaged: !!t.NamespacePrefix,
-              body: t.Body,
-              buttonTitle: t.NamespacePrefix
-                ? "Managed Package Trigger (View Restricted)"
-                : "Open Trigger"
+              body: t.Body
             });
           }
         }
@@ -438,6 +436,7 @@ export default class TriggerActionsManager extends NavigationMixin(
     if (this.selectedAction?.Apex_Class_Name__c) {
       this.sourceClassName = this.selectedAction.Apex_Class_Name__c;
       this.sourceCode = "";
+      this.sourceRecordId = "";
       this.showSourceModal = true;
     }
   }
@@ -446,6 +445,7 @@ export default class TriggerActionsManager extends NavigationMixin(
     this.showSourceModal = false;
     this.sourceCode = "";
     this.sourceClassName = "";
+    this.sourceRecordId = "";
   }
 
   async handleViewTriggerActionFlow() {
@@ -490,20 +490,9 @@ export default class TriggerActionsManager extends NavigationMixin(
     if (trigger && trigger.Body) {
       this.sourceClassName = trigger.Name;
       this.sourceCode = trigger.Body;
+      this.sourceRecordId = trigger.Id;
       this.showSourceModal = true;
     }
-  }
-
-  handleOpenNativeTrigger(event) {
-    const triggerId = event.currentTarget.dataset.id;
-    this[NavigationMixin.Navigate]({
-      type: "standard__recordPage",
-      attributes: {
-        recordId: triggerId,
-        objectApiName: "ApexTrigger",
-        actionName: "view"
-      }
-    });
   }
 
   handleTabChange(event) {
