@@ -52,13 +52,15 @@ export default class TriggerActionSourceView extends NavigationMixin(
 
   handleOpenTrigger() {
     if (this.recordId) {
-      this[NavigationMixin.Navigate]({
+      this[NavigationMixin.GenerateUrl]({
         type: "standard__recordPage",
         attributes: {
           recordId: this.recordId,
           objectApiName: "ApexTrigger",
           actionName: "view"
         }
+      }).then((url) => {
+        window.open(url, "_blank");
       });
     }
   }
