@@ -50,13 +50,15 @@
           </template>
           <template if:true={classBody}>
             <!-- Toolbar -->
-            <div class="toolbar slds-m-bottom_medium">
+            <div
+              class="toolbar slds-grid slds-grid_vertical-align-center slds-m-bottom_medium"
+            >
               <div class="slds-col slds-grow-none">
                 <span class="class-title slds-text-heading_small"
                   >{className}</span
                 >
               </div>
-              <div class="slds-col_filler"></div>
+              <div class="slds-col"></div>
               <template if:true={recordId}>
                 <div class="slds-col slds-no-flex">
                   <lightning-button
