@@ -26,7 +26,7 @@
             id="modal-heading-01"
             class="slds-text-heading_medium slds-hyphenate"
           >
-            Source View: {className}
+            Source Viewer
           </h2>
         </header>
         <div
@@ -49,19 +49,29 @@
             </div>
           </template>
           <template if:true={classBody}>
+            <!-- Toolbar -->
+            <div class="toolbar slds-m-bottom_medium">
+              <div class="slds-col slds-grow-none">
+                <span class="class-title slds-text-heading_small"
+                  >{className}</span
+                >
+              </div>
+              <div class="slds-col_filler"></div>
+              <template if:true={recordId}>
+                <div class="slds-col slds-no-flex">
+                  <lightning-button
+                    label="Open Trigger"
+                    icon-name="utility:new_window"
+                    variant="brand"
+                    onclick={handleOpenTrigger}
+                  ></lightning-button>
+                </div>
+              </template>
+            </div>
             <pre class="code-container"><code>{classBody}</code></pre>
           </template>
         </div>
         <footer class="slds-modal__footer">
-          <template if:true={recordId}>
-            <lightning-button
-              label="Open Trigger"
-              icon-name="utility:new_window"
-              variant="brand"
-              onclick={handleOpenTrigger}
-              class="slds-m-right_x-small"
-            ></lightning-button>
-          </template>
           <lightning-button
             label="Close"
             variant="neutral"
