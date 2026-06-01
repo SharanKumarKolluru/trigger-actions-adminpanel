@@ -1,0 +1,166 @@
+/* flowVisualizer.css */
+
+.visualizer-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+
+.visualizer-content {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Toolbar styling */
+.toolbar {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.flow-title {
+  font-weight: 700;
+  color: #1e293b;
+  background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* Scrollable Canvas */
+.canvas-wrapper {
+  overflow: auto;
+  max-height: 75vh;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 24px;
+  background: #f8fafc;
+  position: relative;
+  cursor: grab;
+}
+
+.canvas-wrapper:active {
+  cursor: grabbing;
+}
+
+.diagram-canvas {
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: max-content;
+  height: max-content;
+  min-width: 100%;
+  min-height: 100%;
+  transition: transform 0.15s ease-out;
+}
+
+/* Loading Spinner CSS */
+.loading-container {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner-wrapper {
+  width: 48px;
+  height: 48px;
+  position: relative;
+  margin: 0 auto;
+}
+
+.double-bounce1,
+.double-bounce2 {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #1b96ff;
+  opacity: 0.6;
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: bounce 2s infinite ease-in-out;
+}
+
+.double-bounce2 {
+  animation-delay: -1s;
+  background-color: #f9548a;
+}
+
+.loading-text {
+  font-weight: 500;
+  color: #64748b;
+  animation: pulse 1.5s infinite;
+}
+
+/* Error state CSS */
+.error-container {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  animation: shake 0.5s ease;
+}
+
+/* Keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-4px);
+  }
+  40%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+/* Custom styling applied inside the SVG nodes via inline stylesheet injection */
+/* Styling for SVG nodes is dynamically injected in JS because LWC CSS encapsulation would otherwise block it from matching dynamic SVG innerHTML elements. */

@@ -1,0 +1,113 @@
+<template>
+  <div class="visualizer-card">
+    <!-- Error State -->
+    <template if:true={error}>
+      <div class="error-container slds-p-around_large slds-text-align_center">
+        <lightning-icon
+          icon-name="utility:error"
+          size="large"
+          variant="error"
+          class="slds-m-bottom_medium"
+        ></lightning-icon>
+        <h3
+          class="slds-text-heading_medium slds-text-color_error slds-m-bottom_small"
+        >
+          Unable to Load Flow Visualizer
+        </h3>
+        <p class="slds-text-body_regular slds-m-bottom_medium">{error}</p>
+        <lightning-button
+          label="Try Again"
+          icon-name="utility:refresh"
+          variant="brand"
+          onclick={handleRetry}
+        ></lightning-button>
+      </div>
+    </template>
+
+    <!-- Loading State -->
+    <template if:false={isReady}>
+      <template if:false={error}>
+        <div
+          class="loading-container slds-p-around_large slds-text-align_center"
+        >
+          <div class="spinner-wrapper">
+            <div class="double-bounce1"></div>
+            <div class="double-bounce2"></div>
+          </div>
+          <p class="slds-text-body_regular slds-m-top_medium loading-text">
+            {loadingMessage}
+          </p>
+        </div>
+      </template>
+    </template>
+
+    <!-- Success State -->
+    <template if:true={isReady}>
+      <div class="visualizer-content">
+        <!-- Toolbar -->
+        <div
+          class="toolbar slds-grid slds-grid_vertical-align-center slds-p-bottom_medium slds-border_bottom"
+        >
+          <div class="slds-col slds-grow-none">
+            <span class="flow-title slds-text-heading_small">{flowName}</span>
+          </div>
+
+          <!-- Zoom Controls -->
+          <div class="slds-col slds-m-left_medium">
+            <lightning-button-group>
+              <lightning-button-icon
+                icon-name="utility:zoomout"
+                alternative-text="Zoom Out"
+                title="Zoom Out"
+                onclick={handleZoomOut}
+              ></lightning-button-icon>
+              <lightning-button
+                label={zoomPercentage}
+                variant="neutral"
+                onclick={handleZoomReset}
+                title="Reset Zoom"
+                style="min-width: 60px; display: inline-block"
+              ></lightning-button>
+              <lightning-button-icon
+                icon-name="utility:zoomin"
+                alternative-text="Zoom In"
+                title="Zoom In"
+                onclick={handleZoomIn}
+              ></lightning-button-icon>
+              <lightning-button-icon
+                icon-name="utility:expand"
+                alternative-text="Fit to Screen"
+                title="Fit to Screen"
+                onclick={handleZoomFit}
+              ></lightning-button-icon>
+            </lightning-button-group>
+          </div>
+
+          <div class="slds-col_filler"></div>
+          <div class="slds-col slds-no-flex btn-group">
+            <lightning-button
+              label="Copy Diagram Code"
+              icon-name="utility:copy"
+              variant="neutral"
+              onclick={handleCopyCode}
+              class="slds-m-right_x-small"
+            >
+            </lightning-button>
+            <lightning-button
+              label="Open in Flow Builder"
+              icon-name="utility:new_window"
+              variant="brand"
+              onclick={handleOpenFlowBuilder}
+            >
+            </lightning-button>
+          </div>
+        </div>
+
+        <!-- Scrollable Canvas Container -->
+        <div class="canvas-wrapper slds-m-top_medium">
+          <div class="diagram-canvas" lwc:dom="manual"></div>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>

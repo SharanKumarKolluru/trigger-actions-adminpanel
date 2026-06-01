@@ -46,6 +46,9 @@ export default class TriggerActionsManager extends NavigationMixin(
   activeTab = "actions";
   nativeTypeFilter = "all";
   nativeStatusFilter = "all";
+  isFlowModalOpen = false;
+  selectedFlowId = "";
+  selectedFlowName = "";
   _wiredActionsResult;
   _wiredSObjectsResult;
   _wiredNativeResult;
@@ -445,22 +448,21 @@ export default class TriggerActionsManager extends NavigationMixin(
     this.sourceClassName = "";
   }
 
-  async handleOpenFlowBuilder() {
+  async handleViewTriggerActionFlow() {
     const flowName = this.selectedAction?.Flow_Name__c;
+    if (!flowName) return;
+
     this.isLoading = true;
     try {
       const flowId = await getFlowIdByName({ flowName });
-      if (flowId && flowId.startsWith("300")) {
-        this.navigateToFlowBuilder(flowId);
-      } else {
-        this.showError(
-          "Notice",
-          "This is a managed package flow and cannot be opened directly in the Flow Builder."
-        );
+      if (flowId) {
+        this.selectedFlowId = flowId;
+        this.selectedFlowName = flowName;
+        this.isFlowModalOpen = true;
       }
     } catch (error) {
       this.showError(
-        "Error opening Flow Builder",
+        "Error loading Flow",
         error.body?.message || error.message
       );
     } finally {
@@ -468,9 +470,16 @@ export default class TriggerActionsManager extends NavigationMixin(
     }
   }
 
-  handleOpenNativeFlow(event) {
-    const durableId = event.currentTarget.dataset.id;
-    this.navigateToFlowBuilder(durableId);
+  handleViewFlowChart(event) {
+    this.selectedFlowId = event.currentTarget.dataset.id;
+    this.selectedFlowName = event.currentTarget.dataset.name;
+    this.isFlowModalOpen = true;
+  }
+
+  handleCloseFlowModal() {
+    this.isFlowModalOpen = false;
+    this.selectedFlowId = "";
+    this.selectedFlowName = "";
   }
 
   handleViewTriggerSource(event) {
@@ -493,15 +502,6 @@ export default class TriggerActionsManager extends NavigationMixin(
         recordId: triggerId,
         objectApiName: "ApexTrigger",
         actionName: "view"
-      }
-    });
-  }
-
-  navigateToFlowBuilder(durableId) {
-    this[NavigationMixin.Navigate]({
-      type: "standard__webPage",
-      attributes: {
-        url: `/builder_platform_interaction/flowBuilder.app?flowDefId=${durableId}`
       }
     });
   }

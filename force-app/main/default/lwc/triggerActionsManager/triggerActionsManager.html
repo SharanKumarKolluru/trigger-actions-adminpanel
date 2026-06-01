@@ -245,11 +245,11 @@
                               >
                                 <div class="detail-label">Flow Name</div>
                                 <lightning-button-icon
-                                  icon-name="utility:new_window"
+                                  icon-name="utility:flow"
                                   variant="bare"
-                                  onclick={handleOpenFlowBuilder}
-                                  alternative-text="Open in Flow Builder"
-                                  title="Open in Flow Builder"
+                                  onclick={handleViewTriggerActionFlow}
+                                  alternative-text="Visualize Flow"
+                                  title="Visualize Flow"
                                   size="small"
                                 >
                                 </lightning-button-icon>
@@ -441,12 +441,13 @@
                                     </template>
                                     <template if:true={item.isFlow}>
                                       <lightning-button-icon
-                                        icon-name="utility:new_window"
+                                        icon-name="utility:flow"
                                         variant="bare"
                                         data-id={item.id}
-                                        onclick={handleOpenNativeFlow}
-                                        title={item.buttonTitle}
-                                        disabled={item.isManaged}
+                                        data-name={item.name}
+                                        onclick={handleViewFlowChart}
+                                        title="Visualize Flow"
+                                        class="slds-var-m-right_x-small"
                                       ></lightning-button-icon>
                                     </template>
                                   </div>
@@ -710,6 +711,45 @@
             </div>
           </template>
         </div>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <!-- Flow Visualizer Modal -->
+  <template if:true={isFlowModalOpen}>
+    <section
+      role="dialog"
+      tabindex="-1"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open slds-modal_large"
+    >
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <lightning-button-icon
+            icon-name="utility:close"
+            alternative-text="Close"
+            variant="bare-inverse"
+            class="slds-modal__close"
+            onclick={handleCloseFlowModal}
+          >
+          </lightning-button-icon>
+          <h2 class="slds-text-heading_medium slds-hyphenate">
+            Flow Visualizer
+          </h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium">
+          <c-flow-visualizer
+            flow-id={selectedFlowId}
+            flow-name={selectedFlowName}
+          ></c-flow-visualizer>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button
+            label="Close"
+            onclick={handleCloseFlowModal}
+          ></lightning-button>
+        </footer>
       </div>
     </section>
     <div class="slds-backdrop slds-backdrop_open"></div>
