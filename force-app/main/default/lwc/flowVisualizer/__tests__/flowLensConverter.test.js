@@ -84,9 +84,9 @@ describe("flowLensConverter", () => {
 
       const result = convertFlowToMermaid(flow);
 
-      expect(result).toContain("Trigger Type: RecordAfterSave");
+      expect(result).toContain("Trigger: After Save");
       expect(result).toContain("Object: Account");
-      expect(result).toContain("Record Trigger: CreateAndUpdate");
+      expect(result).toContain("Event: Created or Updated");
     });
 
     it("should include filter criteria when present", () => {
@@ -115,8 +115,8 @@ describe("flowLensConverter", () => {
       const result = convertFlowToMermaid(flow);
 
       expect(result).toContain("Filter Logic: 1 AND 2");
-      expect(result).toContain("1. Name EqualTo Test");
-      expect(result).toContain("2. Active__c EqualTo true");
+      expect(result).toContain("1. Name == 'Test'");
+      expect(result).toContain("2. Active__c == true");
     });
 
     it("should handle a single filter (not array)", () => {
@@ -134,7 +134,7 @@ describe("flowLensConverter", () => {
       };
 
       const result = convertFlowToMermaid(flow);
-      expect(result).toContain("1. Status EqualTo Active");
+      expect(result).toContain("1. Status == 'Active'");
     });
 
     it("should include schedule details when present", () => {
@@ -181,7 +181,7 @@ describe("flowLensConverter", () => {
 
       expect(result).toContain("Assignment 📝");
       expect(result).toContain("Set Name");
-      expect(result).toContain("record.Name = Hello");
+      expect(result).toContain("record.Name = 'Hello'");
       expect(result).toContain("class Set_Name orange");
     });
 
@@ -211,8 +211,8 @@ describe("flowLensConverter", () => {
       };
 
       const result = convertFlowToMermaid(flow);
-      expect(result).toContain("var1 = A");
-      expect(result).toContain("var2 Add 5");
+      expect(result).toContain("var1 = 'A'");
+      expect(result).toContain("var2 += 5");
     });
   });
 
@@ -247,9 +247,134 @@ describe("flowLensConverter", () => {
 
       expect(result).toContain("Decision 🔹");
       expect(result).toContain("Check Status");
-      expect(result).toContain("Rule");
-      expect(result).toContain("Is Active");
-      expect(result).toContain("record.IsActive EqualTo true");
+      expect(result).toContain("IF");
+      expect(result).toContain("record.IsActive == true");
+    });
+
+    it("should render decision rules with AND logic and single quoted string literals", () => {
+      const flow = {
+        processType: "AutoLaunchedFlow",
+        start: {
+          connector: { targetReference: "MyDecision" }
+        },
+        decisions: {
+          name: "MyDecision",
+          label: "Check Status",
+          defaultConnector: null,
+          defaultConnectorLabel: "Default",
+          rules: {
+            name: "IsActive",
+            label: "Is Active",
+            conditionLogic: "and",
+            conditions: [
+              {
+                leftValueReference: "record.IsActive",
+                operator: "EqualTo",
+                rightValue: { booleanValue: true }
+              },
+              {
+                leftValueReference: "record.Type",
+                operator: "EqualTo",
+                rightValue: { stringValue: "Vendor" }
+              }
+            ],
+            connector: null
+          }
+        }
+      };
+
+      const result = convertFlowToMermaid(flow);
+
+      expect(result).toContain("IF (All)");
+      expect(result).toContain("1. record.IsActive == true");
+      expect(result).toContain("2. record.Type == 'Vendor'");
+      expect(result).not.toContain("Logic: AND");
+    });
+
+    it("should render decision rules with OR logic and empty right-hand values as null", () => {
+      const flow = {
+        processType: "AutoLaunchedFlow",
+        start: {
+          connector: { targetReference: "MyDecision" }
+        },
+        decisions: {
+          name: "MyDecision",
+          label: "Check Status",
+          defaultConnector: null,
+          defaultConnectorLabel: "Default",
+          rules: {
+            name: "IsActive",
+            label: "Is Active",
+            conditionLogic: "or",
+            conditions: [
+              {
+                leftValueReference: "record.Customer",
+                operator: "EqualTo",
+                rightValue: null
+              },
+              {
+                leftValueReference: "record.Vendor",
+                operator: "NotEqualTo",
+                rightValue: {}
+              }
+            ],
+            connector: null
+          }
+        }
+      };
+
+      const result = convertFlowToMermaid(flow);
+
+      expect(result).toContain("IF (Any)");
+      expect(result).toContain("1. record.Customer == null");
+      expect(result).toContain("2. record.Vendor != null");
+      expect(result).not.toContain("Logic: OR");
+    });
+
+    it("should render decision rules with custom logic", () => {
+      const flow = {
+        processType: "AutoLaunchedFlow",
+        start: {
+          connector: { targetReference: "MyDecision" }
+        },
+        decisions: {
+          name: "MyDecision",
+          label: "Check Status",
+          defaultConnector: null,
+          defaultConnectorLabel: "Default",
+          rules: {
+            name: "IsActive",
+            label: "Is Active",
+            conditionLogic: "1 AND (2 OR 3)",
+            conditions: [
+              {
+                leftValueReference: "a",
+                operator: "EqualTo",
+                rightValue: { numberValue: 1 }
+              },
+              {
+                leftValueReference: "b",
+                operator: "EqualTo",
+                rightValue: { numberValue: 2 }
+              },
+              {
+                leftValueReference: "c",
+                operator: "EqualTo",
+                rightValue: { numberValue: 3 }
+              }
+            ],
+            connector: null
+          }
+        }
+      };
+
+      const result = convertFlowToMermaid(flow);
+
+      expect(result).toContain("IF (1 AND (2 OR 3))");
+      expect(result).toContain("1. a == 1");
+      expect(result).toContain("2. b == 2");
+      expect(result).toContain("3. c == 3");
+      expect(result).not.toContain("Logic: 1 AND (2 OR 3)");
     });
   });
 
@@ -311,12 +436,49 @@ describe("flowLensConverter", () => {
 
       const result = convertFlowToMermaid(flow);
 
-      expect(result).toContain("Record Lookup 🔍");
-      expect(result).toContain("sObject: Account");
-      expect(result).toContain("Fields Queried:");
-      expect(result).toContain("Name, Industry");
-      expect(result).toContain("First Record Only");
+      expect(result).toContain("Get Account 🔍");
+      expect(result).toContain("SELECT Name, Industry");
+      expect(result).toContain("WHERE");
+      expect(result).toContain("Id == recordId");
+      expect(result).toContain("LIMIT 1");
       expect(result).toContain("class GetAccount pink");
+    });
+
+    it("should render lookup filters with logic embedded in WHERE header", () => {
+      const flow = {
+        processType: "AutoLaunchedFlow",
+        start: {
+          connector: { targetReference: "GetAccount" }
+        },
+        recordLookups: {
+          name: "GetAccount",
+          label: "Get Account",
+          object: "Account",
+          queriedFields: ["Name"],
+          filterLogic: "and",
+          filters: [
+            {
+              field: "Industry",
+              operator: "EqualTo",
+              value: { stringValue: "Apparel" }
+            },
+            {
+              field: "Rating",
+              operator: "EqualTo",
+              value: { stringValue: "Hot" }
+            }
+          ],
+          getFirstRecordOnly: true,
+          connector: null
+        }
+      };
+
+      const result = convertFlowToMermaid(flow);
+
+      expect(result).toContain("WHERE (All)");
+      expect(result).toContain("1. Industry == 'Apparel'");
+      expect(result).toContain("2. Rating == 'Hot'");
+      expect(result).not.toContain("Logic: AND");
     });
   });
 
@@ -342,8 +504,9 @@ describe("flowLensConverter", () => {
 
       const result = convertFlowToMermaid(flow);
 
-      expect(result).toContain("Record Update ✏️");
-      expect(result).toContain("Description = Updated");
+      expect(result).toContain("Update Account ✏️");
+      expect(result).toContain("SET");
+      expect(result).toContain("Description = 'Updated'");
       expect(result).toContain("class UpdateAcct pink");
     });
   });
@@ -611,7 +774,7 @@ describe("flowLensConverter", () => {
       // Verify node types
       expect(result).toContain("Decision 🔹");
       expect(result).toContain("Loop 🔄");
-      expect(result).toContain("Record Update ✏️");
+      expect(result).toContain("Update Contact ✏️");
 
       // Verify transitions labels
       expect(result).toContain("Is New Contact");
@@ -700,6 +863,66 @@ describe("flowLensConverter", () => {
 
       expect(result).toContain("Wait ⏳");
       expect(result).toContain("Wait for Approval");
+    });
+
+    it("should handle values with null properties from Tooling API by falling through correctly", () => {
+      const flow = {
+        processType: "AutoLaunchedFlow",
+        start: {
+          connector: { targetReference: "TestAssign" }
+        },
+        assignments: {
+          name: "TestAssign",
+          label: "Test Values",
+          assignmentItems: [
+            {
+              assignToReference: "refVar",
+              operator: "Assign",
+              value: {
+                stringValue: null,
+                booleanValue: null,
+                numberValue: null,
+                elementReference: "record.AccountId"
+              }
+            }
+          ],
+          connector: null
+        }
+      };
+
+      const result = convertFlowToMermaid(flow);
+      expect(result).toContain("refVar = record.AccountId");
+      expect(result).not.toContain("refVar = 'null'");
+    });
+
+    it("should render null (unquoted) when all value properties are null", () => {
+      const flow = {
+        processType: "AutoLaunchedFlow",
+        start: {
+          connector: { targetReference: "TestAssign" }
+        },
+        assignments: {
+          name: "TestAssign",
+          label: "Test Values",
+          assignmentItems: [
+            {
+              assignToReference: "nullVar",
+              operator: "Assign",
+              value: {
+                stringValue: null,
+                booleanValue: null,
+                numberValue: null,
+                elementReference: null
+              }
+            }
+          ],
+          connector: null
+        }
+      };
+
+      const result = convertFlowToMermaid(flow);
+      expect(result).toContain("nullVar = null");
+      expect(result).not.toContain("nullVar = 'null'");
     });
   });
 });

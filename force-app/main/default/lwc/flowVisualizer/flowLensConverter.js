@@ -59,18 +59,22 @@ function toString(element) {
   if (!element) {
     return "";
   }
+  if (element.stringValue !== null && element.stringValue !== undefined) {
+    return `'${element.stringValue}'`;
+  }
   if (
-    element.stringValue !== undefined ||
-    element.sobjectValue !== undefined ||
-    element.apexValue !== undefined ||
-    element.elementReference !== undefined ||
-    element.formulaExpression !== undefined ||
-    element.setupReference !== undefined ||
-    element.transformValueReference !== undefined ||
-    element.formulaDataType !== undefined
+    (element.sobjectValue !== null && element.sobjectValue !== undefined) ||
+    (element.apexValue !== null && element.apexValue !== undefined) ||
+    (element.elementReference !== null &&
+      element.elementReference !== undefined) ||
+    (element.formulaExpression !== null &&
+      element.formulaExpression !== undefined) ||
+    (element.setupReference !== null && element.setupReference !== undefined) ||
+    (element.transformValueReference !== null &&
+      element.transformValueReference !== undefined) ||
+    (element.formulaDataType !== null && element.formulaDataType !== undefined)
   ) {
     return (
-      element.stringValue ??
       element.sobjectValue ??
       element.apexValue ??
       element.elementReference ??
@@ -81,16 +85,16 @@ function toString(element) {
       ""
     );
   }
-  if (element.dateTimeValue) {
+  if (element.dateTimeValue !== null && element.dateTimeValue !== undefined) {
     return new Date(element.dateTimeValue).toLocaleDateString();
   }
-  if (element.dateValue) {
+  if (element.dateValue !== null && element.dateValue !== undefined) {
     return new Date(element.dateValue).toLocaleDateString();
   }
-  if (element.numberValue !== undefined) {
+  if (element.numberValue !== null && element.numberValue !== undefined) {
     return String(element.numberValue);
   }
-  if (element.booleanValue !== undefined) {
+  if (element.booleanValue !== null && element.booleanValue !== undefined) {
     return String(element.booleanValue);
   }
   return "";
@@ -102,6 +106,69 @@ function sanitizeId(id) {
 
 function sanitizeLabel(label) {
   return label ? label.replace(/"/g, "'") : "";
+}
+
+function translateOperator(op) {
+  const operatorMap = {
+    // Comparison
+    EqualTo: "==",
+    NotEqualTo: "!=",
+    GreaterThan: ">",
+    GreaterThanOrEqualTo: ">=",
+    LessThan: "<",
+    LessThanOrEqualTo: "<=",
+    Contains: "contains",
+    StartsWith: "starts with",
+    EndsWith: "ends with",
+
+    // Assignment
+    Assign: "=",
+    Add: "+=",
+    Subtract: "-=",
+    AddItem: "+=",
+    SubtractItem: "-="
+  };
+  return operatorMap[op] || op;
+}
+
+function formatCondition(left, operator, rightValue) {
+  let right = toString(rightValue);
+  if (operator === "IsNull") {
+    return right === "true" ? `${left} is null` : `${left} is not null`;
+  }
+  if (operator === "IsChanged") {
+    return right === "true" ? `${left} is changed` : `${left} is not changed`;
+  }
+
+  if (right === "") {
+    right = "null";
+  }
+
+  const opSymbol = translateOperator(operator);
+  return `${left} ${opSymbol} ${right}`;
+}
+
+function formatAssignment(left, operator, rightValue) {
+  let right = toString(rightValue);
+  if (right === "") {
+    right = "null";
+  }
+  const opSymbol = translateOperator(operator);
+  return `${left} ${opSymbol} ${right}`;
+}
+
+function translateTriggerType(type) {
+  if (type === "RecordBeforeSave") return "Before Save";
+  if (type === "RecordAfterSave") return "After Save";
+  return type;
+}
+
+function translateRecordTriggerType(type) {
+  if (type === "Create") return "Created";
+  if (type === "Update") return "Updated";
+  if (type === "CreateAndUpdate") return "Created or Updated";
+  if (type === "Delete") return "Deleted";
+  return type;
 }
 
 function getNodeLabel(node) {
@@ -162,13 +229,15 @@ function getFlowStart(start, processType) {
     entryCriteria.push(`Process Type: ${processType}`);
   }
   if (start.triggerType) {
-    entryCriteria.push(`Trigger Type: ${start.triggerType}`);
+    entryCriteria.push(`Trigger: ${translateTriggerType(start.triggerType)}`);
   }
   if (start.object) {
     entryCriteria.push(`Object: ${start.object}`);
   }
   if (start.recordTriggerType) {
-    entryCriteria.push(`Record Trigger: ${start.recordTriggerType}`);
+    entryCriteria.push(
+      `Event: ${translateRecordTriggerType(start.recordTriggerType)}`
+    );
   }
   if (start.entryType) {
     entryCriteria.push(`Entry Type: ${start.entryType}`);
@@ -182,9 +251,12 @@ function getFlowStart(start, processType) {
   if (start.filterLogic && filters.length > 0) {
     entryCriteria.push(`Filter Logic: ${start.filterLogic}`);
     filters.forEach((filter, index) => {
-      entryCriteria.push(
-        `${index + 1}. ${filter.field} ${filter.operator} ${toString(filter.value)}`
+      const condStr = formatCondition(
+        filter.field,
+        filter.operator,
+        filter.value
       );
+      entryCriteria.push(`${index + 1}. ${condStr}`);
     });
   }
 
@@ -250,8 +322,11 @@ function getFlowAssignment(node) {
     : [];
   if (items.length > 0) {
     const assignments = items.map((item) => {
-      const operator = item.operator === "Assign" ? "=" : item.operator;
-      return `${item.assignToReference} ${operator} ${toString(item.value)}`;
+      return formatAssignment(
+        item.assignToReference,
+        item.operator,
+        item.value
+      );
     });
     innerNodes.push({
       id: `${node.name}__Assignments`,
@@ -278,24 +353,37 @@ function getFlowDecision(node) {
       ? node.rules
       : [node.rules]
     : [];
-  rules.forEach((rule) => {
-    let conditionCounter = 1;
+  rules.forEach((rule, index) => {
     const conditionsList = rule.conditions
       ? Array.isArray(rule.conditions)
         ? rule.conditions
         : [rule.conditions]
       : [];
-    const conditions = conditionsList.map(
-      (cond) =>
-        `${conditionCounter++}. ${cond.leftValueReference} ${cond.operator} ${toString(cond.rightValue)}`
-    );
-    if (conditions.length > 1) {
-      conditions.push(`Logic: ${rule.conditionLogic}`);
+    const conditions = conditionsList.map((cond, idx) => {
+      const condStr = formatCondition(
+        cond.leftValueReference,
+        cond.operator,
+        cond.rightValue
+      );
+      return conditionsList.length > 1 ? `${idx + 1}. ${condStr}` : condStr;
+    });
+
+    let typeLabel = index === 0 ? "IF" : "ELSE IF";
+    if (conditionsList.length > 1 && rule.conditionLogic) {
+      const logicUpper = rule.conditionLogic.toUpperCase();
+      if (logicUpper === "AND") {
+        typeLabel += " (All)";
+      } else if (logicUpper === "OR") {
+        typeLabel += " (Any)";
+      } else {
+        typeLabel += ` (${logicUpper})`;
+      }
     }
+
     innerNodes.push({
       id: rule.name,
-      type: "Rule",
-      label: rule.label,
+      type: typeLabel,
+      label: "",
       content: conditions
     });
   });
@@ -346,43 +434,58 @@ function getFlowRecordLookup(node) {
       : [node.queriedFields]
     : [];
   if (queried.length > 0) {
-    innerNodeContent.push("Fields Queried:", queried.join(", "));
-  } else {
-    innerNodeContent.push("Fields Queried: all");
+    innerNodeContent.push(`SELECT ${queried.join(", ")}`);
   }
 
-  innerNodeContent.push(
-    `Filter Logic: ${node.filterLogic ? node.filterLogic : "None"}`
-  );
   const filters = node.filters
     ? Array.isArray(node.filters)
       ? node.filters
       : [node.filters]
     : [];
-  filters.forEach((filter, index) => {
+  if (filters.length > 0) {
+    const filterConditions = filters.map((filter, index) => {
+      const condStr = formatCondition(
+        filter.field,
+        filter.operator,
+        filter.value
+      );
+      return filters.length > 1 ? `${index + 1}. ${condStr}` : condStr;
+    });
+    let whereHeader = "WHERE";
+    if (filters.length > 1 && node.filterLogic) {
+      const logicUpper = node.filterLogic.toUpperCase();
+      if (logicUpper === "AND") {
+        whereHeader += " (All)";
+      } else if (logicUpper === "OR") {
+        whereHeader += " (Any)";
+      } else {
+        whereHeader += ` (${logicUpper})`;
+      }
+    }
     innerNodeContent.push(
-      `${index + 1}. ${filter.field} ${filter.operator} ${toString(filter.value)}`
+      whereHeader,
+      ...filterConditions.map((c) => `  ${c}`)
     );
-  });
-
-  if (node.getFirstRecordOnly) {
-    innerNodeContent.push("Limit: First Record Only");
-  } else if (node.limit) {
-    innerNodeContent.push(`Limit: ${node.limit}`);
-  } else {
-    innerNodeContent.push("Limit: All Records");
   }
+
+  let limitStr = "All Records";
+  if (node.getFirstRecordOnly) {
+    limitStr = "1";
+  } else if (node.limit) {
+    limitStr = String(node.limit);
+  }
+  innerNodeContent.push(`LIMIT ${limitStr}`);
 
   return toUmlString({
     id: node.name,
     label: node.label || node.name,
-    type: "Record Lookup",
+    type: `Get ${node.object || "Record"}`,
     color: SkinColor.PINK,
     icon: Icon.LOOKUP,
     innerNodes: [
       {
         id: `${node.name}__LookupDetails`,
-        type: `sObject: ${node.object}`,
+        type: "",
         label: "",
         content: innerNodeContent
       }
@@ -392,19 +495,6 @@ function getFlowRecordLookup(node) {
 
 function getFlowRecordUpdate(node) {
   const innerNodeContent = [];
-  const filters = node.filters
-    ? Array.isArray(node.filters)
-      ? node.filters
-      : [node.filters]
-    : [];
-  if (filters.length > 0) {
-    innerNodeContent.push("Filter Criteria:");
-    filters.forEach((filter, index) => {
-      innerNodeContent.push(
-        `${index + 1}. ${filter.field} ${filter.operator} ${toString(filter.value)}`
-      );
-    });
-  }
 
   const assignments = node.inputAssignments
     ? Array.isArray(node.inputAssignments)
@@ -412,31 +502,212 @@ function getFlowRecordUpdate(node) {
       : [node.inputAssignments]
     : [];
   if (assignments.length > 0) {
-    innerNodeContent.push("Field Updates:");
+    innerNodeContent.push("SET");
     assignments.forEach((assign) => {
-      innerNodeContent.push(`${assign.field} = ${toString(assign.value)}`);
+      let valStr = toString(assign.value);
+      if (valStr === "") {
+        valStr = "null";
+      }
+      innerNodeContent.push(`  ${assign.field} = ${valStr}`);
     });
   }
 
-  const type = node.inputReference ? "Reference Update" : "Direct Update";
-  const label = node.inputReference
-    ? node.inputReference
-    : `sObject: ${node.object}`;
+  const filters = node.filters
+    ? Array.isArray(node.filters)
+      ? node.filters
+      : [node.filters]
+    : [];
+  if (filters.length > 0) {
+    const filterConditions = filters.map((filter, index) => {
+      const condStr = formatCondition(
+        filter.field,
+        filter.operator,
+        filter.value
+      );
+      return filters.length > 1 ? `${index + 1}. ${condStr}` : condStr;
+    });
+    let whereHeader = "WHERE";
+    if (filters.length > 1 && node.filterLogic) {
+      const logicUpper = node.filterLogic.toUpperCase();
+      if (logicUpper === "AND") {
+        whereHeader += " (All)";
+      } else if (logicUpper === "OR") {
+        whereHeader += " (Any)";
+      } else {
+        whereHeader += ` (${logicUpper})`;
+      }
+    }
+    innerNodeContent.push(
+      whereHeader,
+      ...filterConditions.map((c) => `  ${c}`)
+    );
+  }
+
+  const objLabel = node.object ? ` ${node.object}` : " Record";
+  const typeLabel = node.inputReference
+    ? `Update Reference: ${node.inputReference}`
+    : `Update${objLabel}`;
 
   return toUmlString({
     id: node.name,
     label: node.label || node.name,
-    type: "Record Update",
+    type: typeLabel,
     color: SkinColor.PINK,
     icon: Icon.UPDATE,
     innerNodes: [
       {
         id: `${node.name}__UpdateDetails`,
-        type,
-        label,
+        type: "",
+        label: "",
         content: innerNodeContent
       }
     ]
+  });
+}
+
+function getFlowRecordCreate(node) {
+  const innerNodeContent = [];
+  const assignments = node.inputAssignments
+    ? Array.isArray(node.inputAssignments)
+      ? node.inputAssignments
+      : [node.inputAssignments]
+    : [];
+  if (assignments.length > 0) {
+    innerNodeContent.push("SET");
+    assignments.forEach((assign) => {
+      innerNodeContent.push(`  ${assign.field} = ${toString(assign.value)}`);
+    });
+  }
+
+  const objLabel = node.object ? ` ${node.object}` : " Record";
+  const typeLabel = node.inputReference
+    ? `Create Reference: ${node.inputReference}`
+    : `Create${objLabel}`;
+
+  return toUmlString({
+    id: node.name,
+    label: node.label || node.name,
+    type: typeLabel,
+    color: SkinColor.PINK,
+    icon: Icon.CREATE_RECORD,
+    innerNodes: [
+      {
+        id: `${node.name}__CreateDetails`,
+        type: "",
+        label: "",
+        content: innerNodeContent
+      }
+    ]
+  });
+}
+
+function getFlowRecordDelete(node) {
+  const innerNodeContent = [];
+  const filters = node.filters
+    ? Array.isArray(node.filters)
+      ? node.filters
+      : [node.filters]
+    : [];
+  if (filters.length > 0) {
+    const filterConditions = filters.map((filter, index) => {
+      const condStr = formatCondition(
+        filter.field,
+        filter.operator,
+        filter.value
+      );
+      return filters.length > 1 ? `${index + 1}. ${condStr}` : condStr;
+    });
+    let whereHeader = "WHERE";
+    if (filters.length > 1 && node.filterLogic) {
+      const logicUpper = node.filterLogic.toUpperCase();
+      if (logicUpper === "AND") {
+        whereHeader += " (All)";
+      } else if (logicUpper === "OR") {
+        whereHeader += " (Any)";
+      } else {
+        whereHeader += ` (${logicUpper})`;
+      }
+    }
+    innerNodeContent.push(
+      whereHeader,
+      ...filterConditions.map((c) => `  ${c}`)
+    );
+  }
+
+  const objLabel = node.object ? ` ${node.object}` : " Record";
+  const typeLabel = node.inputReference
+    ? `Delete Reference: ${node.inputReference}`
+    : `Delete${objLabel}`;
+
+  return toUmlString({
+    id: node.name,
+    label: node.label || node.name,
+    type: typeLabel,
+    color: SkinColor.PINK,
+    icon: Icon.DELETE,
+    innerNodes: [
+      {
+        id: `${node.name}__DeleteDetails`,
+        type: "",
+        label: "",
+        content: innerNodeContent
+      }
+    ]
+  });
+}
+
+function getFlowActionCall(node) {
+  const innerNodeContent = [];
+  if (node.actionType) {
+    innerNodeContent.push(`Type: ${node.actionType}`);
+  }
+  if (node.actionName) {
+    innerNodeContent.push(`Action: ${node.actionName}`);
+  }
+
+  return toUmlString({
+    id: node.name,
+    label: node.label || node.name,
+    type: "Action Call",
+    color: SkinColor.NAVY,
+    icon: Icon.CODE,
+    innerNodes:
+      innerNodeContent.length > 0
+        ? [
+            {
+              id: `${node.name}__ActionDetails`,
+              type: "",
+              label: "",
+              content: innerNodeContent
+            }
+          ]
+        : []
+  });
+}
+
+function getFlowSubflow(node) {
+  const innerNodeContent = [];
+  if (node.flowName) {
+    innerNodeContent.push(`Flow: ${node.flowName}`);
+  }
+
+  return toUmlString({
+    id: node.name,
+    label: node.label || node.name,
+    type: "Subflow",
+    color: SkinColor.NAVY,
+    icon: Icon.RIGHT,
+    innerNodes:
+      innerNodeContent.length > 0
+        ? [
+            {
+              id: `${node.name}__SubflowDetails`,
+              type: "",
+              label: "",
+              content: innerNodeContent
+            }
+          ]
+        : []
   });
 }
 
@@ -775,26 +1046,10 @@ export function convertFlowToMermaid(flow, flowLabel, includeTitle = true) {
         lines.push(getFlowOrchestratedStage(node));
         break;
       case "recordCreate":
-        lines.push(
-          toUmlString({
-            id: node.name,
-            label: node.label || node.name,
-            type: "Record Create",
-            color: SkinColor.PINK,
-            icon: Icon.CREATE_RECORD
-          })
-        );
+        lines.push(getFlowRecordCreate(node));
         break;
       case "recordDelete":
-        lines.push(
-          toUmlString({
-            id: node.name,
-            label: node.label || node.name,
-            type: "Record Delete",
-            color: SkinColor.PINK,
-            icon: Icon.DELETE
-          })
-        );
+        lines.push(getFlowRecordDelete(node));
         break;
       case "recordLookup":
         lines.push(getFlowRecordLookup(node));
@@ -836,15 +1091,7 @@ export function convertFlowToMermaid(flow, flowLabel, includeTitle = true) {
         );
         break;
       case "subflow":
-        lines.push(
-          toUmlString({
-            id: node.name,
-            label: node.label || node.name,
-            type: "Subflow",
-            color: SkinColor.NAVY,
-            icon: Icon.RIGHT
-          })
-        );
+        lines.push(getFlowSubflow(node));
         break;
       case "transform":
         lines.push(
@@ -869,15 +1116,7 @@ export function convertFlowToMermaid(flow, flowLabel, includeTitle = true) {
         );
         break;
       case "actionCall":
-        lines.push(
-          toUmlString({
-            id: node.name,
-            label: node.label || node.name,
-            type: "Action Call",
-            color: SkinColor.NAVY,
-            icon: Icon.CODE
-          })
-        );
+        lines.push(getFlowActionCall(node));
         break;
       case "customError":
         lines.push(getFlowCustomError(node));
