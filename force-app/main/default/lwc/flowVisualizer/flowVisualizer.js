@@ -98,9 +98,10 @@ const DIAGRAM_STYLES = `
   /* Logic details & code lines (e.g. SingleVar.Id = Record.Id) */
   .diagram-canvas svg text tspan.line:nth-child(n+4),
   .diagram-canvas svg text tspan:nth-child(n+4) {
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     font-size: 11.5px !important;
-    letter-spacing: -0.2px !important;
+    font-weight: 400 !important;
+    letter-spacing: -0.1px !important;
   }
   .diagram-canvas svg .pink text tspan.line:nth-child(n+4),
   .diagram-canvas svg .pink text tspan:nth-child(n+4),
@@ -110,7 +111,7 @@ const DIAGRAM_STYLES = `
   .diagram-canvas svg .navy text tspan:nth-child(n+4),
   .diagram-canvas svg .blue text tspan.line:nth-child(n+4),
   .diagram-canvas svg .blue text tspan:nth-child(n+4) {
-    fill: rgba(255, 255, 255, 0.92) !important;
+    fill: rgba(255, 255, 255, 0.85) !important;
   }
 `;
 

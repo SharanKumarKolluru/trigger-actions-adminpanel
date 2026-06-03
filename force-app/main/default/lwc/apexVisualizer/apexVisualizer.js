@@ -86,7 +86,7 @@ const DIAGRAM_STYLES = `
     letter-spacing: 0.5px !important;
   }
 
-  /* Code/Logic Nodes (override to be monospace and normal weight) */
+  /* Code/Logic Nodes (override to be sans-serif and normal weight) */
   .diagram-canvas svg [id*="action_"] text,
   .diagram-canvas svg [id*="action_"] span,
   .diagram-canvas svg [id*="action_"] tspan,
@@ -96,13 +96,13 @@ const DIAGRAM_STYLES = `
   .diagram-canvas svg [id*="_Logic"] text,
   .diagram-canvas svg [id*="_Logic"] span,
   .diagram-canvas svg [id*="_Logic"] tspan {
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
-    font-weight: 500 !important;
+    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-weight: 400 !important;
     font-size: 11.5px !important;
-    letter-spacing: -0.2px !important;
+    letter-spacing: -0.1px !important;
   }
 
-  /* DML Nodes (Line 1: Header, Lines 2+: Monospace Code) */
+  /* DML Nodes (Line 1: Header, Lines 2+: Code) */
   .diagram-canvas svg [id*="dml_"] text tspan:first-child,
   .diagram-canvas svg [id*="dml_"] text tspan.line:first-child {
     font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
@@ -112,10 +112,10 @@ const DIAGRAM_STYLES = `
   }
   .diagram-canvas svg [id*="dml_"] text tspan:nth-child(n+2),
   .diagram-canvas svg [id*="dml_"] text tspan.line:nth-child(n+2) {
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
-    font-weight: 500 !important;
+    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-weight: 400 !important;
     font-size: 11.5px !important;
-    letter-spacing: -0.2px !important;
+    letter-spacing: -0.1px !important;
   }
 `;
 
