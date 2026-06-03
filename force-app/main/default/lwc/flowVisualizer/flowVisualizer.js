@@ -100,8 +100,17 @@ const DIAGRAM_STYLES = `
   .diagram-canvas svg text tspan:nth-child(n+4) {
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
     font-size: 11.5px !important;
-    fill: rgba(255, 255, 255, 0.92) !important;
     letter-spacing: -0.2px !important;
+  }
+  .diagram-canvas svg .pink text tspan.line:nth-child(n+4),
+  .diagram-canvas svg .pink text tspan:nth-child(n+4),
+  .diagram-canvas svg .orange text tspan.line:nth-child(n+4),
+  .diagram-canvas svg .orange text tspan:nth-child(n+4),
+  .diagram-canvas svg .navy text tspan.line:nth-child(n+4),
+  .diagram-canvas svg .navy text tspan:nth-child(n+4),
+  .diagram-canvas svg .blue text tspan.line:nth-child(n+4),
+  .diagram-canvas svg .blue text tspan:nth-child(n+4) {
+    fill: rgba(255, 255, 255, 0.92) !important;
   }
 `;
 
