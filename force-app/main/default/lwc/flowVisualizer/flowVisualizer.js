@@ -20,8 +20,8 @@ const DIAGRAM_STYLES = `
   .diagram-canvas svg .pink ellipse,
   .diagram-canvas svg .pink path,
   .diagram-canvas svg .state.pink rect {
-    fill: #F9548A !important;
-    stroke: #e11d48 !important;
+    fill: #F43F5E !important;
+    stroke: #BE185D !important;
     stroke-width: 2px !important;
   }
   .diagram-canvas svg .orange rect,
@@ -30,8 +30,8 @@ const DIAGRAM_STYLES = `
   .diagram-canvas svg .orange ellipse,
   .diagram-canvas svg .orange path,
   .diagram-canvas svg .state.orange rect {
-    fill: #DD7A00 !important;
-    stroke: #b45309 !important;
+    fill: #F97316 !important;
+    stroke: #C2410C !important;
     stroke-width: 2px !important;
   }
   .diagram-canvas svg .navy rect,
@@ -40,8 +40,8 @@ const DIAGRAM_STYLES = `
   .diagram-canvas svg .navy ellipse,
   .diagram-canvas svg .navy path,
   .diagram-canvas svg .state.navy rect {
-    fill: #344568 !important;
-    stroke: #1e293b !important;
+    fill: #475569 !important;
+    stroke: #1E293B !important;
     stroke-width: 2px !important;
   }
   .diagram-canvas svg .blue rect,
@@ -50,8 +50,8 @@ const DIAGRAM_STYLES = `
   .diagram-canvas svg .blue ellipse,
   .diagram-canvas svg .blue path,
   .diagram-canvas svg .state.blue rect {
-    fill: #1B96FF !important;
-    stroke: #1d4ed8 !important;
+    fill: #0284C7 !important;
+    stroke: #0369A1 !important;
     stroke-width: 2px !important;
   }
   .diagram-canvas svg text,
@@ -79,6 +79,29 @@ const DIAGRAM_STYLES = `
   .diagram-canvas svg .node rect {
     rx: 8px !important;
     ry: 8px !important;
+  }
+
+  /* --- Typography Hierarchy for Code/Details --- */
+  /* Node Header (e.g. Assignment 📝) */
+  .diagram-canvas svg text tspan.line:first-child,
+  .diagram-canvas svg text tspan:first-child {
+    font-weight: 800 !important;
+    font-size: 13.5px !important;
+    letter-spacing: 0.5px !important;
+  }
+  /* Node Name (e.g. Build Single Var - Quote) */
+  .diagram-canvas svg text tspan.line:nth-child(2),
+  .diagram-canvas svg text tspan:nth-child(2) {
+    font-weight: 600 !important;
+    font-size: 12.5px !important;
+  }
+  /* Logic details & code lines (e.g. SingleVar.Id = Record.Id) */
+  .diagram-canvas svg text tspan.line:nth-child(n+4),
+  .diagram-canvas svg text tspan:nth-child(n+4) {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+    font-size: 11.5px !important;
+    fill: rgba(255, 255, 255, 0.92) !important;
+    letter-spacing: -0.2px !important;
   }
 `;
 

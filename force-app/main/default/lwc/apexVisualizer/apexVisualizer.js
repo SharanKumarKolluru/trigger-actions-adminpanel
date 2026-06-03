@@ -15,8 +15,8 @@ const DIAGRAM_STYLES = `
   .diagram-canvas svg .pink ellipse,
   .diagram-canvas svg .pink path,
   .diagram-canvas svg .state.pink rect {
-    fill: #F9548A !important;
-    stroke: #e11d48 !important;
+    fill: #F43F5E !important;
+    stroke: #BE185D !important;
     stroke-width: 2px !important;
   }
   .diagram-canvas svg .orange rect,
@@ -25,8 +25,8 @@ const DIAGRAM_STYLES = `
   .diagram-canvas svg .orange ellipse,
   .diagram-canvas svg .orange path,
   .diagram-canvas svg .state.orange rect {
-    fill: #DD7A00 !important;
-    stroke: #b45309 !important;
+    fill: #F97316 !important;
+    stroke: #C2410C !important;
     stroke-width: 2px !important;
   }
   .diagram-canvas svg .navy rect,
@@ -35,8 +35,8 @@ const DIAGRAM_STYLES = `
   .diagram-canvas svg .navy ellipse,
   .diagram-canvas svg .navy path,
   .diagram-canvas svg .state.navy rect {
-    fill: #344568 !important;
-    stroke: #1e293b !important;
+    fill: #475569 !important;
+    stroke: #1E293B !important;
     stroke-width: 2px !important;
   }
   .diagram-canvas svg .blue rect,
@@ -45,19 +45,14 @@ const DIAGRAM_STYLES = `
   .diagram-canvas svg .blue ellipse,
   .diagram-canvas svg .blue path,
   .diagram-canvas svg .state.blue rect {
-    fill: #1B96FF !important;
-    stroke: #1d4ed8 !important;
+    fill: #0284C7 !important;
+    stroke: #0369A1 !important;
     stroke-width: 2px !important;
   }
   .diagram-canvas svg text,
   .diagram-canvas svg tspan,
   .diagram-canvas svg span {
     font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-    fill: #333333 !important;
-    color: #333333 !important;
-    stroke: none !important;
-    visibility: visible !important;
-    opacity: 1 !important;
   }
   .diagram-canvas svg .pink text,
   .diagram-canvas svg .pink span,
@@ -71,13 +66,53 @@ const DIAGRAM_STYLES = `
   .diagram-canvas svg .blue text,
   .diagram-canvas svg .blue span,
   .diagram-canvas svg .blue tspan {
-    fill: #ffffff !important;
     color: #ffffff !important;
+    fill: #ffffff !important;
+    stroke: none !important;
   }
   .diagram-canvas svg .state rect,
   .diagram-canvas svg .node rect {
     rx: 8px !important;
     ry: 8px !important;
+  }
+
+  /* --- Typography Hierarchy for Code/Details --- */
+  
+  /* Header Nodes (METHOD_START, METHOD_END, IF, WHILE, FOR) */
+  .diagram-canvas svg .headerNode text,
+  .diagram-canvas svg .headerNode span,
+  .diagram-canvas svg .headerNode tspan {
+    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-weight: 800 !important;
+    font-size: 13.5px !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  /* Code/Logic Nodes (Actions, Returns, Conditions) */
+  .diagram-canvas svg .codeNode text,
+  .diagram-canvas svg .codeNode span,
+  .diagram-canvas svg .codeNode tspan,
+  .diagram-canvas svg .logicNode text,
+  .diagram-canvas svg .logicNode span,
+  .diagram-canvas svg .logicNode tspan {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+    font-size: 11.5px !important;
+    letter-spacing: -0.2px !important;
+  }
+
+  /* DML Nodes (Line 1: Header, Lines 2+: Monospace Code) */
+  .diagram-canvas svg .dmlNode text tspan:first-child,
+  .diagram-canvas svg .dmlNode text tspan.line:first-child {
+    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-weight: 800 !important;
+    font-size: 13.5px !important;
+    letter-spacing: 0.5px !important;
+  }
+  .diagram-canvas svg .dmlNode text tspan:nth-child(n+2),
+  .diagram-canvas svg .dmlNode text tspan.line:nth-child(n+2) {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+    font-size: 11.5px !important;
+    letter-spacing: -0.2px !important;
   }
 `;
 
