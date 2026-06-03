@@ -497,112 +497,87 @@
         <!-- No object selected: Command Center Dashboard (10-of-12) -->
         <template if:false={selectedObjectName}>
           <div class="slds-col slds-size_10-of-12">
-            <template if:true={isFlowBrowserOpen}>
-              <c-mermaid-flow-browser
-                onclose={handleCloseFlowBrowser}
-              ></c-mermaid-flow-browser>
-            </template>
-            <template if:false={isFlowBrowserOpen}>
-              <div class="command-center">
-                <div class="command-header slds-text-align_center">
-                  <h1 class="command-title">Automation Command Center</h1>
-                  <p class="command-subtitle">
-                    Monitor, manage, and scale your Trigger Actions Framework
-                  </p>
-                </div>
+            <div class="command-center">
+              <div class="command-header slds-text-align_center">
+                <h1 class="command-title">Automation Command Center</h1>
+                <p class="command-subtitle">
+                  Monitor, manage, and scale your Trigger Actions Framework
+                </p>
+              </div>
 
-                <!-- Action Cards (2x2 Grid) -->
+              <!-- Action Cards (3-Column Grid) -->
+              <div class="actions-grid slds-grid slds-wrap slds-gutters_medium">
                 <div
-                  class="actions-grid slds-grid slds-wrap slds-gutters_medium"
+                  class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-m-bottom_medium"
                 >
-                  <div class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
-                    <div
-                      class="dashboard-action-card"
-                      onclick={handleOpenDiscovery}
-                    >
-                      <lightning-icon
-                        icon-name="utility:search"
-                        size="medium"
-                        class="action-icon"
-                      ></lightning-icon>
-                      <h3>Launch Discovery</h3>
-                      <p>
-                        Scan your org to find and initialize unmanaged triggers
-                        and flows.
-                      </p>
-                      <div class="action-link">Start Scanning →</div>
-                    </div>
-                  </div>
-                  <div class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
-                    <div
-                      class="dashboard-action-card"
-                      onclick={handleAddSObject}
-                    >
-                      <lightning-icon
-                        icon-name="utility:add"
-                        size="medium"
-                        class="action-icon"
-                      ></lightning-icon>
-                      <h3>Configure New Object</h3>
-                      <p>
-                        Manually add a new SObject to the Trigger Actions
-                        Framework.
-                      </p>
-                      <div class="action-link">Add Object →</div>
-                    </div>
-                  </div>
-                  <div class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
-                    <div
-                      class="dashboard-action-card"
-                      onclick={handleOpenFlowBrowser}
-                    >
-                      <div class="badge-sparkle">New ✨</div>
-                      <lightning-icon
-                        icon-name="utility:flow"
-                        size="medium"
-                        class="action-icon"
-                      ></lightning-icon>
-                      <h3>Mermaid Flow Browser</h3>
-                      <p>
-                        Scan, index, and query flow elements, variables,
-                        decisions, and action calls across your entire org.
-                      </p>
-                      <div class="action-link">Open Flow Browser →</div>
-                    </div>
-                  </div>
-                  <div class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
-                    <a
-                      href="https://github.com/mitchspano/trigger-actions-framework"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="dashboard-action-card-link"
-                    >
-                      <div class="dashboard-action-card">
-                        <lightning-icon
-                          icon-name="utility:knowledge_base"
-                          size="medium"
-                          class="action-icon"
-                        ></lightning-icon>
-                        <h3>Framework Docs</h3>
-                        <p>
-                          Read the official documentation for advanced framework
-                          features.
-                        </p>
-                        <div class="action-link">Learn More →</div>
-                      </div>
-                    </a>
+                  <div
+                    class="dashboard-action-card"
+                    onclick={handleOpenDiscovery}
+                  >
+                    <lightning-icon
+                      icon-name="utility:search"
+                      size="medium"
+                      class="action-icon"
+                    ></lightning-icon>
+                    <h3>Launch Discovery</h3>
+                    <p>
+                      Scan your org to find and initialize unmanaged triggers
+                      and flows.
+                    </p>
+                    <div class="action-link">Start Scanning →</div>
                   </div>
                 </div>
-
                 <div
-                  class="command-footer slds-text-align_center slds-m-top_xx-large"
+                  class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-m-bottom_medium"
                 >
-                  <p class="slds-text-body_small slds-text-color_weak">
-                    v2.0.3 • Powered by Trigger Actions Framework
-                  </p>
+                  <div class="dashboard-action-card" onclick={handleAddSObject}>
+                    <lightning-icon
+                      icon-name="utility:add"
+                      size="medium"
+                      class="action-icon"
+                    ></lightning-icon>
+                    <h3>Configure New Object</h3>
+                    <p>
+                      Manually add a new SObject to the Trigger Actions
+                      Framework.
+                    </p>
+                    <div class="action-link">Add Object →</div>
+                  </div>
+                </div>
+                <div
+                  class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-m-bottom_medium"
+                >
+                  <a
+                    href="https://github.com/mitchspano/trigger-actions-framework"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="dashboard-action-card-link"
+                  >
+                    <div class="dashboard-action-card">
+                      <lightning-icon
+                        icon-name="utility:knowledge_base"
+                        size="medium"
+                        class="action-icon"
+                      ></lightning-icon>
+                      <h3>Framework Docs</h3>
+                      <p>
+                        Read the official documentation for advanced framework
+                        features.
+                      </p>
+                      <div class="action-link">Learn More →</div>
+                    </div>
+                  </a>
                 </div>
               </div>
-            </template>
+
+              <div
+                class="command-footer slds-text-align_center slds-m-top_xx-large"
+              >
+                <p class="slds-text-body_small slds-text-color_weak">
+                  v2.0.3 • Powered by Trigger Actions Framework
+                </p>
+              </div>
+            </div>
           </div>
         </template>
       </div>

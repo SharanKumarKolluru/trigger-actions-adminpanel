@@ -397,16 +397,3 @@
 .slds-icon-text-light {
   --lwc-colorTextIconDefault: #d8dde6;
 }
-
-.badge-sparkle {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: linear-gradient(135deg, #1b96ff 0%, #a855f7 100%);
-  color: #ffffff;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(27, 150, 255, 0.4);
-}

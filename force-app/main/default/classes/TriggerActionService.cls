@@ -1295,21 +1295,4 @@ public with sharing class TriggerActionService {
     cmValue.value = fieldValue;
     record.values.add(cmValue);
   }
-
-  /**
-   * @description Retrieves all Flow definitions in the org (both active and inactive)
-   * @return List<FlowDefinitionView> List of all flows
-   */
-  @AuraEnabled(cacheable=true)
-  public static List<FlowDefinitionView> getAllFlowDefinitions() {
-    if (mockFlows != null) {
-      return mockFlows;
-    }
-    return [
-      SELECT DurableId, ApiName, Label, ProcessType, Description, IsActive
-      FROM FlowDefinitionView
-      WITH USER_MODE
-      ORDER BY Label
-    ];
-  }
 }

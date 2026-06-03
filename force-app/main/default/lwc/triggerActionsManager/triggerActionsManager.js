@@ -52,7 +52,6 @@ export default class TriggerActionsManager extends NavigationMixin(
   selectedFlowName = "";
   isApexModalOpen = false;
   selectedApexClassName = "";
-  isFlowBrowserOpen = false;
   _wiredActionsResult;
   _wiredSObjectsResult;
   _wiredNativeResult;
@@ -402,7 +401,6 @@ export default class TriggerActionsManager extends NavigationMixin(
     this.selectedAction = null;
     this.nativeTypeFilter = "all";
     this.nativeStatusFilter = "all";
-    this.isFlowBrowserOpen = false;
   }
 
   async handleActionClick(event) {
@@ -584,15 +582,6 @@ export default class TriggerActionsManager extends NavigationMixin(
     setTimeout(() => {
       this.refreshList().catch(() => {});
     }, 8000);
-  }
-
-  handleOpenFlowBrowser() {
-    this.selectedObjectName = "";
-    this.isFlowBrowserOpen = true;
-  }
-
-  handleCloseFlowBrowser() {
-    this.isFlowBrowserOpen = false;
   }
 
   handleAddSObject() {
