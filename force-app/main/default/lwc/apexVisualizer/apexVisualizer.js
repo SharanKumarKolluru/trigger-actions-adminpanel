@@ -78,9 +78,18 @@ const DIAGRAM_STYLES = `
 
   /* --- Typography Hierarchy for Code/Details --- */
   
-  /* Default node headers (first line in nodes) */
-  .diagram-canvas svg text tspan:first-child,
-  .diagram-canvas svg text tspan.line:first-child {
+  /* Default node headers (first line in nodes - excluding action, return, and logic nodes) */
+  .diagram-canvas svg [id*="choice_"]:not([id*="_Logic"]) text tspan,
+  .diagram-canvas svg [id*="choice_"]:not([id*="_Logic"]) text tspan.line,
+  .diagram-canvas svg [id*="loop_cond_"]:not([id*="_Logic"]) text tspan,
+  .diagram-canvas svg [id*="loop_cond_"]:not([id*="_Logic"]) text tspan.line,
+  .diagram-canvas svg [id*="METHOD_START"] text tspan,
+  .diagram-canvas svg [id*="METHOD_START"] text tspan.line,
+  .diagram-canvas svg [id*="METHOD_END"] text tspan,
+  .diagram-canvas svg [id*="METHOD_END"] text tspan.line,
+  .diagram-canvas svg [id*="dml_"] text tspan:first-child,
+  .diagram-canvas svg [id*="dml_"] text tspan.line:first-child {
+    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     font-weight: 800 !important;
     font-size: 13.5px !important;
     letter-spacing: 0.5px !important;
