@@ -1,5 +1,5 @@
 <template>
-  <lightning-card variant="narrow" title="Trigger Action Studio" icon-name="standard:collection">
+  <lightning-card variant="narrow" title="Trigger Action Studio" icon-name="utility:builder">
     <!-- Header Start -->
     <h3 slot="title">
       <lightning-icon icon-name="utility:connected_apps" size="small"></lightning-icon>
@@ -24,14 +24,12 @@
       <!-- Spinner End -->
 
       <div class="slds-grid slds-gutters_medium">
-        <!-- Column 1: SObject Sidebar (2-of-12) -->
-        <div class="slds-col slds-size_2-of-12">
+        <!-- Column 1: SObject Sidebar (3-of-12) -->
+        <div class="slds-col slds-size_3-of-12">
           <div class="object-panel">
             <div class="panel-header slds-grid slds-wrap">
-              <div
-                class="slds-col slds-size_1-of-1 slds-grid slds-grid_align-spread slds-m-bottom_x-small"
-              >
-                <h3 class="slds-text-heading_small">SObjects</h3>
+              <div class="slds-col slds-size_1-of-1 slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+                <h3 class="slds-text-heading_small">Objects</h3>
                 <div class="slds-grid slds-grid_vertical-align-center">
                   <lightning-button-icon
                     icon-name="utility:search"
@@ -123,9 +121,9 @@
           </div>
         </div>
 
-        <!-- Column 2: Actions Grouped List (5-of-12) -->
+        <!-- Column 2: Actions Grouped List (4-of-12) -->
         <template if:true={selectedObjectName}>
-          <div class="slds-col slds-size_5-of-12">
+          <div class="slds-col slds-size_4-of-12">
             <div class="actions-toolbar slds-var-m-bottom_small">
               <h3 class="slds-text-heading_small toolbar-title">
                 <strong>Actions</strong> : {selectedObjectName}
@@ -220,26 +218,31 @@
               <lightning-tab label="Framework Actions" value="actions">
                 <template if:true={selectedAction}>
                   <div class="detail-panel">
-                    <lightning-card
-                      title="Action Details"
-                      icon-name="standard:record"
-                    >
+                    <lightning-card title="Action Details" icon-name="standard:record">
                       <div class="slds-m-around_medium">
                         <div class="slds-grid slds-wrap">
                           <div class="slds-col slds-size_1-of-1 detail-row">
-                            <div class="detail-label">Developer Name</div>
+                            <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+                              <div class="detail-label">Developer Name</div>
+                              <lightning-button
+                                label="View Action"
+                                icon-name="utility:new_window"
+                                variant="base"
+                                onclick={handleOpenMetadata}
+                                class="view-source-button"
+                              >
+                              </lightning-button>
+                            </div>
                             <div class="detail-value">
                               {selectedAction.DeveloperName}
                             </div>
                           </div>
                           <div class="slds-col slds-size_1-of-1 detail-row">
-                            <div
-                              class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread"
-                            >
+                            <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
                               <div class="detail-label">Apex Class</div>
                               <lightning-button
                                 label="View Source"
-                                icon-name="utility:code"
+                                icon-name="utility:apex"
                                 variant="base"
                                 onclick={handleViewSource}
                                 class="view-source-button"
@@ -250,12 +253,22 @@
                               {selectedAction.Apex_Class_Name__c}
                             </div>
                           </div>
-                          <div class="slds-col slds-size_1-of-2 detail-row">
-                            <div class="detail-label">Order</div>
-                            <div class="detail-value">
-                              {selectedAction.Order__c}
+                          <template if:true={selectedAction.Required_Permission__c}>
+                            <div class="slds-col slds-size_1-of-1 detail-row">
+                              <div class="detail-label">Required Permission</div>
+                              <div class="detail-value">
+                                {selectedAction.Required_Permission__c}
+                              </div>
                             </div>
-                          </div>
+                          </template>
+                          <template if:true={selectedAction.Bypass_Permission__c}>
+                            <div class="slds-col slds-size_1-of-1 detail-row">
+                              <div class="detail-label">Bypass Permission</div>
+                              <div class="detail-value">
+                                {selectedAction.Bypass_Permission__c}
+                              </div>
+                            </div>
+                          </template>
                           <template if:true={selectedAction.Flow_Name__c}>
                             <div class="slds-col slds-size_1-of-2 detail-row">
                               <div
@@ -277,7 +290,13 @@
                               </div>
                             </div>
                           </template>
-                          <div class="slds-col slds-size_1-of-1 detail-row">
+                          <div class="slds-col slds-size_1-of-2 detail-row">
+                            <div class="detail-label">Order</div>
+                            <div class="detail-value">
+                              {selectedAction.Order__c}
+                            </div>
+                          </div>
+                          <div class="slds-col slds-size_1-of-2 detail-row">
                             <div class="detail-label">Contexts</div>
                             <div class="detail-value">
                               <template
@@ -298,14 +317,6 @@
                               <div class="detail-label">Entry Criteria</div>
                               <div class="detail-value criteria-text">
                                 {selectedAction.Entry_Criteria__c}
-                              </div>
-                            </div>
-                          </template>
-                          <template if:true={selectedAction.Description__c}>
-                            <div class="slds-col slds-size_1-of-1 detail-row">
-                              <div class="detail-label">Description</div>
-                              <div class="detail-value">
-                                {selectedAction.Description__c}
                               </div>
                             </div>
                           </template>
@@ -331,6 +342,14 @@
                               {flowRecursionLabel}
                             </div>
                           </div>
+                          <template if:true={selectedAction.Description__c}>
+                            <div class="slds-col slds-size_1-of-1 detail-row">
+                              <div class="detail-label">Description</div>
+                              <div class="detail-value">
+                                {selectedAction.Description__c}
+                              </div>
+                            </div>
+                          </template>
                         </div>
                       </div>
                     </lightning-card>
@@ -497,14 +516,14 @@
           </div>
         </template>
 
-        <!-- No object selected: Command Center Dashboard (10-of-12) -->
+        <!-- No object selected: Command Center Dashboard (9-of-12) -->
         <template if:false={selectedObjectName}>
-          <div class="slds-col slds-size_10-of-12">
+          <div class="slds-col slds-size_9-of-12">
             <div class="command-center">
               <div class="command-header slds-text-align_center">
                 <h1 class="command-title">Automation Studio</h1>
                 <p class="command-subtitle">
-                  Design, monitor, manage and scale your Trigger Actions Framework
+                  Design, monitor, manage, and scale your Trigger Actions Framework
                 </p>
               </div>
 
@@ -566,18 +585,25 @@
                   </a>
                 </div>
               </div>
-
-              <div
-                class="command-footer slds-text-align_center slds-m-top_xx-large"
-              >
-                <p class="slds-text-body_small slds-text-color_weak">
-                  v2.0.3 • Powered by Trigger Actions Framework
-                </p>
-              </div>
             </div>
           </div>
         </template>
       </div>
+      <!-- Footer Start -->
+      <div class="command-footer slds-text-align_center slds-m-top_xx-large">
+        <p class="slds-text-body_small slds-text-color_weak">2.0.3 • Powered by Trigger Actions Framework</p>
+      </div>
+      <div class="command-footer slds-text-align_center slds-m-top_xx-large">
+        <div class="slds-p-bottom_small">
+          <lightning-badge label="Apex Trigger"></lightning-badge>
+          <lightning-badge label="Apex Class"></lightning-badge>
+          <lightning-badge label="Record Triggered Flows"></lightning-badge>
+          <lightning-badge label="Autolaunch Flows"></lightning-badge>
+        </div>
+        <p class="slds-text-body_small slds-text-color_weak">2.0.3 • Powered by Trigger Actions Framework</p>
+      </div>
+      <!-- Footer End -->
+      <!-- Main Content End -->
     </div>
   </lightning-card>
 

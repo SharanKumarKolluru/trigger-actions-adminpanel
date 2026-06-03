@@ -439,6 +439,11 @@ export default class TriggerActionsManager extends NavigationMixin(
     }
   }
 
+  handleOpenMetadata() {
+    const recordId = this.selectedAction.Id;
+    window.open('/' + recordId,'_blank');
+  }
+
   handleSourceClose() {
     this.showSourceModal = false;
     this.sourceCode = "";
