@@ -129,7 +129,7 @@ describe("apexLensConverter", () => {
     expect(result.mermaidCode).toContain(
       'dml_2[" DML ⚡ \n insert newAccounts; "]'
     );
-    expect(result.mermaidCode).toContain("class dml_2 pink,dmlNode;");
+    expect(result.mermaidCode).toContain("class dml_2 pink;");
   });
 
   it("should simplify SOQL queries and apply general truncation to long labels", () => {

@@ -78,39 +78,42 @@ const DIAGRAM_STYLES = `
 
   /* --- Typography Hierarchy for Code/Details --- */
   
-  /* Header Nodes (METHOD_START, METHOD_END, IF, WHILE, FOR) */
-  .diagram-canvas svg .headerNode text,
-  .diagram-canvas svg .headerNode span,
-  .diagram-canvas svg .headerNode tspan {
-    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  /* Default node headers (first line in nodes) */
+  .diagram-canvas svg text tspan:first-child,
+  .diagram-canvas svg text tspan.line:first-child {
     font-weight: 800 !important;
     font-size: 13.5px !important;
     letter-spacing: 0.5px !important;
   }
 
-  /* Code/Logic Nodes (Actions, Returns, Conditions) */
-  .diagram-canvas svg .codeNode text,
-  .diagram-canvas svg .codeNode span,
-  .diagram-canvas svg .codeNode tspan,
-  .diagram-canvas svg .logicNode text,
-  .diagram-canvas svg .logicNode span,
-  .diagram-canvas svg .logicNode tspan {
+  /* Code/Logic Nodes (override to be monospace and normal weight) */
+  .diagram-canvas svg [id*="action_"] text,
+  .diagram-canvas svg [id*="action_"] span,
+  .diagram-canvas svg [id*="action_"] tspan,
+  .diagram-canvas svg [id*="return_"] text,
+  .diagram-canvas svg [id*="return_"] span,
+  .diagram-canvas svg [id*="return_"] tspan,
+  .diagram-canvas svg [id*="_Logic"] text,
+  .diagram-canvas svg [id*="_Logic"] span,
+  .diagram-canvas svg [id*="_Logic"] tspan {
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+    font-weight: 500 !important;
     font-size: 11.5px !important;
     letter-spacing: -0.2px !important;
   }
 
   /* DML Nodes (Line 1: Header, Lines 2+: Monospace Code) */
-  .diagram-canvas svg .dmlNode text tspan:first-child,
-  .diagram-canvas svg .dmlNode text tspan.line:first-child {
+  .diagram-canvas svg [id*="dml_"] text tspan:first-child,
+  .diagram-canvas svg [id*="dml_"] text tspan.line:first-child {
     font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
     font-weight: 800 !important;
     font-size: 13.5px !important;
     letter-spacing: 0.5px !important;
   }
-  .diagram-canvas svg .dmlNode text tspan:nth-child(n+2),
-  .diagram-canvas svg .dmlNode text tspan.line:nth-child(n+2) {
+  .diagram-canvas svg [id*="dml_"] text tspan:nth-child(n+2),
+  .diagram-canvas svg [id*="dml_"] text tspan.line:nth-child(n+2) {
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+    font-weight: 500 !important;
     font-size: 11.5px !important;
     letter-spacing: -0.2px !important;
   }
