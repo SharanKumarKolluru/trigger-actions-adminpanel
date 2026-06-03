@@ -1,6 +1,19 @@
 <template>
-  <lightning-card variant="narrow" icon-name="standard:config">
-    <div class="slds-m-around_medium slds-is-relative">
+  <lightning-card variant="narrow" title="Trigger Action Studio" icon-name="standard:collection">
+    <!-- Header Start -->
+    <h3 slot="title">
+      <lightning-icon icon-name="utility:connected_apps" size="small"></lightning-icon>
+        Trigger Action Studio
+    </h3>
+    <p class="slds-p-horizontal_small">Metadata Driven Automation Orchestration Console</p>
+    <lightning-button variant="neutral" label="New Sobject" icon-name="utility:add" alternative-text="New SObject" slot="actions" onclick={handleAddSObject}></lightning-button>
+		<lightning-button variant="neutral" label="Discovery Mode" icon-name="utility:search" alternative-text="Discovery Mode" slot="actions" onclick={handleOpenDiscovery}></lightning-button>
+		<lightning-button variant="neutral" label="Refresh" icon-name="utility:refresh" alternative-text="Refresh" slot="actions" onclick={handleRefresh}></lightning-button>
+    <!-- Header End -->
+
+    <!-- Main Content Start -->
+    <div class="slds-m-around_medium slds-is-relative slds-border_top slds-p-top_medium">
+      <!-- Spinner Start -->
       <template if:true={isLoading}>
         <lightning-spinner
           alternative-text="Loading"
@@ -8,6 +21,8 @@
           class="slds-spinner_container"
         ></lightning-spinner>
       </template>
+      <!-- Spinner End -->
+
       <div class="slds-grid slds-gutters_medium">
         <!-- Column 1: SObject Sidebar (2-of-12) -->
         <div class="slds-col slds-size_2-of-12">
@@ -113,7 +128,7 @@
           <div class="slds-col slds-size_5-of-12">
             <div class="actions-toolbar slds-var-m-bottom_small">
               <h3 class="slds-text-heading_small toolbar-title">
-                Actions: {selectedObjectName}
+                <strong>Actions</strong> : {selectedObjectName}
               </h3>
               <lightning-button-group>
                 <lightning-button
@@ -176,15 +191,18 @@
               </template>
               <template if:false={hasObjectActions}>
                 <div class="slds-p-around_large slds-text-align_center">
-                  <p class="slds-text-body_small slds-text-color_weak">
-                    No trigger actions for this SObject
+                  <lightning-empty-state illustration-name="noresults:unknown" title="No Trigger Actions">
+                    <p slot="description">No trigger actions have been set up for this SObject.</p>
+                  </lightning-empty-state>
+                  <p class="slds-text-body_small slds-text-color_weak slds-var-m-bottom_medium">
+                    Ready to streamline your automation ? Click the button below to create your first trigger action.
                   </p>
                   <lightning-button
                     label="Create First Action"
                     icon-name="utility:add"
                     variant="brand"
                     onclick={handleCreateNew}
-                    class="slds-var-m-top_small"
+                    class="slds-var-m-top_x-large"
                   >
                   </lightning-button>
                 </div>
@@ -484,9 +502,9 @@
           <div class="slds-col slds-size_10-of-12">
             <div class="command-center">
               <div class="command-header slds-text-align_center">
-                <h1 class="command-title">Automation Command Center</h1>
+                <h1 class="command-title">Automation Studio</h1>
                 <p class="command-subtitle">
-                  Monitor, manage, and scale your Trigger Actions Framework
+                  Design, monitor, manage and scale your Trigger Actions Framework
                 </p>
               </div>
 
@@ -527,7 +545,7 @@
                 </div>
                 <div class="slds-col slds-size_1-of-3">
                   <a
-                    href="https://github.com/mitchspano/trigger-actions-framework"
+                    href="https://www.mitchspano.com/trigger-actions-framework/"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="dashboard-action-card-link"
@@ -612,7 +630,7 @@
           <h2 class="slds-text-heading_medium">Automation Discovery</h2>
         </header>
         <div class="slds-modal__content slds-p-around_medium">
-          <p class="slds-var-m-bottom_medium">
+          <p class="slds-var-m-bottom_medium slds-text-align_center">
             The following objects have native automations (Triggers/Flows) but
             are not yet managed by the Trigger Actions Framework.
           </p>
