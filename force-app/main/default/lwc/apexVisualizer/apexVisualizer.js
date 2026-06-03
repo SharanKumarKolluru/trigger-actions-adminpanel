@@ -325,6 +325,33 @@ export default class ApexVisualizer extends LightningElement {
             this.applyZoom();
           }
 
+          // Left-align text inside rectangle nodes (excluding start/end headers)
+          const nodeGroups = canvas.querySelectorAll("g.node");
+          nodeGroups.forEach((nodeGroup) => {
+            const nodeId = nodeGroup.getAttribute("id");
+            if (
+              nodeId &&
+              !nodeId.includes("_Logic") &&
+              (nodeId.includes("FLOW_START") ||
+                nodeId.includes("FLOW_END") ||
+                nodeId.includes("METHOD_START") ||
+                nodeId.includes("METHOD_END"))
+            ) {
+              return;
+            }
+            const rect = nodeGroup.querySelector("rect");
+            const text = nodeGroup.querySelector("text");
+            if (rect && text) {
+              const width = parseFloat(rect.getAttribute("width"));
+              if (!isNaN(width)) {
+                text.style.textAnchor = "start";
+                const padding = 16;
+                const shiftX = -(width / 2) + padding;
+                text.setAttribute("transform", `translate(${shiftX}, 0)`);
+              }
+            }
+          });
+
           const styleTag = document.createElement("style");
           styleTag.textContent = DIAGRAM_STYLES;
           canvas.appendChild(styleTag);
