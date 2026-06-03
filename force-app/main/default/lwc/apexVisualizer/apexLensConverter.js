@@ -240,10 +240,8 @@ export function convertApexToMermaid(sourceCode, targetMethodName) {
     "",
     '  METHOD_START(["METHOD_START"])',
     '  METHOD_END(["METHOD_END"])',
-    "  class METHOD_START navy;",
-    "  class METHOD_START headerNode;",
-    "  class METHOD_END navy;",
-    "  class METHOD_END headerNode;"
+    "  class METHOD_START navy,headerNode;",
+    "  class METHOD_END navy,headerNode;"
   ];
 
   let nodeIdCounter = 0;
@@ -309,10 +307,8 @@ export function convertApexToMermaid(sourceCode, targetMethodName) {
       lines.push(`  ${choiceId}{"IF"}`);
       lines.push(`  ${logicId}["${nodeLabel}"]`);
       lines.push(`  ${logicId} -.- ${choiceId}`);
-      lines.push(`  class ${choiceId} orange;`);
-      lines.push(`  class ${choiceId} headerNode;`);
-      lines.push(`  class ${logicId} orange;`);
-      lines.push(`  class ${logicId} logicNode;`);
+      lines.push(`  class ${choiceId} orange,headerNode;`);
+      lines.push(`  class ${logicId} orange,logicNode;`);
 
       const thenStmt = ifCtx.statement(0);
       const elseStmt = ifCtx.statement(1);
@@ -345,10 +341,8 @@ export function convertApexToMermaid(sourceCode, targetMethodName) {
       lines.push(`  ${choiceId}{"WHILE"}`);
       lines.push(`  ${logicId}["${nodeLabel}"]`);
       lines.push(`  ${logicId} -.- ${choiceId}`);
-      lines.push(`  class ${choiceId} orange;`);
-      lines.push(`  class ${choiceId} headerNode;`);
-      lines.push(`  class ${logicId} orange;`);
-      lines.push(`  class ${logicId} logicNode;`);
+      lines.push(`  class ${choiceId} orange,headerNode;`);
+      lines.push(`  class ${logicId} orange,logicNode;`);
 
       const bodyStmt = whileCtx.statement();
       const bodyEntry = processStatement(bodyStmt, choiceId, finalExitNodeId);
@@ -370,10 +364,8 @@ export function convertApexToMermaid(sourceCode, targetMethodName) {
       lines.push(`  ${choiceId}{"FOR"}`);
       lines.push(`  ${logicId}["${nodeLabel}"]`);
       lines.push(`  ${logicId} -.- ${choiceId}`);
-      lines.push(`  class ${choiceId} orange;`);
-      lines.push(`  class ${choiceId} headerNode;`);
-      lines.push(`  class ${logicId} orange;`);
-      lines.push(`  class ${logicId} logicNode;`);
+      lines.push(`  class ${choiceId} orange,headerNode;`);
+      lines.push(`  class ${logicId} orange,logicNode;`);
 
       const bodyStmt = forCtx.statement();
       const bodyEntry = processStatement(bodyStmt, choiceId, finalExitNodeId);
@@ -393,8 +385,7 @@ export function convertApexToMermaid(sourceCode, targetMethodName) {
       const sanitizedRet = sanitizeLabel(retText);
       const nodeLabel = formatNodeLabel(sanitizedRet);
       lines.push(`  ${retId}["${nodeLabel}"]`);
-      lines.push(`  class ${retId} blue;`);
-      lines.push(`  class ${retId} codeNode;`);
+      lines.push(`  class ${retId} blue,codeNode;`);
       lines.push(`  ${retId} --> ${finalExitNodeId}`);
       return retId;
     }
@@ -414,8 +405,7 @@ export function convertApexToMermaid(sourceCode, targetMethodName) {
       const sanitizedDml = sanitizeLabel(dmlText);
       const nodeLabel = formatNodeLabel(`DML ⚡\n${sanitizedDml}`);
       lines.push(`  ${dmlId}["${nodeLabel}"]`);
-      lines.push(`  class ${dmlId} pink;`);
-      lines.push(`  class ${dmlId} dmlNode;`);
+      lines.push(`  class ${dmlId} pink,dmlNode;`);
       lines.push(`  ${dmlId} --> ${exitNodeId}`);
       return dmlId;
     }
@@ -430,8 +420,7 @@ export function convertApexToMermaid(sourceCode, targetMethodName) {
     const sanitizedStmt = sanitizeLabel(stmtText);
     const nodeLabel = formatNodeLabel(sanitizedStmt);
     lines.push(`  ${actionId}["${nodeLabel}"]`);
-    lines.push(`  class ${actionId} blue;`);
-    lines.push(`  class ${actionId} codeNode;`);
+    lines.push(`  class ${actionId} blue,codeNode;`);
     lines.push(`  ${actionId} --> ${exitNodeId}`);
     return actionId;
   }
