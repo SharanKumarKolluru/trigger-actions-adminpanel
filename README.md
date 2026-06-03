@@ -111,4 +111,4 @@ Contributions are welcome! Please feel free to open issues or submit pull reques
 
 ---
 
-**Version:** 2.0.3
+**Version:** 3.0.0-pre

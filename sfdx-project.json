@@ -1,8 +1,8 @@
 {
   "packageDirectories": [
     {
-      "versionName": "v2.0.3",
-      "versionNumber": "2.0.3.NEXT",
+      "versionName": "v3.0.0-pre",
+      "versionNumber": "3.0.0.NEXT",
       "path": "force-app",
       "default": true,
       "package": "Trigger Actions Admin Panel",
@@ -15,7 +15,7 @@
     }
   ],
   "name": "trigger-actions-adminpanel",
-  "version": "2.0.3",
+  "version": "3.0.0-pre",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
   "sourceApiVersion": "66.0",
