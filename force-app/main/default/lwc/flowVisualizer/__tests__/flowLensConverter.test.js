@@ -62,10 +62,10 @@ describe("flowLensConverter", () => {
       const flow = { start: {}, processType: "AutoLaunchedFlow" };
       const result = convertFlowToMermaid(flow);
 
-      expect(result).toContain("classDef pink fill:#F9548A, color:white");
-      expect(result).toContain("classDef orange fill:#DD7A00, color:white");
-      expect(result).toContain("classDef navy fill:#344568, color:white");
-      expect(result).toContain("classDef blue fill:#1B96FF, color:white");
+      expect(result).toContain("classDef pink fill:#F43F5E, color:#ffffff");
+      expect(result).toContain("classDef orange fill:#F97316, color:#ffffff");
+      expect(result).toContain("classDef navy fill:#475569, color:#ffffff");
+      expect(result).toContain("classDef blue fill:#0284C7, color:#ffffff");
     });
   });
 

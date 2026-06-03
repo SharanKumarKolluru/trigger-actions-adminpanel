@@ -1032,10 +1032,10 @@ export function convertFlowToMermaid(flow, flowLabel, includeTitle = true) {
   lines.push(
     "flowchart TD",
     "",
-    "  classDef pink fill:#F9548A, color:white",
-    "  classDef orange fill:#DD7A00, color:white",
-    "  classDef navy fill:#344568, color:white",
-    "  classDef blue fill:#1B96FF, color:white",
+    "  classDef pink fill:#F43F5E, color:#ffffff",
+    "  classDef orange fill:#F97316, color:#ffffff",
+    "  classDef navy fill:#475569, color:#ffffff",
+    "  classDef blue fill:#0284C7, color:#ffffff",
     ""
   );
 

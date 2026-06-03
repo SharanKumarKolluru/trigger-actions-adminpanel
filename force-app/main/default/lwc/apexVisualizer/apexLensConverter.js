@@ -233,10 +233,10 @@ export function convertApexToMermaid(sourceCode, targetMethodName) {
   // 3. Translate the method body to control flow nodes
   const lines = [
     "flowchart TD",
-    "  classDef pink fill:#F43F5E, color:white",
-    "  classDef orange fill:#F97316, color:white",
-    "  classDef navy fill:#475569, color:white",
-    "  classDef blue fill:#0284C7, color:white",
+    "  classDef pink fill:#F43F5E, color:#ffffff",
+    "  classDef orange fill:#F97316, color:#ffffff",
+    "  classDef navy fill:#475569, color:#ffffff",
+    "  classDef blue fill:#0284C7, color:#ffffff",
     "",
     '  METHOD_START(["METHOD_START"])',
     '  METHOD_END(["METHOD_END"])',
