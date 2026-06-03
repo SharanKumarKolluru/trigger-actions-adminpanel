@@ -3,6 +3,6 @@
     <description
   >Manage and visualize Trigger Actions Framework configurations.</description>
     <flexiPage>TriggerActionsPage</flexiPage>
-    <label>Trigger Actions</label>
+    <label>Command Center</label>
     <motif>Custom63: Chip</motif>
 </CustomTab>
