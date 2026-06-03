@@ -751,4 +751,27 @@ private class TriggerActionService_Test {
     Test.stopTest();
     System.assertEquals('MockJobId', jobId);
   }
+
+  @isTest
+  static void testGetAllFlowDefinitions() {
+    Test.startTest();
+    List<FlowDefinitionView> flows = TriggerActionService.getAllFlowDefinitions();
+    Test.stopTest();
+    System.assert(flows != null, 'Flows list should not be null');
+  }
+
+  @isTest
+  static void testGetAllFlowDefinitionsMock() {
+    TriggerActionService.mockFlows = new List<FlowDefinitionView>{
+      (FlowDefinitionView) JSON.deserialize(
+        '{"DurableId":"300xxx","ApiName":"MockFlow","Label":"Mock Flow","ProcessType":"Flow","Description":"Test","IsActive":true}',
+        FlowDefinitionView.class
+      )
+    };
+    Test.startTest();
+    List<FlowDefinitionView> flows = TriggerActionService.getAllFlowDefinitions();
+    Test.stopTest();
+    System.assertEquals(1, flows.size(), 'Should return mocked flow');
+    System.assertEquals('MockFlow', flows[0].ApiName, 'ApiName should match');
+  }
 }

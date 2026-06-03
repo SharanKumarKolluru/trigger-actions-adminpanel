@@ -2,7 +2,7 @@
 
 A lightweight administrative UI for managing the [Trigger Actions Framework](https://github.com/mitchspano/trigger-actions-framework). This tool provides a streamlined management layer for administrators and developers to visualize, organize, and configure trigger logic directly in Salesforce, automating the underlying Custom Metadata deployments.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-ffdd00.svg?style=flat-square&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/shahrier)
 
 ---
 
@@ -94,6 +94,14 @@ This tool is a management layer for the **Trigger Actions Framework**. For detai
 
 - **Metadata Deployments**: Saving changes in the Admin Panel triggers a background metadata deployment. Changes typically take 5-10 seconds to reflect in the UI.
 - **Deletion**: For security and stability, this panel does not support deleting records. Please use Salesforce Setup (Custom Metadata Types) or VS Code to remove configuration records.
+
+---
+
+## ☕ Support
+
+If this project helps you, please consider supporting its development:
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-ffdd00.svg?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/shahrier)
 
 ---
 

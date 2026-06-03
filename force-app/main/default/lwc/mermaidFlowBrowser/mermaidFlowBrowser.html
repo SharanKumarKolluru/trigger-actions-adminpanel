@@ -1,0 +1,325 @@
+<template>
+  <div class="browser-container slds-is-relative">
+    <!-- Header Section -->
+    <div
+      class="header-container slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-var-p-around_medium slds-var-m-bottom_medium"
+    >
+      <div class="slds-col slds-grid slds-grid_vertical-align-center">
+        <lightning-button-icon
+          icon-name="utility:back"
+          variant="border-filled"
+          alternative-text="Back to Command Center"
+          title="Back to Command Center"
+          onclick={handleBackClick}
+          class="back-button slds-var-m-right_medium"
+        ></lightning-button-icon>
+        <div>
+          <h1 class="browser-title slds-grid slds-grid_vertical-align-center">
+            Mermaid Flow Browser <span class="sparkle-icon">✨</span>
+          </h1>
+          <p class="browser-subtitle">
+            Index and search through all your org's flows, logic blocks, and
+            action calls.
+          </p>
+        </div>
+      </div>
+
+      <!-- Background Scanner Widget / Status -->
+      <div class="slds-col">
+        <template if:true={isIndexing}>
+          <div class="scanner-widget slds-var-p-around_small">
+            <div
+              class="slds-grid slds-grid_align-spread slds-var-m-bottom_xx-small"
+            >
+              <span class="scanner-text animate-pulse"
+                >Indexing Flow Logic...</span
+              >
+              <span class="scanner-progress-text"
+                >{indexedCount} / {totalFlows} ({progressPercentage}%)</span
+              >
+            </div>
+            <div class="scanner-bar-track">
+              <div class="scanner-bar-fill" style={progressStyle}></div>
+            </div>
+          </div>
+        </template>
+        <template if:false={isIndexing}>
+          <div
+            class="slds-grid slds-grid_vertical-align-center slds-grid_align-end"
+          >
+            <span
+              class="slds-text-color_weak slds-var-m-right_small"
+              style="font-size: 0.85rem; font-weight: 600; color: #64748b"
+            >
+              Index Complete ({totalFlows} flows)
+            </span>
+            <lightning-button-icon
+              icon-name="utility:refresh"
+              variant="border-filled"
+              alternative-text="Refresh Index"
+              title="Refresh Index"
+              onclick={handleRefreshIndex}
+              class="refresh-button"
+            ></lightning-button-icon>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Floating Search & Filters Bar -->
+    <div
+      class="search-filters-card slds-var-p-around_medium slds-var-m-bottom_medium"
+    >
+      <!-- Search input -->
+      <div class="slds-form-element slds-var-m-bottom_medium">
+        <div
+          class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left"
+        >
+          <lightning-icon
+            icon-name="utility:search"
+            size="x-small"
+            class="slds-input__icon slds-input__icon_left search-input-icon"
+          ></lightning-icon>
+          <input
+            type="search"
+            placeholder="Search by field api name, variables, decision criteria, actions..."
+            value={searchQuery}
+            oninput={handleSearchChange}
+            class="slds-input search-text-input"
+          />
+        </div>
+      </div>
+
+      <!-- Filters pills -->
+      <div
+        class="slds-grid slds-wrap slds-grid_vertical-align-center slds-grid_align-spread"
+      >
+        <!-- Flow Type filters -->
+        <div
+          class="slds-col slds-grid slds-grid_vertical-align-center slds-var-m-bottom_x-small"
+        >
+          <span class="filter-label slds-var-m-right_small">Type:</span>
+          <div class="slds-grid">
+            <template for:each={filterPills} for:item="pill">
+              <button
+                key={pill.value}
+                data-value={pill.value}
+                onclick={handleTypeFilter}
+                class={pill.cssClass}
+              >
+                {pill.label}
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Status filters -->
+        <div
+          class="slds-col slds-grid slds-grid_vertical-align-center slds-var-m-bottom_x-small"
+        >
+          <span class="filter-label slds-var-m-right_small">Status:</span>
+          <div class="slds-grid">
+            <template for:each={statusPills} for:item="pill">
+              <button
+                key={pill.value}
+                data-value={pill.value}
+                onclick={handleStatusFilter}
+                class={pill.cssClass}
+              >
+                {pill.label}
+              </button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Skeleton State -->
+    <template if:true={showLoadingSkeleton}>
+      <div class="results-grid">
+        <div
+          class="skeleton-card slds-var-p-around_medium slds-var-m-bottom_medium"
+        >
+          <div class="skeleton-title animate-pulse"></div>
+          <div class="skeleton-line animate-pulse"></div>
+          <div class="skeleton-line animate-pulse"></div>
+        </div>
+        <div
+          class="skeleton-card slds-var-p-around_medium slds-var-m-bottom_medium"
+        >
+          <div class="skeleton-title animate-pulse"></div>
+          <div class="skeleton-line animate-pulse"></div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Empty State -->
+    <template if:true={showEmptyState}>
+      <div class="empty-state slds-var-p-around_xx-large">
+        <lightning-icon
+          icon-name="utility:search"
+          size="large"
+          class="empty-state-icon slds-var-m-bottom_medium"
+        ></lightning-icon>
+        <h3 class="empty-title slds-var-m-bottom_x-small">
+          No matching flows found
+        </h3>
+        <p class="empty-description">
+          Try adjusting your filters or search query<br />to find the desired
+          flow logic.
+        </p>
+      </div>
+    </template>
+
+    <!-- Results Display -->
+    <template if:true={hasResults}>
+      <div class="results-grid">
+        <template for:each={displayedResults} for:item="result">
+          <div
+            key={result.durableId}
+            class="result-card slds-var-m-bottom_medium slds-var-p-around_medium"
+          >
+            <!-- Card Header -->
+            <div
+              class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-var-m-bottom_small"
+            >
+              <div class="slds-col">
+                <h2 class="flow-name-title">{result.label}</h2>
+                <div
+                  class="flow-api-subtitle slds-grid slds-grid_vertical-align-center"
+                >
+                  <code>{result.apiName}</code>
+                  <span class="slds-var-m-horizontal_x-small">•</span>
+                  <span>{result.processTypeLabel}</span>
+                </div>
+              </div>
+              <div class="slds-col slds-grid slds-grid_vertical-align-center">
+                <span class={result.statusClass}> {result.statusLabel} </span>
+                <lightning-button
+                  label="Visualize Flow"
+                  variant="neutral"
+                  icon-name="utility:preview"
+                  data-flow-id={result.durableId}
+                  onclick={openVisualizer}
+                  class="visualize-btn slds-var-m-left_small"
+                ></lightning-button>
+              </div>
+            </div>
+
+            <!-- Matched Nodes List -->
+            <template if:true={result.matchingNodes.length}>
+              <div class="matched-nodes-header slds-var-m-bottom_x-small">
+                Found {result.nodeCount} matching logic blocks:
+              </div>
+              <div class="matched-nodes-list">
+                <template for:each={result.matchingNodes} for:item="node">
+                  <div
+                    key={node.id}
+                    data-flow-id={result.durableId}
+                    data-node-id={node.id}
+                    onclick={openVisualizer}
+                    class="node-match-row slds-grid slds-grid_vertical-align-start slds-var-p-around_small slds-var-m-bottom_xx-small"
+                  >
+                    <!-- Icon badge -->
+                    <div class="node-icon-badge slds-var-m-right_small">
+                      {node.icon}
+                    </div>
+
+                    <div class="slds-col">
+                      <div class="node-type-header">
+                        {node.type} ({node.id})
+                      </div>
+                      <!-- Highlighted Label -->
+                      <div class="node-highlighted-label">
+                        <template
+                          for:each={node.highlightedLabel}
+                          for:item="part"
+                        >
+                          <span key={part.text} class={part.class}
+                            >{part.text}</span
+                          >
+                        </template>
+                      </div>
+
+                      <!-- Highlighted logic criteria note if applicable -->
+                      <template if:true={node.hasLogic}>
+                        <div class="node-logic-note slds-var-m-top_xx-small">
+                          <span class="criteria-label">Criteria:</span>
+                          <template
+                            for:each={node.highlightedLogic}
+                            for:item="part"
+                          >
+                            <span key={part.text} class={part.class}
+                              >{part.text}</span
+                            >
+                          </template>
+                        </div>
+                      </template>
+                    </div>
+
+                    <!-- Highlight click indicator -->
+                    <lightning-icon
+                      icon-name="utility:chevronright"
+                      size="xx-small"
+                      class="row-arrow"
+                    ></lightning-icon>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <template if:true={result.isNameMatchOnly}>
+              <div class="name-match-only-text">
+                Matched flow details (name/description). No specific nodes
+                contain the search query.
+              </div>
+            </template>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- Visualizer Modal Backdrop & Container -->
+    <template if:true={isModalOpen}>
+      <section
+        role="dialog"
+        tabindex="-1"
+        aria-modal="true"
+        class="visualizer-modal slds-modal slds-fade-in-open slds-modal_large"
+      >
+        <div class="slds-modal__container modal-container-premium">
+          <header
+            class="slds-modal__header modal-header-premium slds-grid slds-grid_vertical-align-center slds-grid_align-spread"
+          >
+            <div>
+              <h2 class="modal-flow-title">{selectedFlowLabel}</h2>
+              <p class="modal-flow-subtitle">
+                API: <code>{selectedFlowApiName}</code>
+              </p>
+            </div>
+            <lightning-button-icon
+              icon-name="utility:close"
+              variant="border-filled"
+              size="medium"
+              onclick={closeModal}
+              alternative-text="Close"
+              class="close-modal-btn"
+            ></lightning-button-icon>
+          </header>
+          <div
+            class="slds-modal__content slds-var-p-around_none modal-body-premium"
+          >
+            <c-flow-visualizer
+              flow-id={selectedFlowId}
+              flow-name={selectedFlowApiName}
+              highlight-node-id={selectedNodeId}
+            ></c-flow-visualizer>
+          </div>
+        </div>
+      </section>
+      <div
+        class="slds-backdrop slds-backdrop_open modal-backdrop-premium"
+      ></div>
+    </template>
+  </div>
+</template>

@@ -15,26 +15,20 @@
   animation: fadeIn 0.4s ease-out;
 }
 
-/* Toolbar styling */
-.toolbar {
+/* Toolbar Header */
+.toolbar-header {
   border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 16px;
-  display: flex;
-  align-items: center;
+  padding-bottom: 12px;
 }
 
-.flow-title {
+.visualizer-title {
   font-weight: 700;
+  font-size: 1.125rem;
   color: #1e293b;
   background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.5px;
-}
-
-.btn-group {
-  display: flex;
-  gap: 8px;
 }
 
 /* Scrollable Canvas */

@@ -243,22 +243,6 @@
   font-size: 0.875rem;
 }
 
-.view-source-button {
-  font-size: 0.75rem;
-  height: auto;
-  line-height: 1;
-}
-
-.view-source-button :deep(.slds-button) {
-  color: #0070d2;
-  text-decoration: none;
-}
-
-.view-source-button :deep(.slds-button:hover) {
-  color: #005fb2;
-  text-decoration: underline;
-}
-
 .detail-value.criteria-text {
   font-family: "Courier New", monospace;
   background-color: #f5f5f5;
@@ -351,6 +335,7 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .dashboard-action-card:hover {
@@ -411,4 +396,17 @@
 
 .slds-icon-text-light {
   --lwc-colorTextIconDefault: #d8dde6;
+}
+
+.badge-sparkle {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, #1b96ff 0%, #a855f7 100%);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(27, 150, 255, 0.4);
 }

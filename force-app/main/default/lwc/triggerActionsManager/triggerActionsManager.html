@@ -160,7 +160,19 @@
                             {action.Apex_Class_Name__c}
                           </div>
                         </div>
-                        <div class="action-status-compact">
+                        <div
+                          class="action-status-compact slds-grid slds-grid_vertical-align-center"
+                        >
+                          <lightning-button-icon
+                            icon-name="utility:flow"
+                            variant="bare"
+                            alternative-text="View Flowchart"
+                            title="View Flowchart"
+                            size="small"
+                            onclick={handleViewApexFlowchartFromList}
+                            data-class-name={action.Apex_Class_Name__c}
+                            class="slds-var-m-right_xx-small"
+                          ></lightning-button-icon>
                           <template if:true={action.Bypass_Execution__c}>
                             <lightning-icon
                               icon-name="utility:warning"
@@ -219,14 +231,26 @@
                               class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread"
                             >
                               <div class="detail-label">Apex Class</div>
-                              <lightning-button
-                                label="View Source"
-                                icon-name="utility:code"
-                                variant="base"
-                                onclick={handleViewSource}
-                                class="view-source-button"
+                              <div
+                                class="slds-grid slds-grid_vertical-align-center"
                               >
-                              </lightning-button>
+                                <lightning-button-icon
+                                  icon-name="utility:insert_tag_field"
+                                  variant="container"
+                                  alternative-text="View Source"
+                                  title="View Source"
+                                  onclick={handleViewSource}
+                                >
+                                </lightning-button-icon>
+                                <lightning-button-icon
+                                  icon-name="utility:flow"
+                                  variant="container"
+                                  alternative-text="View Flowchart"
+                                  title="View Flowchart"
+                                  onclick={handleViewApexFlowchart}
+                                >
+                                </lightning-button-icon>
+                              </div>
                             </div>
                             <div class="detail-value">
                               {selectedAction.Apex_Class_Name__c}
@@ -422,7 +446,7 @@
                                   >
                                     <template if:true={item.isTrigger}>
                                       <lightning-button-icon
-                                        icon-name="utility:apex"
+                                        icon-name="utility:insert_tag_field"
                                         variant="bare"
                                         data-id={item.id}
                                         onclick={handleViewTriggerSource}
@@ -473,81 +497,112 @@
         <!-- No object selected: Command Center Dashboard (10-of-12) -->
         <template if:false={selectedObjectName}>
           <div class="slds-col slds-size_10-of-12">
-            <div class="command-center">
-              <div class="command-header slds-text-align_center">
-                <h1 class="command-title">Automation Command Center</h1>
-                <p class="command-subtitle">
-                  Monitor, manage, and scale your Trigger Actions Framework
-                </p>
-              </div>
+            <template if:true={isFlowBrowserOpen}>
+              <c-mermaid-flow-browser
+                onclose={handleCloseFlowBrowser}
+              ></c-mermaid-flow-browser>
+            </template>
+            <template if:false={isFlowBrowserOpen}>
+              <div class="command-center">
+                <div class="command-header slds-text-align_center">
+                  <h1 class="command-title">Automation Command Center</h1>
+                  <p class="command-subtitle">
+                    Monitor, manage, and scale your Trigger Actions Framework
+                  </p>
+                </div>
 
-              <!-- Action Cards -->
-              <div class="actions-grid slds-grid slds-gutters_medium">
-                <div class="slds-col slds-size_1-of-3">
-                  <div
-                    class="dashboard-action-card"
-                    onclick={handleOpenDiscovery}
-                  >
-                    <lightning-icon
-                      icon-name="utility:search"
-                      size="medium"
-                      class="action-icon"
-                    ></lightning-icon>
-                    <h3>Launch Discovery</h3>
-                    <p>
-                      Scan your org to find and initialize unmanaged triggers
-                      and flows.
-                    </p>
-                    <div class="action-link">Start Scanning →</div>
-                  </div>
-                </div>
-                <div class="slds-col slds-size_1-of-3">
-                  <div class="dashboard-action-card" onclick={handleAddSObject}>
-                    <lightning-icon
-                      icon-name="utility:add"
-                      size="medium"
-                      class="action-icon"
-                    ></lightning-icon>
-                    <h3>Configure New Object</h3>
-                    <p>
-                      Manually add a new SObject to the Trigger Actions
-                      Framework.
-                    </p>
-                    <div class="action-link">Add Object →</div>
-                  </div>
-                </div>
-                <div class="slds-col slds-size_1-of-3">
-                  <a
-                    href="https://github.com/mitchspano/trigger-actions-framework"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="dashboard-action-card-link"
-                  >
-                    <div class="dashboard-action-card">
+                <!-- Action Cards (2x2 Grid) -->
+                <div
+                  class="actions-grid slds-grid slds-wrap slds-gutters_medium"
+                >
+                  <div class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
+                    <div
+                      class="dashboard-action-card"
+                      onclick={handleOpenDiscovery}
+                    >
                       <lightning-icon
-                        icon-name="utility:knowledge_base"
+                        icon-name="utility:search"
                         size="medium"
                         class="action-icon"
                       ></lightning-icon>
-                      <h3>Framework Docs</h3>
+                      <h3>Launch Discovery</h3>
                       <p>
-                        Read the official documentation for advanced framework
-                        features.
+                        Scan your org to find and initialize unmanaged triggers
+                        and flows.
                       </p>
-                      <div class="action-link">Learn More →</div>
+                      <div class="action-link">Start Scanning →</div>
                     </div>
-                  </a>
+                  </div>
+                  <div class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
+                    <div
+                      class="dashboard-action-card"
+                      onclick={handleAddSObject}
+                    >
+                      <lightning-icon
+                        icon-name="utility:add"
+                        size="medium"
+                        class="action-icon"
+                      ></lightning-icon>
+                      <h3>Configure New Object</h3>
+                      <p>
+                        Manually add a new SObject to the Trigger Actions
+                        Framework.
+                      </p>
+                      <div class="action-link">Add Object →</div>
+                    </div>
+                  </div>
+                  <div class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
+                    <div
+                      class="dashboard-action-card"
+                      onclick={handleOpenFlowBrowser}
+                    >
+                      <div class="badge-sparkle">New ✨</div>
+                      <lightning-icon
+                        icon-name="utility:flow"
+                        size="medium"
+                        class="action-icon"
+                      ></lightning-icon>
+                      <h3>Mermaid Flow Browser</h3>
+                      <p>
+                        Scan, index, and query flow elements, variables,
+                        decisions, and action calls across your entire org.
+                      </p>
+                      <div class="action-link">Open Flow Browser →</div>
+                    </div>
+                  </div>
+                  <div class="slds-col slds-size_1-of-2 slds-m-bottom_medium">
+                    <a
+                      href="https://github.com/mitchspano/trigger-actions-framework"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="dashboard-action-card-link"
+                    >
+                      <div class="dashboard-action-card">
+                        <lightning-icon
+                          icon-name="utility:knowledge_base"
+                          size="medium"
+                          class="action-icon"
+                        ></lightning-icon>
+                        <h3>Framework Docs</h3>
+                        <p>
+                          Read the official documentation for advanced framework
+                          features.
+                        </p>
+                        <div class="action-link">Learn More →</div>
+                      </div>
+                    </a>
+                  </div>
+                </div>
+
+                <div
+                  class="command-footer slds-text-align_center slds-m-top_xx-large"
+                >
+                  <p class="slds-text-body_small slds-text-color_weak">
+                    v2.0.3 • Powered by Trigger Actions Framework
+                  </p>
                 </div>
               </div>
-
-              <div
-                class="command-footer slds-text-align_center slds-m-top_xx-large"
-              >
-                <p class="slds-text-body_small slds-text-color_weak">
-                  v2.0.3 • Powered by Trigger Actions Framework
-                </p>
-              </div>
-            </div>
+            </template>
           </div>
         </template>
       </div>
@@ -739,6 +794,44 @@
           <lightning-button
             label="Close"
             onclick={handleCloseFlowModal}
+          ></lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <!-- Apex Visualizer Modal -->
+  <template if:true={isApexModalOpen}>
+    <section
+      role="dialog"
+      tabindex="-1"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open slds-modal_large"
+    >
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <lightning-button-icon
+            icon-name="utility:close"
+            alternative-text="Close"
+            variant="bare-inverse"
+            class="slds-modal__close"
+            onclick={handleCloseApexModal}
+          >
+          </lightning-button-icon>
+          <h2 class="slds-text-heading_medium slds-hyphenate">
+            Apex Code Visualizer
+          </h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium">
+          <c-apex-visualizer
+            class-name={selectedApexClassName}
+          ></c-apex-visualizer>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button
+            label="Close"
+            onclick={handleCloseApexModal}
           ></lightning-button>
         </footer>
       </div>

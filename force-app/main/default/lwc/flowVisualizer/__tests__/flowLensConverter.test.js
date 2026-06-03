@@ -14,7 +14,7 @@ describe("flowLensConverter", () => {
 
       const result = convertFlowToMermaid(flow, "Empty Flow");
 
-      expect(result).toContain("stateDiagram-v2");
+      expect(result).toContain("flowchart TD");
       expect(result).toContain('title: "Empty Flow"');
       expect(result).toContain("FLOW_START");
       expect(result).toContain("Process Type: AutoLaunchedFlow");
@@ -52,7 +52,7 @@ describe("flowLensConverter", () => {
       const result = convertFlowToMermaid(flow, "Custom Title", false);
       expect(result).not.toContain("title:");
       expect(result.startsWith("---")).toBe(false);
-      expect(result).toContain("stateDiagram-v2");
+      expect(result).toContain("flowchart TD");
     });
   });
 
@@ -405,8 +405,7 @@ describe("flowLensConverter", () => {
       expect(result).toContain("Loop 🔄");
       expect(result).toContain("Loop Records");
       expect(result).toContain("FLOW_START --> MyLoop");
-      expect(result).toContain("MyLoop --> DoWork : ");
-      expect(result).toContain("for each");
+      expect(result).toContain("MyLoop -->| for each | DoWork");
     });
   });
 
@@ -601,9 +600,7 @@ describe("flowLensConverter", () => {
       const result = convertFlowToMermaid(flow);
 
       expect(result).toContain("FLOW_START --> CreateRec");
-      expect(result).toContain("CreateRec --> HandleError");
-      expect(result).toContain("❌");
-      expect(result).toContain("Fault");
+      expect(result).toContain("CreateRec -->|❌ Fault ❌| HandleError");
     });
 
     it("should render decision branch labels", () => {
@@ -641,8 +638,7 @@ describe("flowLensConverter", () => {
 
       const result = convertFlowToMermaid(flow);
 
-      expect(result).toContain("BranchDecision --> DoA");
-      expect(result).toContain("Path A");
+      expect(result).toContain("BranchDecision -->| Path A | DoA");
     });
   });
 
@@ -705,13 +701,7 @@ describe("flowLensConverter", () => {
 
       // The FLOW_START node has type="Flow Start" and label="Flow Start"
       // It should NOT render "Flow Start\nFlow Start"
-      const flowStartMatch = result.match(/state "([^"]*)" as FLOW_START/);
-      expect(flowStartMatch).toBeTruthy();
-
-      const stateContent = flowStartMatch[1];
-      // Count occurrences of "Flow Start" in the state content
-      const occurrences = (stateContent.match(/Flow Start/g) || []).length;
-      expect(occurrences).toBe(1);
+      expect(result).toContain('FLOW_START(["Flow Start ➡️"])');
     });
   });
 
@@ -765,10 +755,12 @@ describe("flowLensConverter", () => {
       const result = convertFlowToMermaid(flow);
 
       // Verify structure
-      expect(result).toContain("stateDiagram-v2");
+      expect(result).toContain("flowchart TD");
       expect(result).toContain("FLOW_START --> CheckStatus");
-      expect(result).toContain("CheckStatus --> LoopContacts");
-      expect(result).toContain("LoopContacts --> UpdateRec");
+      expect(result).toContain(
+        "CheckStatus -->| Is New Contact | LoopContacts"
+      );
+      expect(result).toContain("LoopContacts -->| for each | UpdateRec");
       expect(result).toContain("UpdateRec --> LoopContacts");
 
       // Verify node types
@@ -792,7 +784,7 @@ describe("flowLensConverter", () => {
       // Should not throw
       expect(() => convertFlowToMermaid(flow)).not.toThrow();
       const result = convertFlowToMermaid(flow);
-      expect(result).toContain("stateDiagram-v2");
+      expect(result).toContain("flowchart TD");
     });
 
     it("should handle value types: numberValue, booleanValue, dateValue", () => {

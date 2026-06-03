@@ -2,17 +2,12 @@ import { LightningElement, api, track } from "lwc";
 import { loadScript } from "lightning/platformResourceLoader";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import MERMAID_RESOURCE from "@salesforce/resourceUrl/mermaid";
+import APEX_PARSER_RESOURCE from "@salesforce/resourceUrl/apexParser";
 import getSessionId from "@salesforce/apex/OrgSessionController.getSessionId";
 import getOrgDomainUrl from "@salesforce/apex/OrgSessionController.getOrgDomainUrl";
-import { convertFlowToMermaid } from "./flowLensConverter";
-export { convertFlowToMermaid };
+import { convertApexToMermaid } from "./apexLensConverter";
 
-// Salesforce ID format: 15 or 18 alphanumeric characters
-const SFDC_ID_PATTERN = /^[a-zA-Z0-9]{15,18}$/;
-
-// Dynamic CSS injected into the shadow DOM to style Mermaid-generated SVG nodes.
-// LWC CSS encapsulation prevents scoped styles from matching dynamic innerHTML elements,
-// so we inject this as a raw <style> tag into the component's shadow root.
+// Styles injected dynamically to bypass Shadow DOM constraints on SVG elements
 const DIAGRAM_STYLES = `
   .diagram-canvas svg .pink rect,
   .diagram-canvas svg .pink polygon,
@@ -58,6 +53,11 @@ const DIAGRAM_STYLES = `
   .diagram-canvas svg tspan,
   .diagram-canvas svg span {
     font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    fill: #333333 !important;
+    color: #333333 !important;
+    stroke: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
   .diagram-canvas svg .pink text,
   .diagram-canvas svg .pink span,
@@ -71,9 +71,8 @@ const DIAGRAM_STYLES = `
   .diagram-canvas svg .blue text,
   .diagram-canvas svg .blue span,
   .diagram-canvas svg .blue tspan {
-    color: #ffffff !important;
     fill: #ffffff !important;
-    stroke: none !important;
+    color: #ffffff !important;
   }
   .diagram-canvas svg .state rect,
   .diagram-canvas svg .node rect {
@@ -82,35 +81,48 @@ const DIAGRAM_STYLES = `
   }
 `;
 
-export default class FlowVisualizer extends LightningElement {
-  @api flowId;
-  @api flowName;
-  @api highlightNodeId;
+export default class ApexVisualizer extends LightningElement {
+  @api className;
 
   @track error;
   @track isReady = false;
-  @track loadingMessage = "Loading visualization libraries...";
+  @track loadingMessage = "Loading parsing libraries...";
+
+  @track selectedMethod = "";
+  @track methodsList = [];
 
   @track zoomLevel = 1.0;
   naturalWidth;
   naturalHeight;
 
+  classId;
+  classBody;
+  symbolTable;
   sessionId;
   orgDomainUrl;
   mermaidCode;
-  copiedMermaidCode;
   isLibraryLoaded = false;
   _isDestroyed = false;
 
-  // Drag scroll state
+  // Drag scroll panning state
   isMouseDown = false;
   startX = 0;
   startY = 0;
   scrollLeft = 0;
   scrollTop = 0;
 
+  get workspaceClass() {
+    return this.isReady ? "workspace-active visualizer-content" : "slds-hide";
+  }
+
   get zoomPercentage() {
     return `${Math.round(this.zoomLevel * 100)}%`;
+  }
+
+  get methodOptions() {
+    return (this.methodsList || []).map((methodName) => {
+      return { label: methodName, value: methodName };
+    });
   }
 
   connectedCallback() {
@@ -124,14 +136,16 @@ export default class FlowVisualizer extends LightningElement {
 
   async loadLibraries() {
     try {
-      // Load Mermaid JS Static Resource
       if (!this.isLibraryLoaded) {
-        await loadScript(this, MERMAID_RESOURCE);
+        // Load both Mermaid and Certinia's Apex Parser script
+        await Promise.all([
+          loadScript(this, MERMAID_RESOURCE),
+          loadScript(this, APEX_PARSER_RESOURCE)
+        ]);
         this.isLibraryLoaded = true;
       }
 
       this.loadingMessage = "Authenticating session...";
-      // Fetch session info
       const [session, domain] = await Promise.all([
         getSessionId(),
         getOrgDomainUrl()
@@ -146,8 +160,7 @@ export default class FlowVisualizer extends LightningElement {
         );
       }
 
-      // Fetch flow metadata
-      await this.fetchFlowMetadata();
+      await this.fetchApexClass();
     } catch (err) {
       if (this._isDestroyed) return;
       this.error = err.message || err;
@@ -155,93 +168,61 @@ export default class FlowVisualizer extends LightningElement {
     }
   }
 
-  async fetchFlowMetadata() {
-    this.loadingMessage =
-      "Fetching Flow metadata from Salesforce Tooling API...";
-
+  async fetchApexClass() {
+    this.loadingMessage = "Fetching Apex class code and symbol table...";
     try {
-      // First try to fetch the active version of the flow
-      let data = await this.queryFlow(true);
+      const query = `SELECT Id, Body, SymbolTable FROM ApexClass WHERE Name = '${this.className}'`;
+      const url = `${this.orgDomainUrl}/services/data/v60.0/tooling/query?q=${encodeURIComponent(query)}`;
 
-      // If no active version found, fetch the latest version (e.g. draft/obsolete)
-      if (!data) {
-        data = await this.queryFlow(false);
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${this.sessionId}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Tooling API query failed: ${errText}`);
       }
 
-      if (!data || !data.Metadata) {
+      const data = await response.json();
+      if (!data.records || data.records.length === 0) {
         throw new Error(
-          `No Flow version metadata found for ID ${this.flowId}.`
+          `Apex class "${this.className}" was not found in the org.`
         );
       }
 
-      this.loadingMessage = "Generating flowchart diagram...";
+      const record = data.records[0];
+      this.classId = record.Id;
+      this.classBody = record.Body;
+      this.symbolTable = record.SymbolTable;
 
-      // Translate the Metadata JSON using our flow-lens port
-      // We pass includeTitle = false for rendering inside LWC to avoid duplicate title blocks,
-      // but keep includeTitle = true for copied/portable Mermaid code.
-      this.mermaidCode = convertFlowToMermaid(
-        data.Metadata,
-        this.flowName,
-        false
-      );
-      if (this.highlightNodeId) {
-        this.mermaidCode += `\n  style ${this.highlightNodeId} stroke:#FF5D5D,stroke-width:5px,stroke-dasharray:5;`;
-      }
-      this.copiedMermaidCode = convertFlowToMermaid(
-        data.Metadata,
-        this.flowName,
-        true
-      );
-
-      // Render the diagram
-      this.renderDiagram();
+      this.generateFlowchart();
     } catch (err) {
-      this.error = `REST callout failed: ${err.message}. Please verify if CORS allows requests from this Lightning origin to your Salesforce API domain.`;
+      this.error = `Tooling API fetch failed: ${err.message || err}`;
       this.isReady = false;
     }
   }
 
-  async queryFlow(activeOnly) {
-    // Validate flowId to prevent SOQL injection via Tooling API query string
-    if (!this.flowId || !SFDC_ID_PATTERN.test(this.flowId)) {
-      throw new Error(
-        `Invalid Flow ID format: "${this.flowId}". Expected a 15 or 18-character Salesforce ID.`
-      );
-    }
+  generateFlowchart() {
+    this.loadingMessage = "Generating flowchart diagram...";
+    try {
+      const result = convertApexToMermaid(this.classBody, this.selectedMethod);
+      this.mermaidCode = result.mermaidCode;
+      this.selectedMethod = result.selectedMethod;
+      this.methodsList = result.methods;
 
-    let query = `SELECT Id, Metadata FROM Flow WHERE DefinitionId = '${this.flowId}'`;
-    if (activeOnly) {
-      query += ` AND Status = 'Active'`;
-    } else {
-      query += ` ORDER BY VersionNumber DESC LIMIT 1`;
+      this.renderDiagram();
+    } catch (err) {
+      this.error = `Flowchart generation failed: ${err.message || err}`;
+      this.isReady = false;
     }
-
-    const url = `${this.orgDomainUrl}/services/data/v60.0/tooling/query?q=${encodeURIComponent(query)}`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${this.sessionId}`,
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(
-        `Tooling API query failed with status ${response.status}: ${errText}`
-      );
-    }
-
-    const resData = await response.json();
-    if (resData.records && resData.records.length > 0) {
-      return resData.records[0];
-    }
-    return null;
   }
 
   async renderDiagram() {
     try {
-      // Initialize Mermaid configuration
       window.mermaid.initialize({
         startOnLoad: false,
         theme: "neutral",
@@ -251,40 +232,29 @@ export default class FlowVisualizer extends LightningElement {
           fontFamily:
             "'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
         },
-        state: {
-          htmlLabels: false
-        },
-        stateDiagram: {
-          htmlLabels: false
-        },
         flowchart: {
           useMaxWidth: true,
           htmlLabels: false
         }
       });
 
-      // SVG generation id
-      const chartId = `mermaid_chart_${this.flowId}`;
+      const chartId = `mermaid_chart_${this.classId}`;
 
-      // Render to SVG
       const { svg: svgCode } = await window.mermaid.render(
         chartId,
         this.mermaidCode
       );
       this.isReady = true;
 
-      // Use a short delay to ensure DOM element is rendered after isReady triggers re-render
       // eslint-disable-next-line @lwc/lwc/no-async-operation
       setTimeout(() => {
         if (this._isDestroyed) return;
 
         const canvas = this.template.querySelector(".diagram-canvas");
         if (canvas) {
-          // lwc:dom="manual" container — innerHTML is the only way to inject Mermaid SVG output
           // eslint-disable-next-line @lwc/lwc/no-inner-html
           canvas.innerHTML = svgCode;
 
-          // Inject custom CSS styling to the generated SVG nodes
           const svgElement = canvas.querySelector("svg");
           if (svgElement) {
             const viewBox = svgElement.getAttribute("viewBox");
@@ -308,7 +278,6 @@ export default class FlowVisualizer extends LightningElement {
             this.applyZoom();
           }
 
-          // Inject extracted style constant to bypass LWC shadow DOM scoping
           const styleTag = document.createElement("style");
           styleTag.textContent = DIAGRAM_STYLES;
           canvas.appendChild(styleTag);
@@ -318,6 +287,11 @@ export default class FlowVisualizer extends LightningElement {
       this.error = `Mermaid.js rendering failed: ${err.message}`;
       this.isReady = false;
     }
+  }
+
+  handleMethodChange(event) {
+    this.selectedMethod = event.detail.value;
+    this.generateFlowchart();
   }
 
   handleZoomIn() {
@@ -338,7 +312,7 @@ export default class FlowVisualizer extends LightningElement {
   handleZoomFit() {
     const wrapper = this.template.querySelector(".canvas-wrapper");
     if (wrapper && this.naturalWidth) {
-      const wrapperWidth = wrapper.clientWidth - 48; // padding
+      const wrapperWidth = wrapper.clientWidth - 48;
       this.zoomLevel = Math.min(wrapperWidth / this.naturalWidth, 1.0);
       this.applyZoom();
     }
@@ -358,15 +332,13 @@ export default class FlowVisualizer extends LightningElement {
   handleRetry() {
     this.error = null;
     this.isReady = false;
-    this.loadingMessage = "Retrying loading visualization...";
+    this.loadingMessage = "Retrying loading libraries...";
     this.loadLibraries();
   }
 
   async handleCopyCode() {
-    const codeToCopy = this.copiedMermaidCode || this.mermaidCode;
-    const text = `\`\`\`mermaid\n${codeToCopy}\n\`\`\``;
+    const text = `\`\`\`mermaid\n${this.mermaidCode}\n\`\`\``;
     try {
-      // Prefer modern Clipboard API, fall back to deprecated execCommand
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(text);
       } else {
@@ -398,16 +370,13 @@ export default class FlowVisualizer extends LightningElement {
     }
   }
 
-  handleOpenFlowBuilder() {
-    // Flow Builder requires the flowDefId parameter when passing the FlowDefinition (300) ID.
-    // Using flowId with a 300 ID results in an error.
-    const url = `${this.orgDomainUrl}/builder_platform_interaction/flowBuilder.app?flowDefId=${this.flowId}`;
+  handleOpenApexClass() {
+    const url = `${this.orgDomainUrl}/lightning/setup/ApexClasses/page?address=%2F${this.classId}`;
     window.open(url, "_blank");
   }
 
   // --- Drag-Scroll Event Handlers ---
   handleMouseDown(event) {
-    // Only drag with primary mouse button
     if (event.button !== 0) return;
     const wrapper = this.template.querySelector(".canvas-wrapper");
     if (!wrapper) return;
@@ -429,7 +398,7 @@ export default class FlowVisualizer extends LightningElement {
 
     const x = event.pageX - wrapper.offsetLeft;
     const y = event.pageY - wrapper.offsetTop;
-    const walkX = (x - this.startX) * 1.5; // Scroll speed factor
+    const walkX = (x - this.startX) * 1.5;
     const walkY = (y - this.startY) * 1.5;
 
     wrapper.scrollLeft = this.scrollLeft - walkX;

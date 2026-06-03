@@ -171,50 +171,99 @@ function translateRecordTriggerType(type) {
   return type;
 }
 
-function getNodeLabel(node) {
-  const emoji = ICON_TO_EMOJI[node.icon] || "";
-  const sanitizedLabel = sanitizeLabel(node.label || node.name);
-
-  const typeWithEmoji = `${node.type || ""} ${emoji}`.trim();
-  if (!sanitizedLabel || sanitizedLabel === node.type) {
-    return typeWithEmoji;
-  }
-
-  return `${typeWithEmoji}\\n${sanitizedLabel}`;
-}
-
 function formatInnerNodeLabel(innerNode) {
   const sanitizedLabel = sanitizeLabel(innerNode.label);
   const sanitizedContent = (innerNode.content || []).map((item) =>
     sanitizeLabel(item)
   );
 
-  const nodeType = innerNode.type ? `${innerNode.type}\\n` : "";
+  const nodeType = innerNode.type ? `${innerNode.type}\n` : "";
   const nodeLabel =
     innerNode.label && innerNode.label !== innerNode.type
-      ? `${sanitizedLabel}\\n`
+      ? `${sanitizedLabel}\n`
       : "";
-  const nodeContent = sanitizedContent.join("\\n");
+  const nodeContent = sanitizedContent.join("\n");
 
   return `${nodeType}${nodeLabel}${nodeContent}`;
 }
 
 function toUmlString(node) {
-  const nodeId = sanitizeId(node.id);
-  const nodeLabel = getNodeLabel(node);
+  const nodeId = sanitizeId(node.id || node.name);
   const styleClass = COLOR_TO_STYLE_CLASS[node.color];
   const lines = [];
 
+  if (nodeId === "FLOW_END") {
+    lines.push(`  FLOW_END(["End"])`);
+    return lines.join("\n");
+  }
+
+  if (nodeId === "FLOW_START") {
+    lines.push(`  FLOW_START(["Flow Start ➡️"])`);
+
+    if (node.innerNodes && node.innerNodes.length > 0) {
+      const logicId = "FLOW_START_Logic";
+      const logicLines = [];
+      node.innerNodes.forEach((inner) => {
+        logicLines.push(formatInnerNodeLabel(inner));
+      });
+      const logicContent = `Flow Details\n---\n${logicLines.join("\n---\n")}`;
+      lines.push(`  ${logicId}["${logicContent}"]`);
+      lines.push(`  ${logicId} -.- FLOW_START`);
+
+      if (styleClass) {
+        lines.push(`  class ${logicId} ${styleClass}`);
+      }
+    }
+    if (styleClass) {
+      lines.push(`  class FLOW_START ${styleClass}`);
+    }
+    return lines.join("\n");
+  }
+
+  if (node.type === "Decision" || node.type === "Loop") {
+    const emoji = ICON_TO_EMOJI[node.icon] || "";
+    const nodeLabel = `${node.type} ${emoji}\n${sanitizeLabel(node.label || node.id)}`;
+    lines.push(`  ${nodeId}{"${nodeLabel}"}`);
+
+    if (node.innerNodes && node.innerNodes.length > 0) {
+      const logicId = `${nodeId}_Logic`;
+      const logicLines = [];
+      node.innerNodes.forEach((inner) => {
+        logicLines.push(formatInnerNodeLabel(inner));
+      });
+      const logicContent = `Criteria\n---\n${logicLines.join("\n---\n")}`;
+      lines.push(`  ${logicId}["${logicContent}"]`);
+      lines.push(`  ${logicId} -.- ${nodeId}`);
+
+      if (styleClass) {
+        lines.push(`  class ${logicId} ${styleClass}`);
+      }
+    }
+    if (styleClass) {
+      lines.push(`  class ${nodeId} ${styleClass}`);
+    }
+    return lines.join("\n");
+  }
+
+  // Standard nodes (Assignments, Lookups, DML, Action Calls, Screens, etc.)
+  const emoji = ICON_TO_EMOJI[node.icon] || "";
+  const typeText = node.type ? `${node.type} ${emoji}`.trim() : "";
+  const labelText = sanitizeLabel(node.label || node.id);
+  const nodeHeader =
+    typeText && labelText && labelText !== node.type
+      ? `${typeText}\n${labelText}`
+      : typeText || labelText;
+
+  let nodeContent = nodeHeader;
   if (node.innerNodes && node.innerNodes.length > 0) {
-    const content = [nodeLabel];
+    const content = [nodeHeader];
     node.innerNodes.forEach((inner) => {
       content.push(formatInnerNodeLabel(inner));
     });
-    lines.push(`  state "${content.join("\\n---\\n")}" as ${nodeId}`);
-  } else {
-    lines.push(`  state "${nodeLabel}" as ${nodeId}`);
+    nodeContent = content.join("\n---\n");
   }
 
+  lines.push(`  ${nodeId}["${nodeContent}"]`);
   if (styleClass) {
     lines.push(`  class ${nodeId} ${styleClass}`);
   }
@@ -751,7 +800,7 @@ function createTransition(
 ) {
   const targetRef = connection.targetReference;
   const connectedNode = nameToNode.get(targetRef);
-  const toName = connectedNode ? connectedNode.name : "END";
+  const toName = connectedNode ? connectedNode.name : "FLOW_END";
   return {
     from: from.name,
     to: toName,
@@ -930,7 +979,7 @@ function populateTransitions(flow, nameToNode) {
 
 export function convertFlowToMermaid(flow, flowLabel, includeTitle = true) {
   const nameToNode = new Map();
-  nameToNode.set("END", { name: "END", label: "End", _type: "end" });
+  nameToNode.set("FLOW_END", { name: "FLOW_END", label: "End", _type: "end" });
 
   if (flow.start) {
     flow.start.name = "FLOW_START";
@@ -981,7 +1030,7 @@ export function convertFlowToMermaid(flow, flowLabel, includeTitle = true) {
     lines.push("---");
   }
   lines.push(
-    "stateDiagram-v2",
+    "flowchart TD",
     "",
     "  classDef pink fill:#F9548A, color:white",
     "  classDef orange fill:#DD7A00, color:white",
@@ -992,8 +1041,8 @@ export function convertFlowToMermaid(flow, flowLabel, includeTitle = true) {
 
   // Emit node state definitions
   nameToNode.forEach((node) => {
-    if (node.name === "END") {
-      lines.push(`  state "END" as END`);
+    if (node.name === "FLOW_END") {
+      lines.push(toUmlString(node));
       return;
     }
 
@@ -1135,9 +1184,9 @@ export function convertFlowToMermaid(flow, flowLabel, includeTitle = true) {
     const toId = sanitizeId(trans.to);
     const faultIndicator = trans.fault ? "❌" : "";
     const label = trans.label
-      ? ` : ${faultIndicator} ${trans.label} ${faultIndicator}`
+      ? `|${faultIndicator} ${trans.label} ${faultIndicator}|`
       : "";
-    lines.push(`  ${fromId} --> ${toId}${label}`);
+    lines.push(`  ${fromId} -->${label} ${toId}`);
   });
 
   return lines.join("\n");

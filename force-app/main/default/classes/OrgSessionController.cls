@@ -1,4 +1,4 @@
-public with sharing class FlowVisualizerController {
+public with sharing class OrgSessionController {
   /**
    * @description Fetches the API-enabled session ID by loading the SessionIdPage Visualforce page.
    * @return String The current session ID, or empty string if an error occurs.

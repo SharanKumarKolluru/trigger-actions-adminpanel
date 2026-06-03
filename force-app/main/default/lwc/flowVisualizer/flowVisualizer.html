@@ -46,15 +46,17 @@
       <div class="visualizer-content">
         <!-- Toolbar -->
         <div
-          class="toolbar slds-grid slds-grid_vertical-align-center slds-p-bottom_medium slds-border_bottom"
+          class="toolbar-header slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-var-p-around_small slds-var-m-bottom_small"
         >
+          <!-- Title -->
           <div class="slds-col slds-grow-none">
-            <span class="flow-title slds-text-heading_small">{flowName}</span>
+            <span class="visualizer-title">{flowName}</span>
           </div>
 
-          <!-- Zoom Controls -->
-          <div class="slds-col slds-m-left_medium">
-            <lightning-button-group>
+          <!-- Control Buttons -->
+          <div class="slds-col slds-grid slds-grid_vertical-align-center">
+            <!-- Zoom Controls -->
+            <lightning-button-group class="slds-var-m-right_medium">
               <lightning-button-icon
                 icon-name="utility:zoomout"
                 alternative-text="Zoom Out"
@@ -76,21 +78,19 @@
               ></lightning-button-icon>
               <lightning-button-icon
                 icon-name="utility:expand"
-                alternative-text="Fit to Screen"
-                title="Fit to Screen"
+                alternative-text="Fit to Canvas"
+                title="Fit to Canvas"
                 onclick={handleZoomFit}
               ></lightning-button-icon>
             </lightning-button-group>
-          </div>
 
-          <div class="slds-col_filler"></div>
-          <div class="slds-col slds-no-flex btn-group">
+            <!-- Action Buttons -->
             <lightning-button
               label="Copy Diagram Code"
               icon-name="utility:copy"
               variant="neutral"
               onclick={handleCopyCode}
-              class="slds-m-right_x-small"
+              class="slds-var-m-right_small"
             >
             </lightning-button>
             <lightning-button

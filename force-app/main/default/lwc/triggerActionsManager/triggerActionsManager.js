@@ -50,6 +50,9 @@ export default class TriggerActionsManager extends NavigationMixin(
   isFlowModalOpen = false;
   selectedFlowId = "";
   selectedFlowName = "";
+  isApexModalOpen = false;
+  selectedApexClassName = "";
+  isFlowBrowserOpen = false;
   _wiredActionsResult;
   _wiredSObjectsResult;
   _wiredNativeResult;
@@ -399,6 +402,7 @@ export default class TriggerActionsManager extends NavigationMixin(
     this.selectedAction = null;
     this.nativeTypeFilter = "all";
     this.nativeStatusFilter = "all";
+    this.isFlowBrowserOpen = false;
   }
 
   async handleActionClick(event) {
@@ -482,6 +486,27 @@ export default class TriggerActionsManager extends NavigationMixin(
     this.selectedFlowName = "";
   }
 
+  handleViewApexFlowchart() {
+    if (this.selectedAction?.Apex_Class_Name__c) {
+      this.selectedApexClassName = this.selectedAction.Apex_Class_Name__c;
+      this.isApexModalOpen = true;
+    }
+  }
+
+  handleViewApexFlowchartFromList(event) {
+    event.stopPropagation();
+    const className = event.currentTarget.dataset.className;
+    if (className) {
+      this.selectedApexClassName = className;
+      this.isApexModalOpen = true;
+    }
+  }
+
+  handleCloseApexModal() {
+    this.isApexModalOpen = false;
+    this.selectedApexClassName = "";
+  }
+
   handleViewTriggerSource(event) {
     const id = event.currentTarget.dataset.id;
     const trigger = (this.nativeAutomations.triggers || []).find(
@@ -559,6 +584,15 @@ export default class TriggerActionsManager extends NavigationMixin(
     setTimeout(() => {
       this.refreshList().catch(() => {});
     }, 8000);
+  }
+
+  handleOpenFlowBrowser() {
+    this.selectedObjectName = "";
+    this.isFlowBrowserOpen = true;
+  }
+
+  handleCloseFlowBrowser() {
+    this.isFlowBrowserOpen = false;
   }
 
   handleAddSObject() {
