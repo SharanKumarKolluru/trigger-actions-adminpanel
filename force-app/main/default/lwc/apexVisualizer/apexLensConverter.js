@@ -1,4 +1,11 @@
 /**
+ * Portions of this code are inspired by and derived from the Certinia Apex Parser / Apex Dev Tools
+ * parser patterns (https://github.com/apex-dev-tools/apex-parser), licensed under the
+ * 3-clause BSD License. The parser grammar uses an Antlr4 grammar originally from Tooling-force.com.
+ * This version has been significantly modified, refactored, and extended for Mermaid flowchart generation.
+ */
+
+/**
  * Helper to get the exact source text substring of a rule context.
  */
 function getSourceText(ctx, sourceCode) {
@@ -18,7 +25,7 @@ function formatNodeLabel(sanitizedText) {
   if (!sanitizedText) return "";
   return sanitizedText
     .split("\n")
-    .map((line) => " " + line.trim() + " ")
+    .map((line) => line.trim())
     .join("\n");
 }
 

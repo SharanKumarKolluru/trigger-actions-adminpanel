@@ -1,146 +1,21 @@
 import { LightningElement, api, track } from "lwc";
 import { loadScript } from "lightning/platformResourceLoader";
-import { ShowToastEvent } from "lightning/platformShowToastEvent";
-import MERMAID_RESOURCE from "@salesforce/resourceUrl/mermaid";
 import APEX_PARSER_RESOURCE from "@salesforce/resourceUrl/apexParser";
 import getSessionId from "@salesforce/apex/OrgSessionController.getSessionId";
 import getOrgDomainUrl from "@salesforce/apex/OrgSessionController.getOrgDomainUrl";
 import { convertApexToMermaid } from "./apexLensConverter";
 
-// Styles injected dynamically to bypass Shadow DOM constraints on SVG elements
-const DIAGRAM_STYLES = `
-  .diagram-canvas svg .pink rect,
-  .diagram-canvas svg .pink polygon,
-  .diagram-canvas svg .pink circle,
-  .diagram-canvas svg .pink ellipse,
-  .diagram-canvas svg .pink path,
-  .diagram-canvas svg .state.pink rect {
-    fill: #F43F5E !important;
-    stroke: #BE185D !important;
-    stroke-width: 2px !important;
-  }
-  .diagram-canvas svg .orange rect,
-  .diagram-canvas svg .orange polygon,
-  .diagram-canvas svg .orange circle,
-  .diagram-canvas svg .orange ellipse,
-  .diagram-canvas svg .orange path,
-  .diagram-canvas svg .state.orange rect {
-    fill: #F97316 !important;
-    stroke: #C2410C !important;
-    stroke-width: 2px !important;
-  }
-  .diagram-canvas svg .navy rect,
-  .diagram-canvas svg .navy polygon,
-  .diagram-canvas svg .navy circle,
-  .diagram-canvas svg .navy ellipse,
-  .diagram-canvas svg .navy path,
-  .diagram-canvas svg .state.navy rect {
-    fill: #475569 !important;
-    stroke: #1E293B !important;
-    stroke-width: 2px !important;
-  }
-  .diagram-canvas svg .blue rect,
-  .diagram-canvas svg .blue polygon,
-  .diagram-canvas svg .blue circle,
-  .diagram-canvas svg .blue ellipse,
-  .diagram-canvas svg .blue path,
-  .diagram-canvas svg .state.blue rect {
-    fill: #0284C7 !important;
-    stroke: #0369A1 !important;
-    stroke-width: 2px !important;
-  }
-  .diagram-canvas svg text,
-  .diagram-canvas svg tspan,
-  .diagram-canvas svg span {
-    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  }
-  .diagram-canvas svg .pink text,
-  .diagram-canvas svg .pink span,
-  .diagram-canvas svg .pink tspan,
-  .diagram-canvas svg .orange text,
-  .diagram-canvas svg .orange span,
-  .diagram-canvas svg .orange tspan,
-  .diagram-canvas svg .navy text,
-  .diagram-canvas svg .navy span,
-  .diagram-canvas svg .navy tspan,
-  .diagram-canvas svg .blue text,
-  .diagram-canvas svg .blue span,
-  .diagram-canvas svg .blue tspan {
-    color: #ffffff !important;
-    fill: #ffffff !important;
-    stroke: none !important;
-  }
-  .diagram-canvas svg .state rect,
-  .diagram-canvas svg .node rect {
-    rx: 8px !important;
-    ry: 8px !important;
-  }
-
-  /* --- Typography Hierarchy for Code/Details --- */
-  
-  /* Default node headers (first line in nodes - excluding action, return, and logic nodes) */
-  .diagram-canvas svg [id*="choice_"]:not([id*="_Logic"]) text tspan,
-  .diagram-canvas svg [id*="choice_"]:not([id*="_Logic"]) text tspan.line,
-  .diagram-canvas svg [id*="loop_cond_"]:not([id*="_Logic"]) text tspan,
-  .diagram-canvas svg [id*="loop_cond_"]:not([id*="_Logic"]) text tspan.line,
-  .diagram-canvas svg [id*="METHOD_START"] text tspan,
-  .diagram-canvas svg [id*="METHOD_START"] text tspan.line,
-  .diagram-canvas svg [id*="METHOD_END"] text tspan,
-  .diagram-canvas svg [id*="METHOD_END"] text tspan.line,
-  .diagram-canvas svg [id*="dml_"] text tspan:first-child,
-  .diagram-canvas svg [id*="dml_"] text tspan.line:first-child {
-    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-    font-weight: 800 !important;
-    font-size: 13.5px !important;
-    letter-spacing: 0.5px !important;
-  }
-
-  /* Code/Logic Nodes (override to be sans-serif and normal weight) */
-  .diagram-canvas svg [id*="action_"] text,
-  .diagram-canvas svg [id*="action_"] span,
-  .diagram-canvas svg [id*="action_"] tspan,
-  .diagram-canvas svg [id*="return_"] text,
-  .diagram-canvas svg [id*="return_"] span,
-  .diagram-canvas svg [id*="return_"] tspan,
-  .diagram-canvas svg [id*="_Logic"] text,
-  .diagram-canvas svg [id*="_Logic"] span,
-  .diagram-canvas svg [id*="_Logic"] tspan {
-    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-    font-weight: 400 !important;
-    font-size: 11.5px !important;
-    letter-spacing: -0.1px !important;
-  }
-
-  /* DML Nodes (Line 1: Header, Lines 2+: Code) */
-  .diagram-canvas svg [id*="dml_"] text tspan:first-child,
-  .diagram-canvas svg [id*="dml_"] text tspan.line:first-child {
-    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-    font-weight: 800 !important;
-    font-size: 13.5px !important;
-    letter-spacing: 0.5px !important;
-  }
-  .diagram-canvas svg [id*="dml_"] text tspan:nth-child(n+2),
-  .diagram-canvas svg [id*="dml_"] text tspan.line:nth-child(n+2) {
-    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-    font-weight: 400 !important;
-    font-size: 11.5px !important;
-    letter-spacing: -0.1px !important;
-  }
-`;
-
 export default class ApexVisualizer extends LightningElement {
   @api className;
+  @api apiVersion = "v66.0";
 
   @track error;
-  @track isReady = false;
+  @track isLoading = true;
   @track loadingMessage = "Loading parsing libraries...";
+  @track resources;
 
   @track selectedMethod = "";
   @track methodsList = [];
-
-  @track zoomLevel = 1.0;
-  naturalWidth;
-  naturalHeight;
 
   classId;
   classBody;
@@ -148,28 +23,36 @@ export default class ApexVisualizer extends LightningElement {
   sessionId;
   orgDomainUrl;
   mermaidCode;
-  isLibraryLoaded = false;
+  isParserLoaded = false;
   _isDestroyed = false;
 
-  // Drag scroll panning state
-  isMouseDown = false;
-  startX = 0;
-  startY = 0;
-  scrollLeft = 0;
-  scrollTop = 0;
+  get filteredResources() {
+    if (!this.resources) return null;
+    if (!this.selectedMethod) return this.resources;
 
-  get workspaceClass() {
-    return this.isReady ? "workspace-active visualizer-content" : "slds-hide";
-  }
+    const filteredVariables = this.resources.variables.filter((v) => {
+      return (
+        v.scope === "Class Field" ||
+        v.scope === "Class Property" ||
+        v.scope === `Method: ${this.selectedMethod}()`
+      );
+    });
 
-  get zoomPercentage() {
-    return `${Math.round(this.zoomLevel * 100)}%`;
+    return {
+      ...this.resources,
+      variables: filteredVariables
+    };
   }
 
   get methodOptions() {
     return (this.methodsList || []).map((methodName) => {
       return { label: methodName, value: methodName };
     });
+  }
+
+  get builderUrl() {
+    if (!this.orgDomainUrl || !this.classId) return "";
+    return `${this.orgDomainUrl}/lightning/setup/ApexClasses/page?address=%2F${this.classId}`;
   }
 
   connectedCallback() {
@@ -183,23 +66,25 @@ export default class ApexVisualizer extends LightningElement {
 
   async loadLibraries() {
     try {
-      if (!this.isLibraryLoaded) {
-        // Load both Mermaid and Certinia's Apex Parser script
-        await Promise.all([
-          loadScript(this, MERMAID_RESOURCE),
-          loadScript(this, APEX_PARSER_RESOURCE)
-        ]);
-        this.isLibraryLoaded = true;
+      this.isLoading = true;
+      this.error = null;
+
+      if (!this.isParserLoaded) {
+        // Load Certinia's Apex Parser script
+        await loadScript(this, APEX_PARSER_RESOURCE);
+        this.isParserLoaded = true;
       }
 
-      this.loadingMessage = "Authenticating session...";
-      const [session, domain] = await Promise.all([
-        getSessionId(),
-        getOrgDomainUrl()
-      ]);
+      if (!this.sessionId || !this.orgDomainUrl) {
+        this.loadingMessage = "Authenticating session...";
+        const [session, domain] = await Promise.all([
+          getSessionId(),
+          getOrgDomainUrl()
+        ]);
 
-      this.sessionId = session;
-      this.orgDomainUrl = domain;
+        this.sessionId = session;
+        this.orgDomainUrl = domain;
+      }
 
       if (!this.sessionId) {
         throw new Error(
@@ -211,7 +96,7 @@ export default class ApexVisualizer extends LightningElement {
     } catch (err) {
       if (this._isDestroyed) return;
       this.error = err.message || err;
-      this.isReady = false;
+      this.isLoading = false;
     }
   }
 
@@ -219,7 +104,7 @@ export default class ApexVisualizer extends LightningElement {
     this.loadingMessage = "Fetching Apex class code and symbol table...";
     try {
       const query = `SELECT Id, Body, SymbolTable FROM ApexClass WHERE Name = '${this.className}'`;
-      const url = `${this.orgDomainUrl}/services/data/v60.0/tooling/query?q=${encodeURIComponent(query)}`;
+      const url = `${this.orgDomainUrl}/services/data/${this.apiVersion}/tooling/query?q=${encodeURIComponent(query)}`;
 
       const response = await fetch(url, {
         method: "GET",
@@ -245,11 +130,14 @@ export default class ApexVisualizer extends LightningElement {
       this.classId = record.Id;
       this.classBody = record.Body;
       this.symbolTable = record.SymbolTable;
+      this.resources = this.parseApexResources(this.symbolTable);
 
       this.generateFlowchart();
     } catch (err) {
-      this.error = `Tooling API fetch failed: ${err.message || err}`;
-      this.isReady = false;
+      if (!this._isDestroyed) {
+        this.error = `Tooling API fetch failed: ${err.message || err}`;
+        this.isLoading = false;
+      }
     }
   }
 
@@ -261,237 +149,109 @@ export default class ApexVisualizer extends LightningElement {
       this.selectedMethod = result.selectedMethod;
       this.methodsList = result.methods;
 
-      this.renderDiagram();
+      this.isLoading = false;
     } catch (err) {
-      this.error = `Flowchart generation failed: ${err.message || err}`;
-      this.isReady = false;
-    }
-  }
-
-  async renderDiagram() {
-    try {
-      window.mermaid.initialize({
-        startOnLoad: false,
-        theme: "neutral",
-        securityLevel: "loose",
-        htmlLabels: false,
-        themeVariables: {
-          fontFamily:
-            "'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-        },
-        flowchart: {
-          useMaxWidth: true,
-          htmlLabels: false
-        }
-      });
-
-      const chartId = `mermaid_chart_${this.classId}`;
-
-      const { svg: svgCode } = await window.mermaid.render(
-        chartId,
-        this.mermaidCode
-      );
-      this.isReady = true;
-
-      // eslint-disable-next-line @lwc/lwc/no-async-operation
-      setTimeout(() => {
-        if (this._isDestroyed) return;
-
-        const canvas = this.template.querySelector(".diagram-canvas");
-        if (canvas) {
-          // eslint-disable-next-line @lwc/lwc/no-inner-html
-          canvas.innerHTML = svgCode;
-
-          const svgElement = canvas.querySelector("svg");
-          if (svgElement) {
-            const viewBox = svgElement.getAttribute("viewBox");
-            if (viewBox) {
-              const parts = viewBox.split(/\s+/);
-              if (parts.length >= 4) {
-                this.naturalWidth = parseFloat(parts[2]);
-                this.naturalHeight = parseFloat(parts[3]);
-              }
-            }
-
-            if (!this.naturalWidth) {
-              this.naturalWidth =
-                parseFloat(svgElement.getAttribute("width")) || 800;
-            }
-            if (!this.naturalHeight) {
-              this.naturalHeight =
-                parseFloat(svgElement.getAttribute("height")) || 600;
-            }
-
-            this.applyZoom();
-          }
-
-          // Left-align text inside rectangle nodes (excluding start/end headers)
-          const nodeGroups = canvas.querySelectorAll("g.node");
-          nodeGroups.forEach((nodeGroup) => {
-            const nodeId = nodeGroup.getAttribute("id");
-            if (
-              nodeId &&
-              !nodeId.includes("_Logic") &&
-              (nodeId.includes("FLOW_START") ||
-                nodeId.includes("FLOW_END") ||
-                nodeId.includes("METHOD_START") ||
-                nodeId.includes("METHOD_END"))
-            ) {
-              return;
-            }
-            const rect = nodeGroup.querySelector("rect");
-            const text = nodeGroup.querySelector("text");
-            if (rect && text) {
-              const width = parseFloat(rect.getAttribute("width"));
-              if (!isNaN(width)) {
-                text.style.textAnchor = "start";
-                const padding = 16;
-                const shiftX = -(width / 2) + padding;
-                text.setAttribute("transform", `translate(${shiftX}, 0)`);
-              }
-            }
-          });
-
-          const styleTag = document.createElement("style");
-          styleTag.textContent = DIAGRAM_STYLES;
-          canvas.appendChild(styleTag);
-        }
-      }, 50);
-    } catch (err) {
-      this.error = `Mermaid.js rendering failed: ${err.message}`;
-      this.isReady = false;
+      if (!this._isDestroyed) {
+        this.error = `Flowchart generation failed: ${err.message || err}`;
+        this.isLoading = false;
+      }
     }
   }
 
   handleMethodChange(event) {
     this.selectedMethod = event.detail.value;
+    this.isLoading = true;
     this.generateFlowchart();
-  }
-
-  handleZoomIn() {
-    this.zoomLevel = Math.min(this.zoomLevel + 0.15, 3.0);
-    this.applyZoom();
-  }
-
-  handleZoomOut() {
-    this.zoomLevel = Math.max(this.zoomLevel - 0.15, 0.3);
-    this.applyZoom();
-  }
-
-  handleZoomReset() {
-    this.zoomLevel = 1.0;
-    this.applyZoom();
-  }
-
-  handleZoomFit() {
-    const wrapper = this.template.querySelector(".canvas-wrapper");
-    if (wrapper && this.naturalWidth) {
-      const wrapperWidth = wrapper.clientWidth - 48;
-      this.zoomLevel = Math.min(wrapperWidth / this.naturalWidth, 1.0);
-      this.applyZoom();
-    }
-  }
-
-  applyZoom() {
-    const canvas = this.template.querySelector(".diagram-canvas");
-    if (canvas) {
-      const svgElement = canvas.querySelector("svg");
-      if (svgElement && this.naturalWidth && this.naturalHeight) {
-        svgElement.style.width = `${this.naturalWidth * this.zoomLevel}px`;
-        svgElement.style.height = `${this.naturalHeight * this.zoomLevel}px`;
-      }
-    }
   }
 
   handleRetry() {
     this.error = null;
-    this.isReady = false;
-    this.loadingMessage = "Retrying loading libraries...";
+    this.isLoading = true;
     this.loadLibraries();
   }
 
-  async handleCopyCode() {
-    const text = `\`\`\`mermaid\n${this.mermaidCode}\n\`\`\``;
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(text);
-      } else {
-        const textarea = document.createElement("textarea");
-        textarea.value = text;
-        textarea.style.position = "fixed";
-        textarea.style.opacity = "0";
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textarea);
+  parseApexResources(symbolTable) {
+    if (!symbolTable) return null;
+
+    const resources = {
+      variables: [],
+      formulas: [],
+      constants: [],
+      textTemplates: []
+    };
+
+    const getArray = (val) => {
+      if (!val) return [];
+      return Array.isArray(val) ? val : [val];
+    };
+
+    // Sort methods by start line to match local variables to their enclosing methods
+    const methods = getArray(symbolTable.methods)
+      .map((m) => ({
+        name: m.name,
+        line: m.location ? m.location.line : 0
+      }))
+      .filter((m) => m.line > 0)
+      .sort((a, b) => a.line - b.line);
+
+    const getEnclosingMethod = (line) => {
+      if (!line || methods.length === 0) return null;
+      let enclosing = null;
+      for (let i = 0; i < methods.length; i++) {
+        if (methods[i].line <= line) {
+          enclosing = methods[i].name;
+        } else {
+          break;
+        }
+      }
+      return enclosing;
+    };
+
+    const uniqueVariables = new Map();
+
+    // 1. Variables (Fields / Local variables / Parameters)
+    getArray(symbolTable.variables).forEach((v) => {
+      const typeText = v.type || "Object";
+      const hasModifiers = v.modifiers && v.modifiers.length > 0;
+      const modifiers = getArray(v.modifiers).join(" ") || "private";
+      const line = v.location ? v.location.line : null;
+
+      let scope = "Class Field";
+      if (!hasModifiers && line) {
+        const methodName = getEnclosingMethod(line);
+        if (methodName) {
+          scope = `Method: ${methodName}()`;
+        }
       }
 
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Copied!",
-          message: "Mermaid flowchart code copied to clipboard.",
-          variant: "success"
-        })
-      );
-    } catch (err) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Copy Failed",
-          message: err.message,
-          variant: "error"
-        })
-      );
-    }
-  }
+      uniqueVariables.set(v.name, {
+        name: v.name,
+        dataType: typeText,
+        isCollection: typeText.includes("<") || typeText.includes("[]"),
+        access: modifiers,
+        scope: scope
+      });
+    });
 
-  handleOpenApexClass() {
-    const url = `${this.orgDomainUrl}/lightning/setup/ApexClasses/page?address=%2F${this.classId}`;
-    window.open(url, "_blank");
-  }
+    // 2. Properties (prefer properties over variables if names clash)
+    getArray(symbolTable.properties).forEach((p) => {
+      const typeText = p.type || "Object";
+      const modifiers = getArray(p.modifiers).join(" ") || "public";
 
-  // --- Drag-Scroll Event Handlers ---
-  handleMouseDown(event) {
-    if (event.button !== 0) return;
-    const wrapper = this.template.querySelector(".canvas-wrapper");
-    if (!wrapper) return;
+      uniqueVariables.set(p.name, {
+        name: p.name,
+        dataType: `${typeText} {Property}`,
+        isCollection: typeText.includes("<") || typeText.includes("[]"),
+        access: modifiers,
+        scope: "Class Property"
+      });
+    });
 
-    this.isMouseDown = true;
-    wrapper.classList.add("grabbing");
+    resources.variables = Array.from(uniqueVariables.values());
 
-    this.startX = event.pageX - wrapper.offsetLeft;
-    this.startY = event.pageY - wrapper.offsetTop;
-    this.scrollLeft = wrapper.scrollLeft;
-    this.scrollTop = wrapper.scrollTop;
-  }
+    // Sort alphabetically by name
+    resources.variables.sort((a, b) => a.name.localeCompare(b.name));
 
-  handleMouseMove(event) {
-    if (!this.isMouseDown) return;
-    event.preventDefault();
-    const wrapper = this.template.querySelector(".canvas-wrapper");
-    if (!wrapper) return;
-
-    const x = event.pageX - wrapper.offsetLeft;
-    const y = event.pageY - wrapper.offsetTop;
-    const walkX = (x - this.startX) * 1.5;
-    const walkY = (y - this.startY) * 1.5;
-
-    wrapper.scrollLeft = this.scrollLeft - walkX;
-    wrapper.scrollTop = this.scrollTop - walkY;
-  }
-
-  handleMouseUp() {
-    this.isMouseDown = false;
-    const wrapper = this.template.querySelector(".canvas-wrapper");
-    if (wrapper) {
-      wrapper.classList.remove("grabbing");
-    }
-  }
-
-  handleMouseLeave() {
-    this.isMouseDown = false;
-    const wrapper = this.template.querySelector(".canvas-wrapper");
-    if (wrapper) {
-      wrapper.classList.remove("grabbing");
-    }
+    return resources;
   }
 }

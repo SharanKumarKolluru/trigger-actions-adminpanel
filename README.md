@@ -111,4 +111,13 @@ Contributions are welcome! Please feel free to open issues or submit pull reques
 
 ---
 
+## ⚖️ Open Source Attribution & Licenses
+
+This project includes and builds upon contributions from the following open-source libraries:
+
+- **Flow Lens** ([google/flow-lens](https://github.com/google/flow-lens)) - Licensed under the MIT License. The flowchart converter engine builds upon the original logic for parsing Salesforce Flow metadata into visual structures.
+- **Apex Dev Tools Parser** ([apex-dev-tools/apex-parser](https://github.com/apex-dev-tools/apex-parser)) - Licensed under the 3-clause BSD License. The Apex flowchart visualizer utilizes the parser's AST visitor patterns to parse and render Apex code blocks.
+
+---
+
 **Version:** 3.0.0-pre

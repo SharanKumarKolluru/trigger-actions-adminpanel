@@ -1,3 +1,9 @@
+/**
+ * Portions of this code are derived from the open-source Flow Lens project (https://github.com/google/flow-lens),
+ * licensed under the MIT License. This version has been significantly modified, extended, and optimized
+ * for the Trigger Actions Framework Admin Panel.
+ */
+
 // SkinColor values
 export const SkinColor = {
   NONE: "NONE",
@@ -204,7 +210,10 @@ function toUmlString(node) {
       const logicId = "FLOW_START_Logic";
       const logicLines = [];
       node.innerNodes.forEach((inner) => {
-        logicLines.push(formatInnerNodeLabel(inner));
+        const formatted = formatInnerNodeLabel(inner);
+        if (formatted && formatted.trim() !== "") {
+          logicLines.push(formatted);
+        }
       });
       const logicContent = `Flow Details\n---\n${logicLines.join("\n---\n")}`;
       lines.push(`  ${logicId}["${logicContent}"]`);
@@ -229,7 +238,10 @@ function toUmlString(node) {
       const logicId = `${nodeId}_Logic`;
       const logicLines = [];
       node.innerNodes.forEach((inner) => {
-        logicLines.push(formatInnerNodeLabel(inner));
+        const formatted = formatInnerNodeLabel(inner);
+        if (formatted && formatted.trim() !== "") {
+          logicLines.push(formatted);
+        }
       });
       const logicContent = `Criteria\n---\n${logicLines.join("\n---\n")}`;
       lines.push(`  ${logicId}["${logicContent}"]`);
@@ -258,7 +270,10 @@ function toUmlString(node) {
   if (node.innerNodes && node.innerNodes.length > 0) {
     const content = [nodeHeader];
     node.innerNodes.forEach((inner) => {
-      content.push(formatInnerNodeLabel(inner));
+      const formatted = formatInnerNodeLabel(inner);
+      if (formatted && formatted.trim() !== "") {
+        content.push(formatted);
+      }
     });
     nodeContent = content.join("\n---\n");
   }
@@ -354,7 +369,7 @@ function getFlowStart(start, processType) {
     innerNodes: [
       {
         id: "FlowStart__EntryCriteria",
-        type: "Flow Details",
+        type: "",
         label: "",
         content: entryCriteria
       }
@@ -594,7 +609,8 @@ function getFlowRecordUpdate(node) {
 
   const objLabel = node.object ? ` ${node.object}` : " Record";
   const typeLabel = node.inputReference
-    ? `Update Reference: ${node.inputReference}`
+    ? `Update Reference: 
+    ${node.inputReference}`
     : `Update${objLabel}`;
 
   return toUmlString({
@@ -603,14 +619,17 @@ function getFlowRecordUpdate(node) {
     type: typeLabel,
     color: SkinColor.PINK,
     icon: Icon.UPDATE,
-    innerNodes: [
-      {
-        id: `${node.name}__UpdateDetails`,
-        type: "",
-        label: "",
-        content: innerNodeContent
-      }
-    ]
+    innerNodes:
+      innerNodeContent.length > 0
+        ? [
+            {
+              id: `${node.name}__UpdateDetails`,
+              type: "",
+              label: "",
+              content: innerNodeContent
+            }
+          ]
+        : []
   });
 }
 
@@ -630,7 +649,8 @@ function getFlowRecordCreate(node) {
 
   const objLabel = node.object ? ` ${node.object}` : " Record";
   const typeLabel = node.inputReference
-    ? `Create Reference: ${node.inputReference}`
+    ? `Create Reference: 
+    ${node.inputReference}`
     : `Create${objLabel}`;
 
   return toUmlString({
@@ -639,14 +659,17 @@ function getFlowRecordCreate(node) {
     type: typeLabel,
     color: SkinColor.PINK,
     icon: Icon.CREATE_RECORD,
-    innerNodes: [
-      {
-        id: `${node.name}__CreateDetails`,
-        type: "",
-        label: "",
-        content: innerNodeContent
-      }
-    ]
+    innerNodes:
+      innerNodeContent.length > 0
+        ? [
+            {
+              id: `${node.name}__CreateDetails`,
+              type: "",
+              label: "",
+              content: innerNodeContent
+            }
+          ]
+        : []
   });
 }
 
@@ -694,14 +717,17 @@ function getFlowRecordDelete(node) {
     type: typeLabel,
     color: SkinColor.PINK,
     icon: Icon.DELETE,
-    innerNodes: [
-      {
-        id: `${node.name}__DeleteDetails`,
-        type: "",
-        label: "",
-        content: innerNodeContent
-      }
-    ]
+    innerNodes:
+      innerNodeContent.length > 0
+        ? [
+            {
+              id: `${node.name}__DeleteDetails`,
+              type: "",
+              label: "",
+              content: innerNodeContent
+            }
+          ]
+        : []
   });
 }
 

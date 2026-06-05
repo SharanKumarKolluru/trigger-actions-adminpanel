@@ -508,6 +508,76 @@ describe("flowLensConverter", () => {
       expect(result).toContain("Description = 'Updated'");
       expect(result).toContain("class UpdateAcct pink");
     });
+
+    it("should render without trailing separator when assignments and filters are empty", () => {
+      const flow = {
+        processType: "AutoLaunchedFlow",
+        start: {
+          connector: { targetReference: "UpdateOpportunity" }
+        },
+        recordUpdates: {
+          name: "UpdateOpportunity",
+          label: "Update Opportunity",
+          inputReference: "$Record",
+          connector: null
+        }
+      };
+
+      const result = convertFlowToMermaid(flow);
+
+      // Verify header is outputted correctly
+      expect(result).toContain("Update Reference:");
+      expect(result).toContain("$Record ✏️");
+      expect(result).toContain("Update Opportunity");
+      // Verify no trailing separator is outputted
+      expect(result).not.toContain('Update Opportunity\n---"]');
+    });
+
+    it("should render Record Create without trailing separator when assignments are empty", () => {
+      const flow = {
+        processType: "AutoLaunchedFlow",
+        start: {
+          connector: { targetReference: "CreateOpportunity" }
+        },
+        recordCreates: {
+          name: "CreateOpportunity",
+          label: "Create Opportunity",
+          inputReference: "$Record",
+          connector: null
+        }
+      };
+
+      const result = convertFlowToMermaid(flow);
+
+      expect(result).toContain("Create Reference:");
+      expect(result).toContain("$Record ➕");
+      expect(result).toContain("Create Opportunity");
+      expect(result).not.toContain('Create Opportunity\n---"]');
+    });
+
+    it("should render Record Delete without trailing separator when filters are empty", () => {
+      const flow = {
+        processType: "AutoLaunchedFlow",
+        start: {
+          connector: { targetReference: "DeleteOpportunity" }
+        },
+        recordDeletes: {
+          name: "DeleteOpportunity",
+          label: "Delete Opportunity",
+          inputReference: "$Record",
+          connector: null
+        }
+      };
+
+      const result = convertFlowToMermaid(flow);
+
+      expect(result).toContain(
+        'DeleteOpportunity["Delete Reference: $Record 🗑️\nDelete Opportunity"]'
+      );
+      expect(result).not.toContain(
+        'DeleteOpportunity["Delete Reference: $Record 🗑️\nDelete Opportunity\n---"]'
+      );
+    });
   });
 
   // ─── Action Call Node ───────────────────────────────────────────

@@ -56,8 +56,8 @@ describe("apexLensConverter", () => {
       }
     `;
     const result = convertApexToMermaid(code, "beforeInsert");
-    expect(result.mermaidCode).toContain('action_2[" Integer x = 5 "]');
-    expect(result.mermaidCode).toContain('action_1[" x = x + 1 "]');
+    expect(result.mermaidCode).toContain('action_2["Integer x = 5"]');
+    expect(result.mermaidCode).toContain('action_1["x = x + 1"]');
   });
 
   it("should parse If statements with and without Else blocks", () => {
@@ -74,7 +74,7 @@ describe("apexLensConverter", () => {
     `;
     const result = convertApexToMermaid(code, "beforeInsert");
     expect(result.mermaidCode).toContain('choice_1{"IF"}');
-    expect(result.mermaidCode).toContain('choice_1_Logic[" (x > 0) "]');
+    expect(result.mermaidCode).toContain('choice_1_Logic["(x > 0)"]');
     expect(result.mermaidCode).toContain("choice_1_Logic -.- choice_1");
     expect(result.mermaidCode).toContain("choice_1 -->|True| action_2");
     expect(result.mermaidCode).toContain("choice_1 -->|False| action_3");
@@ -95,11 +95,11 @@ describe("apexLensConverter", () => {
     `;
     const result = convertApexToMermaid(code, "beforeInsert");
     expect(result.mermaidCode).toContain('loop_cond_3{"WHILE"}');
-    expect(result.mermaidCode).toContain('loop_cond_3_Logic[" (x < 10) "]');
+    expect(result.mermaidCode).toContain('loop_cond_3_Logic["(x < 10)"]');
     expect(result.mermaidCode).toContain("loop_cond_3_Logic -.- loop_cond_3");
     expect(result.mermaidCode).toContain('loop_cond_1{"FOR"}');
     expect(result.mermaidCode).toContain(
-      'loop_cond_1_Logic[" Account acc : newAccounts "]'
+      'loop_cond_1_Logic["Account acc : newAccounts"]'
     );
     expect(result.mermaidCode).toContain("loop_cond_1_Logic -.- loop_cond_1");
   });
@@ -113,7 +113,7 @@ describe("apexLensConverter", () => {
       }
     `;
     const result = convertApexToMermaid(code, "beforeInsert");
-    expect(result.mermaidCode).toContain('return_1[" return "]');
+    expect(result.mermaidCode).toContain('return_1["return"]');
   });
 
   it("should style DML statements with the pink classDef", () => {
@@ -127,7 +127,7 @@ describe("apexLensConverter", () => {
     `;
     const result = convertApexToMermaid(code, "beforeInsert");
     expect(result.mermaidCode).toContain(
-      'dml_2[" DML ⚡ \n insert newAccounts; "]'
+      'dml_2["DML ⚡\ninsert newAccounts;"]'
     );
     expect(result.mermaidCode).toContain("class dml_2 pink;");
   });

@@ -1,119 +1,16 @@
 <template>
-  <div class="visualizer-card">
-    <!-- Error State -->
-    <template if:true={error}>
-      <div class="error-container slds-p-around_large slds-text-align_center">
-        <lightning-icon
-          icon-name="utility:error"
-          size="large"
-          variant="error"
-          class="slds-m-bottom_medium"
-        ></lightning-icon>
-        <h3
-          class="slds-text-heading_medium slds-text-color_error slds-m-bottom_small"
-        >
-          Unable to Load Flow Visualizer
-        </h3>
-        <p class="slds-text-body_regular slds-m-bottom_medium">{error}</p>
-        <lightning-button
-          label="Try Again"
-          icon-name="utility:refresh"
-          variant="brand"
-          onclick={handleRetry}
-        ></lightning-button>
-      </div>
-    </template>
-
-    <!-- Loading State -->
-    <template if:false={isReady}>
-      <template if:false={error}>
-        <div
-          class="loading-container slds-p-around_large slds-text-align_center"
-        >
-          <div class="spinner-wrapper">
-            <div class="double-bounce1"></div>
-            <div class="double-bounce2"></div>
-          </div>
-          <p class="slds-text-body_regular slds-m-top_medium loading-text">
-            {loadingMessage}
-          </p>
-        </div>
-      </template>
-    </template>
-
-    <!-- Success State -->
-    <template if:true={isReady}>
-      <div class="visualizer-content">
-        <!-- Toolbar -->
-        <div
-          class="toolbar-header slds-grid slds-grid_vertical-align-center slds-grid_align-spread slds-var-p-around_small slds-var-m-bottom_small"
-        >
-          <!-- Title -->
-          <div class="slds-col slds-grow-none">
-            <span class="visualizer-title">{flowName}</span>
-          </div>
-
-          <!-- Control Buttons -->
-          <div class="slds-col slds-grid slds-grid_vertical-align-center">
-            <!-- Zoom Controls -->
-            <lightning-button-group class="slds-var-m-right_medium">
-              <lightning-button-icon
-                icon-name="utility:zoomout"
-                alternative-text="Zoom Out"
-                title="Zoom Out"
-                onclick={handleZoomOut}
-              ></lightning-button-icon>
-              <lightning-button
-                label={zoomPercentage}
-                variant="neutral"
-                onclick={handleZoomReset}
-                title="Reset Zoom"
-                style="min-width: 60px; display: inline-block"
-              ></lightning-button>
-              <lightning-button-icon
-                icon-name="utility:zoomin"
-                alternative-text="Zoom In"
-                title="Zoom In"
-                onclick={handleZoomIn}
-              ></lightning-button-icon>
-              <lightning-button-icon
-                icon-name="utility:expand"
-                alternative-text="Fit to Canvas"
-                title="Fit to Canvas"
-                onclick={handleZoomFit}
-              ></lightning-button-icon>
-            </lightning-button-group>
-
-            <!-- Action Buttons -->
-            <lightning-button
-              label="Copy Diagram Code"
-              icon-name="utility:copy"
-              variant="neutral"
-              onclick={handleCopyCode}
-              class="slds-var-m-right_small"
-            >
-            </lightning-button>
-            <lightning-button
-              label="Open in Flow Builder"
-              icon-name="utility:new_window"
-              variant="brand"
-              onclick={handleOpenFlowBuilder}
-            >
-            </lightning-button>
-          </div>
-        </div>
-
-        <!-- Scrollable Canvas Container -->
-        <div
-          class="canvas-wrapper slds-m-top_medium"
-          onmousedown={handleMouseDown}
-          onmousemove={handleMouseMove}
-          onmouseup={handleMouseUp}
-          onmouseleave={handleMouseLeave}
-        >
-          <div class="diagram-canvas" lwc:dom="manual"></div>
-        </div>
-      </div>
-    </template>
-  </div>
+  <c-diagram-viewer
+    title={flowName}
+    mermaid-code={mermaidCode}
+    copied-mermaid-code={copiedMermaidCode}
+    diagram-id={flowId}
+    builder-url={builderUrl}
+    builder-button-label="Open in Flow Builder"
+    is-loading={isLoading}
+    loading-message={loadingMessage}
+    error={error}
+    type="flow"
+    resources={resources}
+    onretry={handleRetry}
+  ></c-diagram-viewer>
 </template>

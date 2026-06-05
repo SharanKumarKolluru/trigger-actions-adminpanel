@@ -1,7 +1,4 @@
 import { LightningElement, api, track } from "lwc";
-import { loadScript } from "lightning/platformResourceLoader";
-import { ShowToastEvent } from "lightning/platformShowToastEvent";
-import MERMAID_RESOURCE from "@salesforce/resourceUrl/mermaid";
 import getSessionId from "@salesforce/apex/OrgSessionController.getSessionId";
 import getOrgDomainUrl from "@salesforce/apex/OrgSessionController.getOrgDomainUrl";
 import { convertFlowToMermaid } from "./flowLensConverter";
@@ -10,168 +7,53 @@ export { convertFlowToMermaid };
 // Salesforce ID format: 15 or 18 alphanumeric characters
 const SFDC_ID_PATTERN = /^[a-zA-Z0-9]{15,18}$/;
 
-// Dynamic CSS injected into the shadow DOM to style Mermaid-generated SVG nodes.
-// LWC CSS encapsulation prevents scoped styles from matching dynamic innerHTML elements,
-// so we inject this as a raw <style> tag into the component's shadow root.
-const DIAGRAM_STYLES = `
-  .diagram-canvas svg .pink rect,
-  .diagram-canvas svg .pink polygon,
-  .diagram-canvas svg .pink circle,
-  .diagram-canvas svg .pink ellipse,
-  .diagram-canvas svg .pink path,
-  .diagram-canvas svg .state.pink rect {
-    fill: #F43F5E !important;
-    stroke: #BE185D !important;
-    stroke-width: 2px !important;
-  }
-  .diagram-canvas svg .orange rect,
-  .diagram-canvas svg .orange polygon,
-  .diagram-canvas svg .orange circle,
-  .diagram-canvas svg .orange ellipse,
-  .diagram-canvas svg .orange path,
-  .diagram-canvas svg .state.orange rect {
-    fill: #F97316 !important;
-    stroke: #C2410C !important;
-    stroke-width: 2px !important;
-  }
-  .diagram-canvas svg .navy rect,
-  .diagram-canvas svg .navy polygon,
-  .diagram-canvas svg .navy circle,
-  .diagram-canvas svg .navy ellipse,
-  .diagram-canvas svg .navy path,
-  .diagram-canvas svg .state.navy rect {
-    fill: #475569 !important;
-    stroke: #1E293B !important;
-    stroke-width: 2px !important;
-  }
-  .diagram-canvas svg .blue rect,
-  .diagram-canvas svg .blue polygon,
-  .diagram-canvas svg .blue circle,
-  .diagram-canvas svg .blue ellipse,
-  .diagram-canvas svg .blue path,
-  .diagram-canvas svg .state.blue rect {
-    fill: #0284C7 !important;
-    stroke: #0369A1 !important;
-    stroke-width: 2px !important;
-  }
-  .diagram-canvas svg text,
-  .diagram-canvas svg tspan,
-  .diagram-canvas svg span {
-    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  }
-  .diagram-canvas svg .pink text,
-  .diagram-canvas svg .pink span,
-  .diagram-canvas svg .pink tspan,
-  .diagram-canvas svg .orange text,
-  .diagram-canvas svg .orange span,
-  .diagram-canvas svg .orange tspan,
-  .diagram-canvas svg .navy text,
-  .diagram-canvas svg .navy span,
-  .diagram-canvas svg .navy tspan,
-  .diagram-canvas svg .blue text,
-  .diagram-canvas svg .blue span,
-  .diagram-canvas svg .blue tspan {
-    color: #ffffff !important;
-    fill: #ffffff !important;
-    stroke: none !important;
-  }
-  .diagram-canvas svg .state rect,
-  .diagram-canvas svg .node rect {
-    rx: 8px !important;
-    ry: 8px !important;
-  }
-
-  /* --- Typography Hierarchy for Code/Details --- */
-  /* Node Header (e.g. Assignment 📝) */
-  .diagram-canvas svg text tspan.line:first-child,
-  .diagram-canvas svg text tspan:first-child {
-    font-weight: 800 !important;
-    font-size: 13.5px !important;
-    letter-spacing: 0.5px !important;
-  }
-  /* Node Name (e.g. Build Single Var - Quote) */
-  .diagram-canvas svg text tspan.line:nth-child(2),
-  .diagram-canvas svg text tspan:nth-child(2) {
-    font-weight: 600 !important;
-    font-size: 12.5px !important;
-  }
-  /* Logic details & code lines (e.g. SingleVar.Id = Record.Id) */
-  .diagram-canvas svg text tspan.line:nth-child(n+4),
-  .diagram-canvas svg text tspan:nth-child(n+4) {
-    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-    font-size: 11.5px !important;
-    font-weight: 400 !important;
-    letter-spacing: -0.1px !important;
-  }
-  .diagram-canvas svg .pink text tspan.line:nth-child(n+4),
-  .diagram-canvas svg .pink text tspan:nth-child(n+4),
-  .diagram-canvas svg .orange text tspan.line:nth-child(n+4),
-  .diagram-canvas svg .orange text tspan:nth-child(n+4),
-  .diagram-canvas svg .navy text tspan.line:nth-child(n+4),
-  .diagram-canvas svg .navy text tspan:nth-child(n+4),
-  .diagram-canvas svg .blue text tspan.line:nth-child(n+4),
-  .diagram-canvas svg .blue text tspan:nth-child(n+4) {
-    fill: rgba(255, 255, 255, 0.85) !important;
-  }
-`;
-
 export default class FlowVisualizer extends LightningElement {
   @api flowId;
   @api flowName;
   @api highlightNodeId;
+  @api apiVersion = "v66.0";
 
   @track error;
-  @track isReady = false;
-  @track loadingMessage = "Loading visualization libraries...";
-
-  @track zoomLevel = 1.0;
-  naturalWidth;
-  naturalHeight;
+  @track isLoading = true;
+  @track loadingMessage = "Authenticating session...";
+  @track resources;
 
   sessionId;
   orgDomainUrl;
   mermaidCode;
   copiedMermaidCode;
-  isLibraryLoaded = false;
   _isDestroyed = false;
 
-  // Drag scroll state
-  isMouseDown = false;
-  startX = 0;
-  startY = 0;
-  scrollLeft = 0;
-  scrollTop = 0;
-
-  get zoomPercentage() {
-    return `${Math.round(this.zoomLevel * 100)}%`;
+  get builderUrl() {
+    if (!this.orgDomainUrl || !this.flowId) return "";
+    // Flow Builder requires the flowDefId parameter when passing the FlowDefinition (300) ID.
+    return `${this.orgDomainUrl}/builder_platform_interaction/flowBuilder.app?flowDefId=${this.flowId}`;
   }
 
   connectedCallback() {
     this._isDestroyed = false;
-    this.loadLibraries();
+    this.loadSessionAndMetadata();
   }
 
   disconnectedCallback() {
     this._isDestroyed = true;
   }
 
-  async loadLibraries() {
+  async loadSessionAndMetadata() {
     try {
-      // Load Mermaid JS Static Resource
-      if (!this.isLibraryLoaded) {
-        await loadScript(this, MERMAID_RESOURCE);
-        this.isLibraryLoaded = true;
+      this.isLoading = true;
+      this.error = null;
+
+      if (!this.sessionId || !this.orgDomainUrl) {
+        this.loadingMessage = "Authenticating session...";
+        const [session, domain] = await Promise.all([
+          getSessionId(),
+          getOrgDomainUrl()
+        ]);
+
+        this.sessionId = session;
+        this.orgDomainUrl = domain;
       }
-
-      this.loadingMessage = "Authenticating session...";
-      // Fetch session info
-      const [session, domain] = await Promise.all([
-        getSessionId(),
-        getOrgDomainUrl()
-      ]);
-
-      this.sessionId = session;
-      this.orgDomainUrl = domain;
 
       if (!this.sessionId) {
         throw new Error(
@@ -179,12 +61,11 @@ export default class FlowVisualizer extends LightningElement {
         );
       }
 
-      // Fetch flow metadata
       await this.fetchFlowMetadata();
     } catch (err) {
       if (this._isDestroyed) return;
       this.error = err.message || err;
-      this.isReady = false;
+      this.isLoading = false;
     }
   }
 
@@ -210,8 +91,6 @@ export default class FlowVisualizer extends LightningElement {
       this.loadingMessage = "Generating flowchart diagram...";
 
       // Translate the Metadata JSON using our flow-lens port
-      // We pass includeTitle = false for rendering inside LWC to avoid duplicate title blocks,
-      // but keep includeTitle = true for copied/portable Mermaid code.
       this.mermaidCode = convertFlowToMermaid(
         data.Metadata,
         this.flowName,
@@ -225,12 +104,14 @@ export default class FlowVisualizer extends LightningElement {
         this.flowName,
         true
       );
+      this.resources = this.parseFlowResources(data.Metadata);
 
-      // Render the diagram
-      this.renderDiagram();
+      this.isLoading = false;
     } catch (err) {
-      this.error = `REST callout failed: ${err.message}. Please verify if CORS allows requests from this Lightning origin to your Salesforce API domain.`;
-      this.isReady = false;
+      if (!this._isDestroyed) {
+        this.error = `REST callout failed: ${err.message}. Please verify if CORS allows requests from this Lightning origin to your Salesforce API domain.`;
+        this.isLoading = false;
+      }
     }
   }
 
@@ -249,7 +130,7 @@ export default class FlowVisualizer extends LightningElement {
       query += ` ORDER BY VersionNumber DESC LIMIT 1`;
     }
 
-    const url = `${this.orgDomainUrl}/services/data/v60.0/tooling/query?q=${encodeURIComponent(query)}`;
+    const url = `${this.orgDomainUrl}/services/data/${this.apiVersion}/tooling/query?q=${encodeURIComponent(query)}`;
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -272,243 +153,94 @@ export default class FlowVisualizer extends LightningElement {
     return null;
   }
 
-  async renderDiagram() {
-    try {
-      // Initialize Mermaid configuration
-      window.mermaid.initialize({
-        startOnLoad: false,
-        theme: "neutral",
-        securityLevel: "loose",
-        htmlLabels: false,
-        themeVariables: {
-          fontFamily:
-            "'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-        },
-        state: {
-          htmlLabels: false
-        },
-        stateDiagram: {
-          htmlLabels: false
-        },
-        flowchart: {
-          useMaxWidth: true,
-          htmlLabels: false
-        }
-      });
-
-      // SVG generation id
-      const chartId = `mermaid_chart_${this.flowId}`;
-
-      // Render to SVG
-      const { svg: svgCode } = await window.mermaid.render(
-        chartId,
-        this.mermaidCode
-      );
-      this.isReady = true;
-
-      // Use a short delay to ensure DOM element is rendered after isReady triggers re-render
-      // eslint-disable-next-line @lwc/lwc/no-async-operation
-      setTimeout(() => {
-        if (this._isDestroyed) return;
-
-        const canvas = this.template.querySelector(".diagram-canvas");
-        if (canvas) {
-          // lwc:dom="manual" container — innerHTML is the only way to inject Mermaid SVG output
-          // eslint-disable-next-line @lwc/lwc/no-inner-html
-          canvas.innerHTML = svgCode;
-
-          // Inject custom CSS styling to the generated SVG nodes
-          const svgElement = canvas.querySelector("svg");
-          if (svgElement) {
-            const viewBox = svgElement.getAttribute("viewBox");
-            if (viewBox) {
-              const parts = viewBox.split(/\s+/);
-              if (parts.length >= 4) {
-                this.naturalWidth = parseFloat(parts[2]);
-                this.naturalHeight = parseFloat(parts[3]);
-              }
-            }
-
-            if (!this.naturalWidth) {
-              this.naturalWidth =
-                parseFloat(svgElement.getAttribute("width")) || 800;
-            }
-            if (!this.naturalHeight) {
-              this.naturalHeight =
-                parseFloat(svgElement.getAttribute("height")) || 600;
-            }
-
-            this.applyZoom();
-          }
-
-          // Left-align text inside rectangle nodes (excluding start/end headers)
-          const nodeGroups = canvas.querySelectorAll("g.node");
-          nodeGroups.forEach((nodeGroup) => {
-            const nodeId = nodeGroup.getAttribute("id");
-            if (
-              nodeId &&
-              !nodeId.includes("_Logic") &&
-              (nodeId.includes("FLOW_START") ||
-                nodeId.includes("FLOW_END") ||
-                nodeId.includes("METHOD_START") ||
-                nodeId.includes("METHOD_END"))
-            ) {
-              return;
-            }
-            const rect = nodeGroup.querySelector("rect");
-            const text = nodeGroup.querySelector("text");
-            if (rect && text) {
-              const width = parseFloat(rect.getAttribute("width"));
-              if (!isNaN(width)) {
-                text.style.textAnchor = "start";
-                const padding = 16;
-                const shiftX = -(width / 2) + padding;
-                text.setAttribute("transform", `translate(${shiftX}, 0)`);
-              }
-            }
-          });
-
-          // Inject extracted style constant to bypass LWC shadow DOM scoping
-          const styleTag = document.createElement("style");
-          styleTag.textContent = DIAGRAM_STYLES;
-          canvas.appendChild(styleTag);
-        }
-      }, 50);
-    } catch (err) {
-      this.error = `Mermaid.js rendering failed: ${err.message}`;
-      this.isReady = false;
-    }
-  }
-
-  handleZoomIn() {
-    this.zoomLevel = Math.min(this.zoomLevel + 0.15, 3.0);
-    this.applyZoom();
-  }
-
-  handleZoomOut() {
-    this.zoomLevel = Math.max(this.zoomLevel - 0.15, 0.3);
-    this.applyZoom();
-  }
-
-  handleZoomReset() {
-    this.zoomLevel = 1.0;
-    this.applyZoom();
-  }
-
-  handleZoomFit() {
-    const wrapper = this.template.querySelector(".canvas-wrapper");
-    if (wrapper && this.naturalWidth) {
-      const wrapperWidth = wrapper.clientWidth - 48; // padding
-      this.zoomLevel = Math.min(wrapperWidth / this.naturalWidth, 1.0);
-      this.applyZoom();
-    }
-  }
-
-  applyZoom() {
-    const canvas = this.template.querySelector(".diagram-canvas");
-    if (canvas) {
-      const svgElement = canvas.querySelector("svg");
-      if (svgElement && this.naturalWidth && this.naturalHeight) {
-        svgElement.style.width = `${this.naturalWidth * this.zoomLevel}px`;
-        svgElement.style.height = `${this.naturalHeight * this.zoomLevel}px`;
-      }
-    }
-  }
-
   handleRetry() {
     this.error = null;
-    this.isReady = false;
-    this.loadingMessage = "Retrying loading visualization...";
-    this.loadLibraries();
+    this.isLoading = true;
+    this.loadSessionAndMetadata();
   }
 
-  async handleCopyCode() {
-    const codeToCopy = this.copiedMermaidCode || this.mermaidCode;
-    const text = `\`\`\`mermaid\n${codeToCopy}\n\`\`\``;
-    try {
-      // Prefer modern Clipboard API, fall back to deprecated execCommand
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(text);
-      } else {
-        const textarea = document.createElement("textarea");
-        textarea.value = text;
-        textarea.style.position = "fixed";
-        textarea.style.opacity = "0";
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textarea);
+  parseFlowResources(metadata) {
+    if (!metadata) return null;
+
+    const resources = {
+      variables: [],
+      formulas: [],
+      constants: [],
+      textTemplates: []
+    };
+
+    const getArray = (val) => {
+      if (!val) return [];
+      return Array.isArray(val) ? val : [val];
+    };
+
+    // 1. Variables
+    getArray(metadata.variables).forEach((v) => {
+      let dataTypeText = v.dataType || "";
+      if (dataTypeText === "SObject" && v.objectType) {
+        dataTypeText = `Record (${v.objectType})`;
       }
 
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Copied!",
-          message: "Mermaid flowchart code copied to clipboard.",
-          variant: "success"
-        })
-      );
-    } catch (err) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Copy Failed",
-          message: err.message,
-          variant: "error"
-        })
-      );
-    }
-  }
+      let accessText = "Private";
+      if (v.isInput && v.isOutput) {
+        accessText = "Input & Output";
+      } else if (v.isInput) {
+        accessText = "Input Only";
+      } else if (v.isOutput) {
+        accessText = "Output Only";
+      }
 
-  handleOpenFlowBuilder() {
-    // Flow Builder requires the flowDefId parameter when passing the FlowDefinition (300) ID.
-    // Using flowId with a 300 ID results in an error.
-    const url = `${this.orgDomainUrl}/builder_platform_interaction/flowBuilder.app?flowDefId=${this.flowId}`;
-    window.open(url, "_blank");
-  }
+      resources.variables.push({
+        name: v.name,
+        dataType: dataTypeText,
+        isCollection: v.isCollection === true || v.isCollection === "true",
+        access: accessText
+      });
+    });
 
-  // --- Drag-Scroll Event Handlers ---
-  handleMouseDown(event) {
-    // Only drag with primary mouse button
-    if (event.button !== 0) return;
-    const wrapper = this.template.querySelector(".canvas-wrapper");
-    if (!wrapper) return;
+    // 2. Formulas
+    getArray(metadata.formulas).forEach((f) => {
+      resources.formulas.push({
+        name: f.name,
+        dataType: f.dataType || "",
+        expression: f.expression || ""
+      });
+    });
 
-    this.isMouseDown = true;
-    wrapper.classList.add("grabbing");
+    // 3. Constants
+    getArray(metadata.constants).forEach((c) => {
+      let constValue = "";
+      if (c.value) {
+        if (typeof c.value === "object") {
+          constValue =
+            c.value.stringValue ||
+            c.value.numberValue ||
+            c.value.booleanValue ||
+            JSON.stringify(c.value);
+        } else {
+          constValue = String(c.value);
+        }
+      }
+      resources.constants.push({
+        name: c.name,
+        dataType: c.dataType || "",
+        value: constValue
+      });
+    });
 
-    this.startX = event.pageX - wrapper.offsetLeft;
-    this.startY = event.pageY - wrapper.offsetTop;
-    this.scrollLeft = wrapper.scrollLeft;
-    this.scrollTop = wrapper.scrollTop;
-  }
+    // 4. Text Templates
+    getArray(metadata.textTemplates).forEach((t) => {
+      resources.textTemplates.push({
+        name: t.name,
+        text: t.text || ""
+      });
+    });
 
-  handleMouseMove(event) {
-    if (!this.isMouseDown) return;
-    event.preventDefault();
-    const wrapper = this.template.querySelector(".canvas-wrapper");
-    if (!wrapper) return;
+    // Sort alphabetically by name
+    Object.keys(resources).forEach((key) => {
+      resources[key].sort((a, b) => a.name.localeCompare(b.name));
+    });
 
-    const x = event.pageX - wrapper.offsetLeft;
-    const y = event.pageY - wrapper.offsetTop;
-    const walkX = (x - this.startX) * 1.5; // Scroll speed factor
-    const walkY = (y - this.startY) * 1.5;
-
-    wrapper.scrollLeft = this.scrollLeft - walkX;
-    wrapper.scrollTop = this.scrollTop - walkY;
-  }
-
-  handleMouseUp() {
-    this.isMouseDown = false;
-    const wrapper = this.template.querySelector(".canvas-wrapper");
-    if (wrapper) {
-      wrapper.classList.remove("grabbing");
-    }
-  }
-
-  handleMouseLeave() {
-    this.isMouseDown = false;
-    const wrapper = this.template.querySelector(".canvas-wrapper");
-    if (wrapper) {
-      wrapper.classList.remove("grabbing");
-    }
+    return resources;
   }
 }
