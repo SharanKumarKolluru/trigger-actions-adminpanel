@@ -35,6 +35,7 @@ export default class TriggerActionsManager extends NavigationMixin(
   showSourceModal = false;
   sourceCode = "";
   sourceClassName = "";
+  sourceRecordId = "";
   searchTerm = "";
   isCreating = false;
   availableSObjects = [];
@@ -46,6 +47,11 @@ export default class TriggerActionsManager extends NavigationMixin(
   activeTab = "actions";
   nativeTypeFilter = "all";
   nativeStatusFilter = "all";
+  isFlowModalOpen = false;
+  selectedFlowId = "";
+  selectedFlowName = "";
+  isApexModalOpen = false;
+  selectedApexClassName = "";
   _wiredActionsResult;
   _wiredSObjectsResult;
   _wiredNativeResult;
@@ -231,10 +237,7 @@ export default class TriggerActionsManager extends NavigationMixin(
               isTrigger: true,
               isFlow: false,
               isManaged: !!t.NamespacePrefix,
-              body: t.Body,
-              buttonTitle: t.NamespacePrefix
-                ? "Managed Package Trigger (View Restricted)"
-                : "Open Trigger"
+              body: t.Body
             });
           }
         }
@@ -435,6 +438,7 @@ export default class TriggerActionsManager extends NavigationMixin(
     if (this.selectedAction?.Apex_Class_Name__c) {
       this.sourceClassName = this.selectedAction.Apex_Class_Name__c;
       this.sourceCode = "";
+      this.sourceRecordId = "";
       this.showSourceModal = true;
     }
   }
@@ -443,24 +447,24 @@ export default class TriggerActionsManager extends NavigationMixin(
     this.showSourceModal = false;
     this.sourceCode = "";
     this.sourceClassName = "";
+    this.sourceRecordId = "";
   }
 
-  async handleOpenFlowBuilder() {
+  async handleViewTriggerActionFlow() {
     const flowName = this.selectedAction?.Flow_Name__c;
+    if (!flowName) return;
+
     this.isLoading = true;
     try {
       const flowId = await getFlowIdByName({ flowName });
-      if (flowId && flowId.startsWith("300")) {
-        this.navigateToFlowBuilder(flowId);
-      } else {
-        this.showError(
-          "Notice",
-          "This is a managed package flow and cannot be opened directly in the Flow Builder."
-        );
+      if (flowId) {
+        this.selectedFlowId = flowId;
+        this.selectedFlowName = flowName;
+        this.isFlowModalOpen = true;
       }
     } catch (error) {
       this.showError(
-        "Error opening Flow Builder",
+        "Error loading Flow",
         error.body?.message || error.message
       );
     } finally {
@@ -468,9 +472,37 @@ export default class TriggerActionsManager extends NavigationMixin(
     }
   }
 
-  handleOpenNativeFlow(event) {
-    const durableId = event.currentTarget.dataset.id;
-    this.navigateToFlowBuilder(durableId);
+  handleViewFlowChart(event) {
+    this.selectedFlowId = event.currentTarget.dataset.id;
+    this.selectedFlowName = event.currentTarget.dataset.name;
+    this.isFlowModalOpen = true;
+  }
+
+  handleCloseFlowModal() {
+    this.isFlowModalOpen = false;
+    this.selectedFlowId = "";
+    this.selectedFlowName = "";
+  }
+
+  handleViewApexFlowchart() {
+    if (this.selectedAction?.Apex_Class_Name__c) {
+      this.selectedApexClassName = this.selectedAction.Apex_Class_Name__c;
+      this.isApexModalOpen = true;
+    }
+  }
+
+  handleViewApexFlowchartFromList(event) {
+    event.stopPropagation();
+    const className = event.currentTarget.dataset.className;
+    if (className) {
+      this.selectedApexClassName = className;
+      this.isApexModalOpen = true;
+    }
+  }
+
+  handleCloseApexModal() {
+    this.isApexModalOpen = false;
+    this.selectedApexClassName = "";
   }
 
   handleViewTriggerSource(event) {
@@ -481,29 +513,9 @@ export default class TriggerActionsManager extends NavigationMixin(
     if (trigger && trigger.Body) {
       this.sourceClassName = trigger.Name;
       this.sourceCode = trigger.Body;
+      this.sourceRecordId = trigger.Id;
       this.showSourceModal = true;
     }
-  }
-
-  handleOpenNativeTrigger(event) {
-    const triggerId = event.currentTarget.dataset.id;
-    this[NavigationMixin.Navigate]({
-      type: "standard__recordPage",
-      attributes: {
-        recordId: triggerId,
-        objectApiName: "ApexTrigger",
-        actionName: "view"
-      }
-    });
-  }
-
-  navigateToFlowBuilder(durableId) {
-    this[NavigationMixin.Navigate]({
-      type: "standard__webPage",
-      attributes: {
-        url: `/builder_platform_interaction/flowBuilder.app?flowDefId=${durableId}`
-      }
-    });
   }
 
   handleTabChange(event) {
@@ -545,7 +557,10 @@ export default class TriggerActionsManager extends NavigationMixin(
         `Initialization of ${objectName} enqueued. This may take a few seconds.`
       );
       this.handleCloseDiscovery();
-      // Refresh will happen via the auto-refresh logic we already have
+      // eslint-disable-next-line @lwc/lwc/no-async-operation
+      setTimeout(() => {
+        this.refreshList().catch(() => {});
+      }, 8000);
     } catch (error) {
       this.showError(
         "Error initializing object",

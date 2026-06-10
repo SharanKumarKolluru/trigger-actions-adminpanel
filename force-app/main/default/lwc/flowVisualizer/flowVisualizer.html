@@ -1,0 +1,16 @@
+<template>
+  <c-diagram-viewer
+    title={flowName}
+    mermaid-code={mermaidCode}
+    copied-mermaid-code={copiedMermaidCode}
+    diagram-id={flowId}
+    builder-url={builderUrl}
+    builder-button-label="Open in Flow Builder"
+    is-loading={isLoading}
+    loading-message={loadingMessage}
+    error={error}
+    type="flow"
+    resources={resources}
+    onretry={handleRetry}
+  ></c-diagram-viewer>
+</template>

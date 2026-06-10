@@ -1,12 +1,12 @@
 {
   "packageDirectories": [
     {
-      "versionName": "v2.0.3",
-      "versionNumber": "2.0.3.NEXT",
+      "versionName": "v3.0.0",
+      "versionNumber": "3.0.0.NEXT",
       "path": "force-app",
       "default": true,
-      "package": "Trigger Actions Admin Panel",
-      "description": "Admin Panel for managing Trigger Actions Framework configurations. Maintained by Shahrier Emon.",
+      "package": "Automation Command Center",
+      "description": "Automation Command Center for managing and visualizing Salesforce automation configurations. Maintained by Shahrier Emon.",
       "dependencies": [
         {
           "package": "Trigger Actions Framework"
@@ -15,13 +15,13 @@
     }
   ],
   "name": "trigger-actions-adminpanel",
-  "version": "2.0.3",
+  "version": "3.0.0",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
   "sourceApiVersion": "66.0",
   "packageAliases": {
     "Trigger Actions Framework": "04tKY000000R0yHYAS",
-    "Trigger Actions Admin Panel": "0HogL0000002AjFSAU",
+    "Automation Command Center": "0HogL0000002AjFSAU",
     "Trigger Actions Admin Panel@2.0.0": "04tgL000000EhBZQA0",
     "Trigger Actions Admin Panel@2.0.1": "04tgL000000Fyn3QAC",
     "Trigger Actions Admin Panel@2.0.2": "04tgL000000FyqHQAS",

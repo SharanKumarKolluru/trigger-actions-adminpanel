@@ -1,0 +1,27 @@
+<template>
+  <c-diagram-viewer
+    title={className}
+    mermaid-code={mermaidCode}
+    diagram-id={classId}
+    builder-url={builderUrl}
+    builder-button-label="Open Apex Class"
+    is-loading={isLoading}
+    loading-message={loadingMessage}
+    error={error}
+    type="apex"
+    resources={filteredResources}
+    onretry={handleRetry}
+  >
+    <lightning-combobox
+      slot="controls"
+      name="methodSelect"
+      label="Select Method"
+      value={selectedMethod}
+      placeholder="Choose Method"
+      options={methodOptions}
+      onchange={handleMethodChange}
+      class="method-dropdown slds-var-m-left_medium"
+      variant="label-hidden"
+    ></lightning-combobox>
+  </c-diagram-viewer>
+</template>
