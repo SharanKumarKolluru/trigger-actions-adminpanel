@@ -1,5 +1,5 @@
 /**
- * @group Trigger Actions Framework - Admin - Stubs
+ * @group Automation Command Center
  * @description This sample stub class implements the TriggerAction.BeforeInsert interface.
  *
  * ### Why this class is required:

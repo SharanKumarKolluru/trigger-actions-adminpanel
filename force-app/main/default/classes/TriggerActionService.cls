@@ -1,5 +1,5 @@
 /**
- * @group Trigger Actions Framework - Admin
+ * @group Automation Command Center
  * @description Service class for CRUD operations on `Trigger_Action__mdt` metadata.
  * Provides methods for querying, creating, and updating trigger actions.
  */
