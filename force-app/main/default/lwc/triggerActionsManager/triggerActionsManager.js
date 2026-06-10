@@ -557,7 +557,10 @@ export default class TriggerActionsManager extends NavigationMixin(
         `Initialization of ${objectName} enqueued. This may take a few seconds.`
       );
       this.handleCloseDiscovery();
-      // Refresh will happen via the auto-refresh logic we already have
+      // eslint-disable-next-line @lwc/lwc/no-async-operation
+      setTimeout(() => {
+        this.refreshList().catch(() => {});
+      }, 8000);
     } catch (error) {
       this.showError(
         "Error initializing object",

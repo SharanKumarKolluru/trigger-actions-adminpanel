@@ -1,4 +1,4 @@
-import { LightningElement, api, track } from "lwc";
+import { LightningElement, api } from "lwc";
 import { loadScript } from "lightning/platformResourceLoader";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import MERMAID_RESOURCE from "@salesforce/resourceUrl/mermaid";
@@ -151,7 +151,7 @@ export default class DiagramViewer extends LightningElement {
   @api type = "flow"; // 'flow' or 'apex'
   @api resources;
 
-  @track isDrawerOpen = false;
+  isDrawerOpen = false;
 
   _mermaidCode = "";
   _copiedMermaidCode = "";
@@ -179,7 +179,7 @@ export default class DiagramViewer extends LightningElement {
     this._copiedMermaidCode = value;
   }
 
-  @track zoomLevel = 1.0;
+  zoomLevel = 1.0;
   naturalWidth;
   naturalHeight;
 

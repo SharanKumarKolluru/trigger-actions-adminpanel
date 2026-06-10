@@ -1,7 +1,8 @@
-import { LightningElement, api, track } from "lwc";
+import { LightningElement, api } from "lwc";
 import getSessionId from "@salesforce/apex/OrgSessionController.getSessionId";
 import getOrgDomainUrl from "@salesforce/apex/OrgSessionController.getOrgDomainUrl";
 import { convertFlowToMermaid } from "./flowLensConverter";
+import { resolveFlowRecordReferences } from "./relationshipResolver";
 export { convertFlowToMermaid };
 
 // Salesforce ID format: 15 or 18 alphanumeric characters
@@ -13,10 +14,10 @@ export default class FlowVisualizer extends LightningElement {
   @api highlightNodeId;
   @api apiVersion = "v66.0";
 
-  @track error;
-  @track isLoading = true;
-  @track loadingMessage = "Authenticating session...";
-  @track resources;
+  error;
+  isLoading = true;
+  loadingMessage = "Authenticating session...";
+  resources;
 
   sessionId;
   orgDomainUrl;
@@ -88,11 +89,21 @@ export default class FlowVisualizer extends LightningElement {
         );
       }
 
+      this.loadingMessage = "Resolving record references...";
+
+      // Resolve $Record paths to concrete sObject names (e.g. $Record.Owner → Account.Owner)
+      const resolvedMetadata = await resolveFlowRecordReferences(
+        data.Metadata,
+        this.sessionId,
+        this.orgDomainUrl,
+        this.apiVersion
+      );
+
       this.loadingMessage = "Generating flowchart diagram...";
 
       // Translate the Metadata JSON using our flow-lens port
       this.mermaidCode = convertFlowToMermaid(
-        data.Metadata,
+        resolvedMetadata,
         this.flowName,
         false
       );
@@ -100,11 +111,11 @@ export default class FlowVisualizer extends LightningElement {
         this.mermaidCode += `\n  style ${this.highlightNodeId} stroke:#FF5D5D,stroke-width:5px,stroke-dasharray:5;`;
       }
       this.copiedMermaidCode = convertFlowToMermaid(
-        data.Metadata,
+        resolvedMetadata,
         this.flowName,
         true
       );
-      this.resources = this.parseFlowResources(data.Metadata);
+      this.resources = this.parseFlowResources(resolvedMetadata);
 
       this.isLoading = false;
     } catch (err) {

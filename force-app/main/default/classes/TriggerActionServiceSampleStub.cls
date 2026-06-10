@@ -9,7 +9,7 @@
  *
  * When Salesforce DX creates/promotes an unlocked package version, it spins up a completely
  * clean, empty scratch org containing ONLY the package's metadata and runs all tests. Because
- * the admin panel package itself does not define any real functional TriggerActions (it only contains
+ * the package itself does not define any real functional TriggerActions (it only contains
  * administrative and setup logic), the query to `ApexTypeImplementor` would return 0 rows in a clean
  * scratch org during the packaging run.
  *

@@ -1,8 +1,8 @@
-# Trigger Actions Framework Admin Panel
+# Automation Command Center
 
-A lightweight administrative UI for managing the [Trigger Actions Framework](https://github.com/mitchspano/trigger-actions-framework). This tool provides a streamlined management layer for administrators and developers to visualize, organize, and configure trigger logic directly in Salesforce, automating the underlying Custom Metadata deployments.
+A centralized UI for managing and visualizing Salesforce automation — built on the [Trigger Actions Framework](https://www.mitchspano.com/trigger-actions-framework). The Command Center gives administrators and developers a single pane of glass to visualize, organize, and configure automation logic directly in Salesforce, automating the underlying Custom Metadata deployments.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-ffdd00.svg?style=flat-square&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/shahrier)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
@@ -26,74 +26,100 @@ A lightweight administrative UI for managing the [Trigger Actions Framework](htt
 
 ## ⚙️ Post-Installation Setup
 
-Assign the **Trigger Actions Framework Admin** permission set to any user who needs to manage trigger configurations.
+1. Assign the **Trigger Actions Framework Admin** permission set:
+   - Go to **Setup → Users → Permission Sets**.
+   - Select **Trigger Actions Framework Admin**.
+   - Click **Manage Assignments** and assign to your user(s).
 
-1. Go to **Setup → Users → Permission Sets**.
-2. Select **Trigger Actions Framework Admin**.
-3. Click **Manage Assignments** and assign to your user(s).
+2. Add the **Command Center** tab to any Lightning app of your choice:
+   - Go to **Setup → App Manager**.
+   - Edit your preferred app → **Navigation Items** → add **Command Center**.
 
 ---
 
-## ✨ Key Features
+## ✨ Features
 
-### 1. Unified Hierarchy View
+### Automation Command Center
 
-Gain full visibility into every automation running on an object. The Admin Panel groups all Trigger Actions by their execution context—such as Before Insert or After Update—and displays them in their precise execution order.
-
-### 2. Intelligent Filtering & Auto-Detection
-
-Save time by browsing only the Apex classes that implement the Trigger Action interfaces. Upon selection, the tool provides full context awareness by auto-detecting and mapping the supported trigger interfaces directly to your configuration.
-
-### 3. Developer Deep-Links & Native Automations
-
-Inspect implementation logic directly from the UI. The "View Source" feature allows you to read the associated Apex code for both framework-managed actions and **native triggers** without switching back and forth to VS Code, providing a seamless bridge between administration and development.
-
-### 4. Operational Agility
-
-Instantly toggle bypasses for data loads or maintenance windows with immediate visual feedback. The UI indicates the active/disabled state of each action at a glance, making it easy to manage org-wide automations in real-time.
-
-### 5. Automation Command Center (v2.0)
-
-Your strategic entry point for automation governance. The Command Center provides a centralized oversight of your framework adoption, serving as the control tower for managing discovery results and initializing new SObject configurations with a single click.
-
-### 6. Intelligent Discovery & Onboarding
-
-Uncover hidden automation debt in seconds. The Discovery engine automatically scans your entire org for unmanaged Apex Triggers and Record-Triggered Flows, identifying exactly where native logic exists and providing a streamlined path to bring it under the framework's control.
-
-### Screenshots
-
-#### Command Center Dashboard
+Your strategic entry point for automation governance. Get a centralized overview of framework adoption across every SObject, launch discovery scans, and initialize new SObject configurations — all from a single dashboard.
 
 ![Command Center Dashboard](images/command_center.png)
 
-#### Discovery & Initialization
+### Intelligent Discovery & Onboarding
+
+Uncover hidden automation debt in seconds. The Discovery engine scans your entire org for unmanaged Apex Triggers and Record-Triggered Flows, identifying exactly where native logic exists and providing a streamlined path to bring it under the framework's control.
 
 ![Discovery Modal](images/discovery_modal.png)
 
-#### Actions Hierarchy View
+### Unified Hierarchy View
+
+Full visibility into every automation on an object. Actions are grouped by execution context — Before Insert, After Update, etc. — and displayed in their precise execution order. Native triggers and Record-Triggered Flows are tracked alongside framework actions, with direct access to View Source and Flow Visualizer from each item.
 
 ![Hierarchy View](images/hierarchy_view.png)
 
-#### Creating a New Action
+![Native Automations](images/native_automation_features.png)
 
-![Create Action](images/create_action.png)
+### Flow Visualizer
 
-#### Native Automations Tracking
+Visualize Record-Triggered Flows as interactive flowcharts directly in the Command Center. See flow details, assignments, decisions, and loops rendered as a diagram — with a direct link to open the Flow in Flow Builder.
 
-![Native Automations](images/native_automations.png)
+![Flow Visualizer](images/flow_viz.png)
+
+### Developer Source View
+
+Inspect implementation logic without leaving the UI. The "View Source" feature renders Apex code for both framework-managed actions and native triggers, while the "Apex Code Visualizer" generates interactive flowcharts from your Apex classes — bridging administration and development in one place.
+
+![Action Details](images/apex_features.png)
+
+![Apex Code Visualizer](images/apex_code_viz.png)
+
+### Smart Action Builder
+
+Browse only the Apex classes that implement Trigger Action interfaces. On selection, the tool auto-detects and maps supported trigger interfaces directly to your configuration — no guesswork required.
+
+![Class Picker](images/create_action_1.png)
+
+![Context Auto-Detection](images/create_action_2.png)
+
+### Operational Controls
+
+Instantly toggle bypasses for data loads or maintenance windows with immediate visual feedback. The active/disabled state of each action is visible at a glance, enabling real-time control over org-wide automations.
 
 ---
 
 ## 📖 Framework Documentation
 
-This tool is a management layer for the **Trigger Actions Framework**. For detailed documentation on how to write Action classes, complex bypass logic, or advanced framework features, please refer to the [official repository](https://github.com/mitchspano/trigger-actions-framework).
+For detailed documentation on the Trigger Actions Framework — writing Action classes, bypass logic, advanced patterns — visit the [official documentation site](https://www.mitchspano.com/trigger-actions-framework) or the [GitHub repository](https://github.com/mitchspano/trigger-actions-framework).
 
 ---
 
 ## 📝 Important Notes
 
-- **Metadata Deployments**: Saving changes in the Admin Panel triggers a background metadata deployment. Changes typically take 5-10 seconds to reflect in the UI.
-- **Deletion**: For security and stability, this panel does not support deleting records. Please use Salesforce Setup (Custom Metadata Types) or VS Code to remove configuration records.
+- **Metadata Deployments**: Saving changes triggers a background metadata deployment. Changes typically take 5-10 seconds to reflect in the UI.
+- **Deletion**: For security and stability, the Command Center does not support deleting records. Use Salesforce Setup (Custom Metadata Types) or VS Code to remove configuration records.
+
+---
+
+## 📋 Changelog
+
+### v3.0.0
+
+- **Renamed** from "Trigger Actions Admin Panel" to **Automation Command Center**
+- **Removed** the dedicated Lightning app — the Command Center is now a standalone tab that can be added to any app
+- **Added** Flow Visualizer — interactive flowchart rendering of Record-Triggered Flows
+- **Added** Apex Visualizer — AST-powered source code visualization for Apex classes
+- **Updated** framework documentation links to the [official doc site](https://www.mitchspano.com/trigger-actions-framework)
+
+### v2.0.0
+
+- Introduced the Command Center dashboard with org-wide automation overview
+- Added Discovery engine for scanning unmanaged triggers and flows
+- Added native trigger and Record-Triggered Flow tracking alongside framework actions
+- Added one-click SObject initialization
+
+### v1.0.0
+
+- Initial release with hierarchy view, action creation, bypass toggles, and source view
 
 ---
 
@@ -107,17 +133,4 @@ If this project helps you, please consider supporting its development:
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to open issues or submit pull requests to improve the Admin Panel.
-
----
-
-## ⚖️ Open Source Attribution & Licenses
-
-This project includes and builds upon contributions from the following open-source libraries:
-
-- **Flow Lens** ([google/flow-lens](https://github.com/google/flow-lens)) - Licensed under the MIT License. The flowchart converter engine builds upon the original logic for parsing Salesforce Flow metadata into visual structures.
-- **Apex Dev Tools Parser** ([apex-dev-tools/apex-parser](https://github.com/apex-dev-tools/apex-parser)) - Licensed under the 3-clause BSD License. The Apex flowchart visualizer utilizes the parser's AST visitor patterns to parse and render Apex code blocks.
-
----
-
-**Version:** 3.0.0-pre
+Contributions are welcome! Please feel free to open issues or submit pull requests.

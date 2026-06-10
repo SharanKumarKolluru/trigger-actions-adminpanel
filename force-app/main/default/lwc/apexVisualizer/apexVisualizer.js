@@ -1,4 +1,4 @@
-import { LightningElement, api, track } from "lwc";
+import { LightningElement, api } from "lwc";
 import { loadScript } from "lightning/platformResourceLoader";
 import APEX_PARSER_RESOURCE from "@salesforce/resourceUrl/apexParser";
 import getSessionId from "@salesforce/apex/OrgSessionController.getSessionId";
@@ -9,13 +9,13 @@ export default class ApexVisualizer extends LightningElement {
   @api className;
   @api apiVersion = "v66.0";
 
-  @track error;
-  @track isLoading = true;
-  @track loadingMessage = "Loading parsing libraries...";
-  @track resources;
+  error;
+  isLoading = true;
+  loadingMessage = "Loading parsing libraries...";
+  resources;
 
-  @track selectedMethod = "";
-  @track methodsList = [];
+  selectedMethod = "";
+  methodsList = [];
 
   classId;
   classBody;

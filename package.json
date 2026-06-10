@@ -1,8 +1,8 @@
 {
   "name": "trigger-actions-adminpanel",
   "private": true,
-  "version": "3.0.0-pre",
-  "description": "Salesforce Admin Panel for managing Trigger Actions Framework configurations",
+  "version": "3.0.0",
+  "description": "Automation Command Center for managing and visualizing Salesforce automation configurations",
   "scripts": {
     "lint": "eslint force-app/main/default/lwc/**/*.js",
     "test": "npm run test:unit",
