@@ -1,12 +1,15 @@
 public with sharing class OrgSessionController {
+  @TestVisible
+  private static String mockSessionId;
+
   /**
    * @description Fetches the API-enabled session ID by loading the SessionIdPage Visualforce page.
    * @return String The current session ID, or empty string if an error occurs.
    */
   @AuraEnabled(cacheable=true)
   public static String getSessionId() {
-    if (Test.isRunningTest()) {
-      return 'test-session-id';
+    if (mockSessionId != null) {
+      return mockSessionId;
     }
     try {
       PageReference sessionPage = Page.SessionIdPage;

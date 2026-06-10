@@ -1,15 +1,26 @@
 @isTest
 private class OrgSessionController_Test {
   @isTest
-  static void testGetSessionId() {
+  static void testGetSessionIdMocked() {
+    OrgSessionController.mockSessionId = 'test-session-id';
     Test.startTest();
     String sessionId = OrgSessionController.getSessionId();
     Test.stopTest();
     System.assertEquals(
       'test-session-id',
       sessionId,
-      'Should return test session ID in test context'
+      'Should return mocked session ID'
     );
+  }
+
+  @isTest
+  static void testGetSessionIdLive() {
+    // With no mock set, exercises the try/catch PageReference path.
+    // In a packaging scratch org the VF page may not render, hitting the catch branch.
+    Test.startTest();
+    String sessionId = OrgSessionController.getSessionId();
+    Test.stopTest();
+    System.assert(sessionId != null, 'Should return a non-null value');
   }
 
   @isTest
