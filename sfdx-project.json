@@ -22,11 +22,10 @@
   "packageAliases": {
     "Trigger Actions Framework": "04tKY000000R0yHYAS",
     "Automation Command Center": "0HogL0000002AjFSAU",
-    "Automation Command Center@3.0.0": "04tgL000000GmtVQAS",
+    "Automation Command Center@3.0.0": "04tgL000000Gmv7QAC",
     "Trigger Actions Admin Panel@2.0.0": "04tgL000000EhBZQA0",
     "Trigger Actions Admin Panel@2.0.1": "04tgL000000Fyn3QAC",
     "Trigger Actions Admin Panel@2.0.2": "04tgL000000FyqHQAS",
-    "Trigger Actions Admin Panel@2.0.3": "04tgL000000GMsbQAG",
-    "Automation Command Center@3.0.0-1": "04tgL000000GmtVQAS"
+    "Trigger Actions Admin Panel@2.0.3": "04tgL000000GMsbQAG"
   }
 }
