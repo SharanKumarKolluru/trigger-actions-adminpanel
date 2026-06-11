@@ -1,5 +1,5 @@
 /**
- * @group Trigger Actions Framework - Admin
+ * @group Automation Command Center
  * @description Validation utilities for Trigger Action configuration.
  * Validates Apex classes, Flows, and other metadata configuration.
  */

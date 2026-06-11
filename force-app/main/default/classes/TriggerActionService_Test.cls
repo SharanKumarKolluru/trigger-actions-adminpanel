@@ -1,5 +1,5 @@
 /**
- * @group Trigger Actions Framework - Admin - Tests
+ * @group Automation Command Center - Tests
  * @description Unit tests for TriggerActionService class
  */
 @isTest
@@ -750,5 +750,58 @@ private class TriggerActionService_Test {
     );
     Test.stopTest();
     System.assertEquals('MockJobId', jobId);
+  }
+
+  @isTest
+  static void testGetGlobalStats() {
+    Test.startTest();
+    TriggerActionService.GlobalStatsWrapper stats = TriggerActionService.getGlobalStats();
+    Test.stopTest();
+    System.assert(stats != null, 'Stats should not be null');
+    System.assert(
+      stats.managedObjectCount >= 0,
+      'Managed count should be non-negative'
+    );
+    System.assert(
+      stats.activeActionCount >= 0,
+      'Active count should be non-negative'
+    );
+    System.assert(
+      stats.unmanagedObjectCount >= 0,
+      'Unmanaged count should be non-negative'
+    );
+  }
+
+  @isTest
+  static void testCreateTriggerSettingDuplicate() {
+    TriggerActionService.mockSettings = new List<sObject_Trigger_Setting__mdt>{
+      (sObject_Trigger_Setting__mdt) JSON.deserialize(
+        '{"DeveloperName":"Account","Object_API_Name__c":"Account"}',
+        sObject_Trigger_Setting__mdt.class
+      )
+    };
+    Test.startTest();
+    try {
+      TriggerActionService.createTriggerSetting('Account', null, null);
+      System.assert(false, 'Should throw for duplicate setting');
+    } catch (AuraHandledException e) {
+      System.assert(
+        e.getMessage().contains('already exists'),
+        'Should indicate duplicate'
+      );
+    }
+    Test.stopTest();
+  }
+
+  @isTest
+  static void testGetNativeAutomationsLive() {
+    Test.startTest();
+    TriggerActionService.AutomationAuditWrapper audit = TriggerActionService.getNativeAutomations(
+      'Account'
+    );
+    Test.stopTest();
+    System.assert(audit != null, 'Audit wrapper should not be null');
+    System.assert(audit.triggers != null, 'Triggers list should not be null');
+    System.assert(audit.flows != null, 'Flows list should not be null');
   }
 }

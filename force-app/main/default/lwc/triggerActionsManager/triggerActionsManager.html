@@ -1,19 +1,6 @@
 <template>
-  <lightning-card variant="narrow" title="Trigger Action Studio" icon-name="utility:builder">
-    <!-- Header Start -->
-    <h3 slot="title">
-      <lightning-icon icon-name="utility:connected_apps" size="small"></lightning-icon>
-        Trigger Action Studio
-    </h3>
-    <p class="slds-p-horizontal_small">Metadata Driven Automation Orchestration Console</p>
-    <lightning-button variant="neutral" label="New Sobject" icon-name="utility:add" alternative-text="New SObject" slot="actions" onclick={handleAddSObject}></lightning-button>
-		<lightning-button variant="neutral" label="Discovery Mode" icon-name="utility:search" alternative-text="Discovery Mode" slot="actions" onclick={handleOpenDiscovery}></lightning-button>
-		<lightning-button variant="neutral" label="Refresh" icon-name="utility:refresh" alternative-text="Refresh" slot="actions" onclick={handleRefresh}></lightning-button>
-    <!-- Header End -->
-
-    <!-- Main Content Start -->
-    <div class="slds-m-around_medium slds-is-relative slds-border_top slds-p-top_medium">
-      <!-- Spinner Start -->
+  <lightning-card variant="narrow" icon-name="standard:config">
+    <div class="slds-m-around_medium slds-is-relative">
       <template if:true={isLoading}>
         <lightning-spinner
           alternative-text="Loading"
@@ -21,15 +8,15 @@
           class="slds-spinner_container"
         ></lightning-spinner>
       </template>
-      <!-- Spinner End -->
-
       <div class="slds-grid slds-gutters_medium">
-        <!-- Column 1: SObject Sidebar (3-of-12) -->
-        <div class="slds-col slds-size_3-of-12">
+        <!-- Column 1: SObject Sidebar (2-of-12) -->
+        <div class="slds-col slds-size_2-of-12">
           <div class="object-panel">
             <div class="panel-header slds-grid slds-wrap">
-              <div class="slds-col slds-size_1-of-1 slds-grid slds-grid_align-spread slds-m-bottom_x-small">
-                <h3 class="slds-text-heading_small">Objects</h3>
+              <div
+                class="slds-col slds-size_1-of-1 slds-grid slds-grid_align-spread slds-m-bottom_x-small"
+              >
+                <h3 class="slds-text-heading_small">SObjects</h3>
                 <div class="slds-grid slds-grid_vertical-align-center">
                   <lightning-button-icon
                     icon-name="utility:search"
@@ -121,12 +108,12 @@
           </div>
         </div>
 
-        <!-- Column 2: Actions Grouped List (4-of-12) -->
+        <!-- Column 2: Actions Grouped List (5-of-12) -->
         <template if:true={selectedObjectName}>
-          <div class="slds-col slds-size_4-of-12">
+          <div class="slds-col slds-size_5-of-12">
             <div class="actions-toolbar slds-var-m-bottom_small">
               <h3 class="slds-text-heading_small toolbar-title">
-                <strong>Actions</strong> : {selectedObjectName}
+                Actions: {selectedObjectName}
               </h3>
               <lightning-button-group>
                 <lightning-button
@@ -173,7 +160,19 @@
                             {action.Apex_Class_Name__c}
                           </div>
                         </div>
-                        <div class="action-status-compact">
+                        <div
+                          class="action-status-compact slds-grid slds-grid_vertical-align-center"
+                        >
+                          <lightning-button-icon
+                            icon-name="utility:flow"
+                            variant="bare"
+                            alternative-text="View Flowchart"
+                            title="View Flowchart"
+                            size="small"
+                            onclick={handleViewApexFlowchartFromList}
+                            data-class-name={action.Apex_Class_Name__c}
+                            class="slds-var-m-right_xx-small"
+                          ></lightning-button-icon>
                           <template if:true={action.Bypass_Execution__c}>
                             <lightning-icon
                               icon-name="utility:warning"
@@ -189,18 +188,15 @@
               </template>
               <template if:false={hasObjectActions}>
                 <div class="slds-p-around_large slds-text-align_center">
-                  <lightning-empty-state illustration-name="noresults:unknown" title="No Trigger Actions">
-                    <p slot="description">No trigger actions have been set up for this SObject.</p>
-                  </lightning-empty-state>
-                  <p class="slds-text-body_small slds-text-color_weak slds-var-m-bottom_medium">
-                    Ready to streamline your automation ? Click the button below to create your first trigger action.
+                  <p class="slds-text-body_small slds-text-color_weak">
+                    No trigger actions for this SObject
                   </p>
                   <lightning-button
                     label="Create First Action"
                     icon-name="utility:add"
                     variant="brand"
                     onclick={handleCreateNew}
-                    class="slds-var-m-top_x-large"
+                    class="slds-var-m-top_small"
                   >
                   </lightning-button>
                 </div>
@@ -218,57 +214,54 @@
               <lightning-tab label="Framework Actions" value="actions">
                 <template if:true={selectedAction}>
                   <div class="detail-panel">
-                    <lightning-card title="Action Details" icon-name="standard:record">
+                    <lightning-card
+                      title="Action Details"
+                      icon-name="standard:record"
+                    >
                       <div class="slds-m-around_medium">
                         <div class="slds-grid slds-wrap">
                           <div class="slds-col slds-size_1-of-1 detail-row">
-                            <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
-                              <div class="detail-label">Developer Name</div>
-                              <lightning-button
-                                label="View Action"
-                                icon-name="utility:new_window"
-                                variant="base"
-                                onclick={handleOpenMetadata}
-                                class="view-source-button"
-                              >
-                              </lightning-button>
-                            </div>
+                            <div class="detail-label">Developer Name</div>
                             <div class="detail-value">
                               {selectedAction.DeveloperName}
                             </div>
                           </div>
                           <div class="slds-col slds-size_1-of-1 detail-row">
-                            <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread">
+                            <div
+                              class="slds-grid slds-grid_vertical-align-center slds-grid_align-spread"
+                            >
                               <div class="detail-label">Apex Class</div>
-                              <lightning-button
-                                label="View Source"
-                                icon-name="utility:apex"
-                                variant="base"
-                                onclick={handleViewSource}
-                                class="view-source-button"
+                              <div
+                                class="slds-grid slds-grid_vertical-align-center"
                               >
-                              </lightning-button>
+                                <lightning-button-icon
+                                  icon-name="utility:insert_tag_field"
+                                  variant="container"
+                                  alternative-text="View Source"
+                                  title="View Source"
+                                  onclick={handleViewSource}
+                                >
+                                </lightning-button-icon>
+                                <lightning-button-icon
+                                  icon-name="utility:flow"
+                                  variant="container"
+                                  alternative-text="View Flowchart"
+                                  title="View Flowchart"
+                                  onclick={handleViewApexFlowchart}
+                                >
+                                </lightning-button-icon>
+                              </div>
                             </div>
                             <div class="detail-value">
                               {selectedAction.Apex_Class_Name__c}
                             </div>
                           </div>
-                          <template if:true={selectedAction.Required_Permission__c}>
-                            <div class="slds-col slds-size_1-of-1 detail-row">
-                              <div class="detail-label">Required Permission</div>
-                              <div class="detail-value">
-                                {selectedAction.Required_Permission__c}
-                              </div>
+                          <div class="slds-col slds-size_1-of-2 detail-row">
+                            <div class="detail-label">Order</div>
+                            <div class="detail-value">
+                              {selectedAction.Order__c}
                             </div>
-                          </template>
-                          <template if:true={selectedAction.Bypass_Permission__c}>
-                            <div class="slds-col slds-size_1-of-1 detail-row">
-                              <div class="detail-label">Bypass Permission</div>
-                              <div class="detail-value">
-                                {selectedAction.Bypass_Permission__c}
-                              </div>
-                            </div>
-                          </template>
+                          </div>
                           <template if:true={selectedAction.Flow_Name__c}>
                             <div class="slds-col slds-size_1-of-2 detail-row">
                               <div
@@ -276,11 +269,11 @@
                               >
                                 <div class="detail-label">Flow Name</div>
                                 <lightning-button-icon
-                                  icon-name="utility:new_window"
+                                  icon-name="utility:flow"
                                   variant="bare"
-                                  onclick={handleOpenFlowBuilder}
-                                  alternative-text="Open in Flow Builder"
-                                  title="Open in Flow Builder"
+                                  onclick={handleViewTriggerActionFlow}
+                                  alternative-text="Visualize Flow"
+                                  title="Visualize Flow"
                                   size="small"
                                 >
                                 </lightning-button-icon>
@@ -290,13 +283,7 @@
                               </div>
                             </div>
                           </template>
-                          <div class="slds-col slds-size_1-of-2 detail-row">
-                            <div class="detail-label">Order</div>
-                            <div class="detail-value">
-                              {selectedAction.Order__c}
-                            </div>
-                          </div>
-                          <div class="slds-col slds-size_1-of-2 detail-row">
+                          <div class="slds-col slds-size_1-of-1 detail-row">
                             <div class="detail-label">Contexts</div>
                             <div class="detail-value">
                               <template
@@ -317,6 +304,14 @@
                               <div class="detail-label">Entry Criteria</div>
                               <div class="detail-value criteria-text">
                                 {selectedAction.Entry_Criteria__c}
+                              </div>
+                            </div>
+                          </template>
+                          <template if:true={selectedAction.Description__c}>
+                            <div class="slds-col slds-size_1-of-1 detail-row">
+                              <div class="detail-label">Description</div>
+                              <div class="detail-value">
+                                {selectedAction.Description__c}
                               </div>
                             </div>
                           </template>
@@ -342,14 +337,6 @@
                               {flowRecursionLabel}
                             </div>
                           </div>
-                          <template if:true={selectedAction.Description__c}>
-                            <div class="slds-col slds-size_1-of-1 detail-row">
-                              <div class="detail-label">Description</div>
-                              <div class="detail-value">
-                                {selectedAction.Description__c}
-                              </div>
-                            </div>
-                          </template>
                         </div>
                       </div>
                     </lightning-card>
@@ -453,37 +440,28 @@
                                   <div
                                     class="slds-grid slds-grid_vertical-align-center slds-m-left_small"
                                     style="
-                                      width: 64px;
+                                      width: 32px;
                                       justify-content: flex-end;
                                     "
                                   >
                                     <template if:true={item.isTrigger}>
                                       <lightning-button-icon
-                                        icon-name="utility:apex"
+                                        icon-name="utility:insert_tag_field"
                                         variant="bare"
                                         data-id={item.id}
                                         onclick={handleViewTriggerSource}
                                         title="View Source"
                                         disabled={item.isManaged}
-                                        class="slds-var-m-right_x-small"
-                                      ></lightning-button-icon>
-                                      <lightning-button-icon
-                                        icon-name="utility:new_window"
-                                        variant="bare"
-                                        data-id={item.id}
-                                        onclick={handleOpenNativeTrigger}
-                                        title={item.buttonTitle}
-                                        disabled={item.isManaged}
                                       ></lightning-button-icon>
                                     </template>
                                     <template if:true={item.isFlow}>
                                       <lightning-button-icon
-                                        icon-name="utility:new_window"
+                                        icon-name="utility:flow"
                                         variant="bare"
                                         data-id={item.id}
-                                        onclick={handleOpenNativeFlow}
-                                        title={item.buttonTitle}
-                                        disabled={item.isManaged}
+                                        data-name={item.name}
+                                        onclick={handleViewFlowChart}
+                                        title="Visualize Flow"
                                       ></lightning-button-icon>
                                     </template>
                                   </div>
@@ -516,20 +494,23 @@
           </div>
         </template>
 
-        <!-- No object selected: Command Center Dashboard (9-of-12) -->
+        <!-- No object selected: Command Center Dashboard (10-of-12) -->
         <template if:false={selectedObjectName}>
-          <div class="slds-col slds-size_9-of-12">
+          <div class="slds-col slds-size_10-of-12">
             <div class="command-center">
               <div class="command-header slds-text-align_center">
-                <h1 class="command-title">Automation Studio</h1>
+                <h1 class="command-title">Automation Command Center</h1>
                 <p class="command-subtitle">
-                  Design, monitor, manage, and scale your Trigger Actions Framework
+                  Visualize, analyze, and manage your Salesforce automations and
+                  Apex triggers.
                 </p>
               </div>
 
-              <!-- Action Cards -->
-              <div class="actions-grid slds-grid slds-gutters_medium">
-                <div class="slds-col slds-size_1-of-3">
+              <!-- Action Cards (3-Column Grid) -->
+              <div class="actions-grid slds-grid slds-wrap slds-gutters_medium">
+                <div
+                  class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-m-bottom_medium"
+                >
                   <div
                     class="dashboard-action-card"
                     onclick={handleOpenDiscovery}
@@ -547,7 +528,9 @@
                     <div class="action-link">Start Scanning →</div>
                   </div>
                 </div>
-                <div class="slds-col slds-size_1-of-3">
+                <div
+                  class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-m-bottom_medium"
+                >
                   <div class="dashboard-action-card" onclick={handleAddSObject}>
                     <lightning-icon
                       icon-name="utility:add"
@@ -562,9 +545,11 @@
                     <div class="action-link">Add Object →</div>
                   </div>
                 </div>
-                <div class="slds-col slds-size_1-of-3">
+                <div
+                  class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-m-bottom_medium"
+                >
                   <a
-                    href="https://www.mitchspano.com/trigger-actions-framework/"
+                    href="https://www.mitchspano.com/trigger-actions-framework"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="dashboard-action-card-link"
@@ -585,25 +570,16 @@
                   </a>
                 </div>
               </div>
+
+              <div
+                class="command-footer slds-text-align_center slds-m-top_xx-large"
+              >
+                <p class="slds-text-body_small slds-text-color_weak">v3.0.0</p>
+              </div>
             </div>
           </div>
         </template>
       </div>
-      <!-- Footer Start -->
-      <div class="command-footer slds-text-align_center slds-m-top_xx-large">
-        <p class="slds-text-body_small slds-text-color_weak">2.0.3 • Powered by Trigger Actions Framework</p>
-      </div>
-      <div class="command-footer slds-text-align_center slds-m-top_xx-large">
-        <div class="slds-p-bottom_small">
-          <lightning-badge label="Apex Trigger"></lightning-badge>
-          <lightning-badge label="Apex Class"></lightning-badge>
-          <lightning-badge label="Record Triggered Flows"></lightning-badge>
-          <lightning-badge label="Autolaunch Flows"></lightning-badge>
-        </div>
-        <p class="slds-text-body_small slds-text-color_weak">2.0.3 • Powered by Trigger Actions Framework</p>
-      </div>
-      <!-- Footer End -->
-      <!-- Main Content End -->
     </div>
   </lightning-card>
 
@@ -632,6 +608,7 @@
   <c-trigger-action-source-view
     class-name={sourceClassName}
     manual-body={sourceCode}
+    record-id={sourceRecordId}
     show-modal={showSourceModal}
     onclose={handleSourceClose}
   >
@@ -656,7 +633,7 @@
           <h2 class="slds-text-heading_medium">Automation Discovery</h2>
         </header>
         <div class="slds-modal__content slds-p-around_medium">
-          <p class="slds-var-m-bottom_medium slds-text-align_center">
+          <p class="slds-var-m-bottom_medium">
             The following objects have native automations (Triggers/Flows) but
             are not yet managed by the Trigger Actions Framework.
           </p>
@@ -754,6 +731,83 @@
             </div>
           </template>
         </div>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <!-- Flow Visualizer Modal -->
+  <template if:true={isFlowModalOpen}>
+    <section
+      role="dialog"
+      tabindex="-1"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open slds-modal_large"
+    >
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <lightning-button-icon
+            icon-name="utility:close"
+            alternative-text="Close"
+            variant="bare-inverse"
+            class="slds-modal__close"
+            onclick={handleCloseFlowModal}
+          >
+          </lightning-button-icon>
+          <h2 class="slds-text-heading_medium slds-hyphenate">
+            Flow Visualizer
+          </h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium">
+          <c-flow-visualizer
+            flow-id={selectedFlowId}
+            flow-name={selectedFlowName}
+          ></c-flow-visualizer>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button
+            label="Close"
+            onclick={handleCloseFlowModal}
+          ></lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <!-- Apex Visualizer Modal -->
+  <template if:true={isApexModalOpen}>
+    <section
+      role="dialog"
+      tabindex="-1"
+      aria-modal="true"
+      class="slds-modal slds-fade-in-open slds-modal_large"
+    >
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <lightning-button-icon
+            icon-name="utility:close"
+            alternative-text="Close"
+            variant="bare-inverse"
+            class="slds-modal__close"
+            onclick={handleCloseApexModal}
+          >
+          </lightning-button-icon>
+          <h2 class="slds-text-heading_medium slds-hyphenate">
+            Apex Code Visualizer
+          </h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium">
+          <c-apex-visualizer
+            class-name={selectedApexClassName}
+          ></c-apex-visualizer>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button
+            label="Close"
+            onclick={handleCloseApexModal}
+          ></lightning-button>
+        </footer>
       </div>
     </section>
     <div class="slds-backdrop slds-backdrop_open"></div>

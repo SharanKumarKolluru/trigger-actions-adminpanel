@@ -1,9 +1,13 @@
 import { LightningElement, api, wire } from "lwc";
+import { NavigationMixin } from "lightning/navigation";
 import getApexClassBody from "@salesforce/apex/TriggerActionService.getApexClassBody";
 
-export default class TriggerActionSourceView extends LightningElement {
+export default class TriggerActionSourceView extends NavigationMixin(
+  LightningElement
+) {
   @api className;
   @api showModal = false;
+  @api recordId;
 
   @api
   get manualBody() {
@@ -44,5 +48,20 @@ export default class TriggerActionSourceView extends LightningElement {
 
   handleClose() {
     this.dispatchEvent(new CustomEvent("close"));
+  }
+
+  handleOpenTrigger() {
+    if (this.recordId) {
+      this[NavigationMixin.GenerateUrl]({
+        type: "standard__recordPage",
+        attributes: {
+          recordId: this.recordId,
+          objectApiName: "ApexTrigger",
+          actionName: "view"
+        }
+      }).then((url) => {
+        window.open(url, "_blank");
+      });
+    }
   }
 }

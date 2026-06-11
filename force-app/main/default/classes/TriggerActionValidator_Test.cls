@@ -1,5 +1,5 @@
 /**
- * @group Trigger Actions Framework - Admin - Tests
+ * @group Automation Command Center - Tests
  * @description Unit tests for TriggerActionValidator class
  */
 @isTest

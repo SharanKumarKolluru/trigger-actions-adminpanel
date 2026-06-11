@@ -1,5 +1,5 @@
 /**
- * @group Trigger Actions Framework - Admin
+ * @group Automation Command Center
  * @description Callback handler for Metadata API deployments of custom metadata records.
  * Logs deployment results for debugging purposes.
  */
